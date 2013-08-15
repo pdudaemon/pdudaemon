@@ -1,0 +1,108 @@
+#! /usr/bin/python
+
+#  Copyright 2013 Linaro Limited
+#  Author Matt Hart <matthew.hart@linaro.org>
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+#  MA 02110-1301, USA.
+
+import logging
+import json
+import os
+import sys
+import optparse
+import daemon
+import daemon.pidlockfile
+from logging.handlers import WatchedFileHandler
+from socketserver import ListenerServer
+
+def getDaemonLogger(filePath, log_format=None, loglevel=logging.INFO):
+    logger = logging.getLogger()
+    logger.setLevel(loglevel)
+    try:
+        watchedHandler = WatchedFileHandler(filePath)
+    except Exception as e:
+        return e
+
+    watchedHandler.setFormatter(logging.Formatter(log_format or '%(asctime)s %(msg)s'))
+    logger.addHandler(watchedHandler)
+    return logger, watchedHandler
+
+
+def readSettings(filename):
+    """
+    Read settings from config file, to listen to all hosts, hostname should be 0.0.0.0
+    """
+    settings = {"port": 16421, "hostname": "0.0.0.0"}
+    with open(filename) as stream:
+        jobdata = stream.read()
+        json_default = json.loads(jobdata)
+    if "port" in json_default:
+        settings['port'] = json_default['port']
+    if "hostname" in json_default:
+        settings['hostname'] = json_default['hostname']
+    return settings
+
+if __name__ == '__main__':
+    # instance settings come from django - the coordinator doesn't use django and is
+    # not necessarily per-instance, so use the command line and a default conf file.
+    pidfile = "/var/run/lava-pdu-listener.pid"
+    logfile = "/var/log/lava-pdu-listener.log"
+    conffile = "/etc/lava-pdu/lava-pdu-listener.conf"
+    settings = readSettings(conffile)
+    usage = "Usage: %prog [--logfile] --[loglevel]"
+    description = "LAVA PDU request listener server, host and port are handled in %s" % conffile
+    parser = optparse.OptionParser(usage=usage, description=description)
+    parser.add_option("--logfile", dest="logfile", action="store",
+                      type="string", help="log file [%s]" % logfile)
+    parser.add_option("--loglevel", dest="loglevel", action="store",
+                      type="string", help="logging level [INFO]")
+    (options, args) = parser.parse_args()
+    if options.logfile:
+        if os.path.exists(os.path.dirname(options.logfile)):
+            logfile = options.logfile
+        else:
+            print "No such directory for specified logfile '%s'" % logfile
+    open(logfile, 'w').close()
+    level = logging.INFO
+    if options.loglevel == "DEBUG":
+        level = logging.DEBUG
+    if options.loglevel == "WARNING":
+        level = logging.WARNING
+    if options.loglevel == "ERROR":
+        level = logging.ERROR
+    client_logger, watched_file_handler = getDaemonLogger(logfile, loglevel=level)
+    if isinstance(client_logger, Exception):
+        print("Fatal error creating client_logger: " + str(client_logger))
+        sys.exit(os.EX_OSERR)
+    # noinspection PyArgumentList
+    lockfile = daemon.pidlockfile.PIDLockFile(pidfile)
+    if lockfile.is_locked():
+        logging.error("PIDFile %s already locked" % pidfile)
+        sys.exit(os.EX_OSERR)
+    context = daemon.DaemonContext(
+        working_directory=os.getcwd(),
+        pidfile=lockfile,
+        files_preserve=[watched_file_handler.stream],
+        stderr=watched_file_handler.stream,
+        stdout=watched_file_handler.stream)
+    starter = {"logging_level": options.loglevel,
+               "hostname": settings['hostname'],
+               "port": settings['port']}
+    with context:
+        logging.info("Running LAVA PDU Listener %s %s %d."
+                     % (logfile, settings['hostname'], settings['port']))
+        ss = ListenerServer(starter)
+        ss.start()
