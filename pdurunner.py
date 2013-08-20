@@ -2,42 +2,50 @@ import sqlite3
 import logging
 import time
 from engine import PDUEngine
-conn = None
-c = None
+from socketserver import DBHandler
 
 class PDURunner():
 
     def __init__(self, config):
-        #logging.basicConfig(level=config["logging_level"])
-        conn = sqlite3.connect(config["dbfile"], check_same_thread = False)
-        c = conn.cursor()
+        logging.basicConfig(level=config["logging_level"])
+        logging.getLogger().setLevel(config["logging_level"])
+        self.db = DBHandler(config["dbfile"])
 
     def get_one(self):
-        c.execute("SELECT * FROM pdu_queue ORDER BY id asc limit 1")
-        res = c.fetchone()
+        res = self.db.get_one("SELECT * FROM pdu_queue ORDER BY id asc limit 1")
         if res:
             id,hostname,port,request = res
-            print(id, hostname, request, port)
+            logging.debug("Processing queue item: (%s %s) on hostname: %s" % (request, port, hostname))
+            #logging.debug(id, hostname, request, port)
             res = self.do_job(hostname,port,request)
             self.delete_row(id)
 
     def delete_row(self, id):
-        print("deleting row %i" % id)
-        c.execute("delete from pdu_queue where id=%i" % id)
-        conn.commit()
+        logging.debug("deleting row %i" % id)
+        self.db.do_sql("delete from pdu_queue where id=%i" % id)
 
     def do_job(self, hostname, port, request):
-        pe = PDUEngine(hostname, 23)
-        if request == "reboot":
-            pe.driver.port_reboot(port)
-        elif request == "on":
-            pe.driver.port_on(port)
-        elif request == "off":
-            pe.driver.port_off(port)
-        elif request == "delayed":
-            pe.driver.port_delayed(port)
-        else:
-            print("Unknown request type: %s" % request)
+        retries = 5
+        while retries > 0:
+            try:
+                pe = PDUEngine(hostname, 23)
+                if request == "reboot":
+                    pe.driver.port_reboot(port)
+                elif request == "on":
+                    pe.driver.port_on(port)
+                elif request == "off":
+                    pe.driver.port_off(port)
+                elif request == "delayed":
+                    pe.driver.port_delayed(port)
+                else:
+                    logging.debug("Unknown request type: %s" % request)
+                retries = 0
+            except BaseException:
+                logging.warn("Failed to execute job: %s %s %s (attempts left %i)" % (hostname,port,request,retries))
+                pe.close()
+                time.sleep(1)
+                retries -= 1
+
 
     def run_me(self):
         print("Starting up the PDURunner")

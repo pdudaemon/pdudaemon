@@ -6,7 +6,8 @@ import logging
 class DBHandler(object):
     db_file = "pdu.db"
 
-    def __init__(self):
+    def __init__(self, db_file="pdu.db"):
+        self.db_file = db_file
         logging.debug("Creating new DBHandler: %s" % self.db_file)
         self.conn = sqlite3.connect(self.db_file, check_same_thread = False)
         self.cursor = self.conn.cursor()
@@ -16,6 +17,13 @@ class DBHandler(object):
         self.cursor.execute(sql)
         self.conn.commit()
 
+    def get_res(self, sql):
+        return self.cursor.execute(sql)
+
+    def get_one(self, sql):
+        res = self.get_res(sql)
+        return res.fetchone()
+
     def close(self):
         self.cursor.close()
         self.conn.close()
@@ -24,12 +32,13 @@ class DBHandler(object):
 class ListenerServer(object):
 #    conn = sqlite3.connect("/var/lib/lava-pdu/pdu.db", check_same_thread = False)
 #    cursor = conn.cursor()
-    db = DBHandler()
 
     def __init__(self, config):
         self.server = TCPServer((config["hostname"], config["port"]), TCPRequestHandler)
         logging.info("listening on %s:%s" % (config["hostname"], config["port"]))
+        self.db = DBHandler(config["dbfile"])
         self.create_db()
+        self.server.db = self.db
 
     def create_db(self):
         sql = "create table if not exists pdu_queue (id integer primary key, hostname text, port int, request text)"
@@ -47,10 +56,10 @@ class TCPRequestHandler(SocketServer.BaseRequestHandler):
         hostname = array[0]
         port = int(array[1])
         request = array[2]
-        db = DBHandler()
+        db = self.server.db
         sql = "insert into pdu_queue values (NULL,'%s',%i,'%s')" % (hostname,port,request)
         db.do_sql(sql)
-        db.close()
+        #db.close()
 
     def handle(self):
         data = self.request.recv(4096).strip()
@@ -66,8 +75,10 @@ class TCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
+    logging.getLogger().setLevel(logging.DEBUG)
     logging.debug("Executing from __main__")
     starter = {"hostname": "0.0.0.0",
-               "port":16421}
+               "port":16421,
+               "dbfile": "/var/lib/lava-pdu/pdu.db"}
     ss = ListenerServer(starter)
     ss.start()

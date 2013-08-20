@@ -1,15 +1,16 @@
 __author__ = 'matt'
 
 from driver import PDUDriver
+import logging
 
 class apc7952(PDUDriver):
     def _pdu_logout(self):
         self._back_to_main()
-        print("Logging out")
+        logging.debug("Logging out")
         self.connection.send("4\r")
 
     def _back_to_main(self):
-        print("Returning to main menu")
+        logging.debug("Returning to main menu")
         self.connection.expect('>')
         for i in range(1,20):
             #print("Sending escape character")
@@ -17,7 +18,7 @@ class apc7952(PDUDriver):
             self.connection.send("\r")
             res = self.connection.expect(["4- Logout","> "])
             if res == 0:
-                print("Back at main menu")
+                logging.debug("Back at main menu")
                 break
         #self.connection.send("\r")
         #self.connection.expect("4- Logout")
@@ -52,9 +53,9 @@ class apc7952(PDUDriver):
         self.connection.send("1\r")
         res = self.connection.expect(["> ","Press <ENTER> to continue..."])
         if res == 1:
-            print("Stupid paging thingmy detected, pressing enter")
+            logging.debug("Stupid paging thingmy detected, pressing enter")
             self.connection.send("\r")
-        print("We should now be at the outlet list")
+        logging.debug("We should now be at the outlet list")
         self.connection.send("%s\r" % port_number)
         self.connection.send("1\r")
         self.connection.expect("3- Immediate Reboot")
@@ -76,7 +77,7 @@ class apc7952(PDUDriver):
             self.connection.expect("Immediate Off")
             self._do_it()
         else:
-            print("Unknown command!")
+            logging.debug("Unknown command!")
 
     def _do_it(self):
         self.connection.expect("Enter 'YES' to continue or <ENTER> to cancel :")
@@ -100,22 +101,22 @@ class apc8959(PDUDriver):
     connection = None
 
     def _pdu_logout(self):
-        print("logging out")
+        logging.debug("logging out")
         self.connection.send("\r")
         self.connection.send("exit")
         self.connection.send("\r")
-        print("done")
+        logging.debug("done")
 
     def _pdu_get_to_prompt(self):
         self.connection.send("\r")
         self.connection.expect ('apc>')
 
     def _port_interaction(self, command, port_number):
-        print("Attempting %s on port %i" % (command, port_number))
+        logging.debug("Attempting %s on port %i" % (command, port_number))
         self._pdu_get_to_prompt()
         self.connection.sendline(self.pdu_commands[command] + (" %i" % port_number))
         self.connection.expect("E000: Success")
-        print("done")
+        logging.debug("done")
 
     def port_delayed(self, port_number):
         self._port_interaction("delayed", port_number)

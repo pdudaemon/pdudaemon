@@ -3,6 +3,7 @@ import sys
 import os
 from apcdrivers import apc8959
 from apcdrivers import apc7952
+import logging
 
 class PDUEngine():
     connection = None
@@ -15,13 +16,13 @@ class PDUEngine():
         #self.connection.logfile_read = sys.stdout
         self._pdu_login("apc","apc")
         if self.prompt == 0:
-            print("Found a v5 prompt")
+            logging.debug("Found a v5 prompt")
             self.driver = apc8959(self.connection)
         elif self.prompt == 1:
-            print("Found a v3 prompt")
+            logging.debug("Found a v3 prompt")
             self.driver = apc7952(self.connection)
         else:
-            print("Unknown prompt!")
+            logging.debug("Unknown prompt!")
 
     def is_busy(self):
         if os.path.exists("/proc/%i" % self.connection.pid):
@@ -33,7 +34,7 @@ class PDUEngine():
         self.connection.close(True)
 
     def _pdu_login(self, username, password):
-        print("attempting login with username %s, password %s" % (username,password))
+        logging.debug("attempting login with username %s, password %s" % (username,password))
         self.connection.send("\r")
         self.connection.expect ("User Name :")
         self.connection.send("apc\r")
