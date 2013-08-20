@@ -99,6 +99,7 @@ class apc7952(PDUDriver):
 
 class apc8959(PDUDriver):
     connection = None
+    pdu_commands = {"off":"olOff","on":"olOn","reboot":"olReboot","delayed":"olDlyReboot"}
 
     def _pdu_logout(self):
         logging.debug("logging out")

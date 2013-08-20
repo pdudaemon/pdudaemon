@@ -9,6 +9,7 @@ class PDURunner():
     def __init__(self, config):
         logging.basicConfig(level=config["logging_level"])
         logging.getLogger().setLevel(config["logging_level"])
+        logging.getLogger().name = "PDURunner"
         self.db = DBHandler(config["dbfile"])
 
     def get_one(self):
@@ -28,6 +29,7 @@ class PDURunner():
         retries = 5
         while retries > 0:
             try:
+                logging.debug("creating a new PDUEngine")
                 pe = PDUEngine(hostname, 23)
                 if request == "reboot":
                     pe.driver.port_reboot(port)
@@ -39,11 +41,12 @@ class PDURunner():
                     pe.driver.port_delayed(port)
                 else:
                     logging.debug("Unknown request type: %s" % request)
+                pe.pduclose()
                 retries = 0
-            except BaseException:
+            except:
                 logging.warn("Failed to execute job: %s %s %s (attempts left %i)" % (hostname,port,request,retries))
-                pe.close()
-                time.sleep(1)
+                #logging.warn(e)
+                time.sleep(5)
                 retries -= 1
 
 

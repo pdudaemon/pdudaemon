@@ -9,6 +9,7 @@ class DBHandler(object):
     def __init__(self, db_file="pdu.db"):
         self.db_file = db_file
         logging.debug("Creating new DBHandler: %s" % self.db_file)
+        logging.getLogger().name = "DBHandler"
         self.conn = sqlite3.connect(self.db_file, check_same_thread = False)
         self.cursor = self.conn.cursor()
 
@@ -35,6 +36,7 @@ class ListenerServer(object):
 
     def __init__(self, config):
         self.server = TCPServer((config["hostname"], config["port"]), TCPRequestHandler)
+        logging.getLogger().name = "ListenerServer"
         logging.info("listening on %s:%s" % (config["hostname"], config["port"]))
         self.db = DBHandler(config["dbfile"])
         self.create_db()
@@ -62,10 +64,14 @@ class TCPRequestHandler(SocketServer.BaseRequestHandler):
         #db.close()
 
     def handle(self):
-        data = self.request.recv(4096).strip()
-        logging.debug("got request: %s" % data)
-        self.insert_request(data)
-        self.request.sendall("ack\n")
+        logging.getLogger().name = "TCPRequestHandler"
+        try:
+            data = self.request.recv(4096).strip()
+            logging.debug("got request: %s" % data)
+            self.insert_request(data)
+            self.request.sendall("ack\n")
+        except:
+            self.request.sendall("nack\n")
         self.request.close()
 
 class TCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
