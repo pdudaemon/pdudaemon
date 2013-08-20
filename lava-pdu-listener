@@ -45,7 +45,7 @@ def readSettings(filename):
     """
     Read settings from config file, to listen to all hosts, hostname should be 0.0.0.0
     """
-    settings = {"port": 16421, "hostname": "0.0.0.0"}
+    settings = {"port": 16421, "hostname": "0.0.0.0", "dbfile":"/var/lib/lava-pdu/pdu.db"}
     with open(filename) as stream:
         jobdata = stream.read()
         json_default = json.loads(jobdata)
@@ -53,6 +53,8 @@ def readSettings(filename):
         settings['port'] = json_default['port']
     if "hostname" in json_default:
         settings['hostname'] = json_default['hostname']
+    if "dbfile" in json_default:
+        settings['dbfile'] = json_default['dbfile']
     return settings
 
 if __name__ == '__main__':
@@ -76,7 +78,7 @@ if __name__ == '__main__':
         else:
             print "No such directory for specified logfile '%s'" % logfile
     open(logfile, 'w').close()
-    level = logging.INFO
+    level = logging.DEBUG
     if options.loglevel == "DEBUG":
         level = logging.DEBUG
     if options.loglevel == "WARNING":
@@ -98,10 +100,12 @@ if __name__ == '__main__':
         files_preserve=[watched_file_handler.stream],
         stderr=watched_file_handler.stream,
         stdout=watched_file_handler.stream)
-    starter = {"logging_level": options.loglevel,
+    starter = {"logging_level": level,
                "hostname": settings['hostname'],
-               "port": settings['port']}
+               "port": settings['port'],
+               "dbfile": settings['dbfile']}
     with context:
         logging.info("Running LAVA PDU Listener %s %s %d."
                      % (logfile, settings['hostname'], settings['port']))
+        #logging.getLogger().setLevel(options.loglevel)
         ListenerServer(starter).start()

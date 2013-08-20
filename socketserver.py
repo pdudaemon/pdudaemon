@@ -37,6 +37,7 @@ class ListenerServer(object):
     def __init__(self, config):
         self.server = TCPServer((config["hostname"], config["port"]), TCPRequestHandler)
         logging.getLogger().name = "ListenerServer"
+        logging.getLogger().setLevel(config["logging_level"])
         logging.info("listening on %s:%s" % (config["hostname"], config["port"]))
         self.db = DBHandler(config["dbfile"])
         self.create_db()
