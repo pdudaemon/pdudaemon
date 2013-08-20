@@ -1,12 +1,17 @@
 import sqlite3
+import logging
 import time
 from engine import PDUEngine
-
-
-conn = sqlite3.connect('pdu.db', check_same_thread = False)
-c = conn.cursor()
+conn = None
+c = None
 
 class PDURunner():
+
+    def __init__(self, config):
+        #logging.basicConfig(level=config["logging_level"])
+        conn = sqlite3.connect(config["dbfile"], check_same_thread = False)
+        c = conn.cursor()
+
     def get_one(self):
         c.execute("SELECT * FROM pdu_queue ORDER BY id asc limit 1")
         res = c.fetchone()
@@ -41,5 +46,7 @@ class PDURunner():
             time.sleep(1)
 
 if __name__ == "__main__":
-    p = PDURunner()
+    starter = {"logging_level": logging.DEBUG,
+               "dbfile": "/var/lib/lava-pdu/pdu.db"}
+    p = PDURunner(starter)
     p.run_me()

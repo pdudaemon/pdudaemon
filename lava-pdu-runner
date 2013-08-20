@@ -26,7 +26,7 @@ import optparse
 import daemon
 import daemon.pidlockfile
 from logging.handlers import WatchedFileHandler
-from socketserver import ListenerServer
+from pdurunner import PDURunner
 
 def getDaemonLogger(filePath, log_format=None, loglevel=logging.INFO):
     logger = logging.getLogger()
@@ -49,18 +49,16 @@ def readSettings(filename):
     with open(filename) as stream:
         jobdata = stream.read()
         json_default = json.loads(jobdata)
-    if "port" in json_default:
-        settings['port'] = json_default['port']
-    if "hostname" in json_default:
-        settings['hostname'] = json_default['hostname']
+    if "dbfile" in json_default:
+        settings['dbfile'] = json_default['dbfile']
     return settings
 
 if __name__ == '__main__':
     # instance settings come from django - the coordinator doesn't use django and is
     # not necessarily per-instance, so use the command line and a default conf file.
-    pidfile = "/var/run/lava-pdu-listener.pid"
-    logfile = "/var/log/lava-pdu-listener.log"
-    conffile = "/etc/lava-pdu/lava-pdu-listener.conf"
+    pidfile = "/var/run/lava-pdu-runner.pid"
+    logfile = "/var/log/lava-pdu-runner.log"
+    conffile = "/etc/lava-pdu/lava-pdu-runner.conf"
     settings = readSettings(conffile)
     usage = "Usage: %prog [--logfile] --[loglevel]"
     description = "LAVA PDU request listener server, host and port are handled in %s" % conffile
@@ -99,10 +97,9 @@ if __name__ == '__main__':
         stderr=watched_file_handler.stream,
         stdout=watched_file_handler.stream)
     starter = {"logging_level": options.loglevel,
-               "hostname": settings['hostname'],
-               "port": settings['port']}
+               "dbfile": settings["dbfile"]}
     with context:
-        logging.info("Running LAVA PDU Listener %s %s %d."
-                     % (logfile, settings['hostname'], settings['port']))
-        ss = ListenerServer(starter)
-        ss.start()
+        logging.info("Running LAVA PDU Runner %s %s"
+                     % (logfile, settings["dbfile"]))
+        p = PDURunner(starter)
+        p.run_me()
