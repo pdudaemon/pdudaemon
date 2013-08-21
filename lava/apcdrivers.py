@@ -2,7 +2,7 @@ __author__ = 'matt'
 
 import logging
 
-from lava.driver import PDUDriver
+from driver import PDUDriver
 
 
 class apc7952(PDUDriver):

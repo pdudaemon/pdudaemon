@@ -1,2 +1,2 @@
-from lava import pdurunner
-from lava import socketserver
+import pdurunner
+import socketserver

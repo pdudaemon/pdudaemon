@@ -2,8 +2,8 @@ import pexpect
 import os
 import logging
 
-from lava.apcdrivers import apc8959
-from lava.apcdrivers import apc7952
+from apcdrivers import apc8959
+from apcdrivers import apc7952
 
 
 class PDUEngine():

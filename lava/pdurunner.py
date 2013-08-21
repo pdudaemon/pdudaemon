@@ -1,7 +1,7 @@
 import logging
 import time
-from lava.engine import PDUEngine
-from lava.socketserver import DBHandler
+from engine import PDUEngine
+from socketserver import DBHandler
 
 class PDURunner():
 
