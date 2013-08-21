@@ -23,10 +23,13 @@ import json
 import os
 import sys
 import optparse
+from logging.handlers import WatchedFileHandler
+
 import daemon
 import daemon.pidlockfile
-from logging.handlers import WatchedFileHandler
-from socketserver import ListenerServer
+
+from lava.socketserver import ListenerServer
+
 
 def getDaemonLogger(filePath, log_format=None, loglevel=logging.INFO):
     logger = logging.getLogger()

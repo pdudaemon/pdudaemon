@@ -1,10 +1,10 @@
 import pexpect
-import sys
 import os
-from apcdrivers import apc8959
-from apcdrivers import apc7952
 import logging
-import time
+
+from lava.apcdrivers import apc8959
+from lava.apcdrivers import apc7952
+
 
 class PDUEngine():
     connection = None

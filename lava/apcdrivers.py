@@ -1,7 +1,9 @@
 __author__ = 'matt'
 
-from driver import PDUDriver
 import logging
+
+from lava.driver import PDUDriver
+
 
 class apc7952(PDUDriver):
     def _pdu_logout(self):

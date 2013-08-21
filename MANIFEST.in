@@ -1,0 +1,3 @@
+include etc/lava-pdu-listener.conf
+include etc/lava-pdu-runner.conf
+include etc/lavapdulogrotate

@@ -86,6 +86,7 @@ if __name__ == "__main__":
     logging.debug("Executing from __main__")
     starter = {"hostname": "0.0.0.0",
                "port":16421,
-               "dbfile": "/var/lib/lava-pdu/pdu.db"}
+               "dbfile": "/var/lib/lava-pdu/pdu.db",
+               "logging_level": logging.DEBUG}
     ss = ListenerServer(starter)
     ss.start()

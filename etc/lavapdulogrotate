@@ -1,0 +1,19 @@
+/var/log/lava-pdu-listener.log {
+	weekly
+	rotate 12
+	compress
+	delaycompress
+	missingok
+	notifempty
+	create 644 root root
+}
+
+/var/log/lava-pdu-runner.log {
+	weekly
+	rotate 12
+	compress
+	delaycompress
+	missingok
+	notifempty
+	create 644 root root
+}
