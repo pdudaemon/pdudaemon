@@ -1,0 +1,3 @@
+*.pyc
+pdu.db
+.idea/
