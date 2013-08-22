@@ -1,4 +1,6 @@
 include etc/lava-pdu-listener.conf
 include etc/lava-pdu-runner.conf
+include etc/lava-pdu-runner.init
+include etc/lava-pdu-listener.init
 include etc/lavapdulogrotate
 include var/lib/lava-pdu/pdu.db
