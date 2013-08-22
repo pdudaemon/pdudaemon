@@ -32,7 +32,8 @@ setup(
     install_requires=[
         "daemon",
         "lockfile",
-        "pexpect"
+        "pexpect",
+        "sqlite2"
     ],
     data_files=[
         ("/etc/init.d/", ["etc/lavapdu.init"]),
