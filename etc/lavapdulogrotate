@@ -1,4 +1,4 @@
-/var/log/lava-pdu-listener.log {
+/var/log/lavapdu-listener.log {
 	weekly
 	rotate 12
 	compress
@@ -8,7 +8,7 @@
 	create 644 root root
 }
 
-/var/log/lava-pdu-runner.log {
+/var/log/lavapdu-runner.log {
 	weekly
 	rotate 12
 	compress

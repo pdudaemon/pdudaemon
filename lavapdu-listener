@@ -28,7 +28,7 @@ from logging.handlers import WatchedFileHandler
 import daemon
 import daemon.pidlockfile
 
-from lava.socketserver import ListenerServer
+from lavapdu.socketserver import ListenerServer
 
 
 def getDaemonLogger(filePath, log_format=None, loglevel=logging.INFO):
@@ -63,9 +63,9 @@ def readSettings(filename):
 if __name__ == '__main__':
     # instance settings come from django - the coordinator doesn't use django and is
     # not necessarily per-instance, so use the command line and a default conf file.
-    pidfile = "/var/run/lava-pdu-listener.pid"
-    logfile = "/var/log/lava-pdu-listener.log"
-    conffile = "/etc/lava-pdu/lava-pdu-listener.conf"
+    pidfile = "/var/run/lavapdu-listener.pid"
+    logfile = "/var/log/lavapdu-listener.log"
+    conffile = "/etc/lavapdu-listener.conf"
     settings = readSettings(conffile)
     usage = "Usage: %prog [--logfile] --[loglevel]"
     description = "LAVA PDU request listener server, host and port are handled in %s" % conffile

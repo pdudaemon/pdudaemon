@@ -1,6 +1,6 @@
 #!/bin/sh
 ### BEGIN INIT INFO
-# Provides:          lava-pdu-runner
+# Provides:          lavapdu-runner
 # Required-Start:    $network
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
@@ -10,14 +10,14 @@
 
 # Author: Matthew Hart <matthew.hart@linaro.org>
 
-LOGFILE="--logfile /var/log/lava-pdu-listener.log"
+LOGFILE="--logfile /var/log/lavapdu-runner.log"
 LOGLEVEL="--loglevel=DEBUG"
 
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
-DESC="lava-pdu-listener"               # short description
-NAME=lava-pdu-listener                 # short server's name (truncated for 15 chars)
-DAEMON=/usr/bin/lava-pdu-listener      # server's location
+DESC="lavapdu-runner"               # short description
+NAME=lavapdu-runner                 # short server's name (truncated for 15 chars)
+DAEMON=/usr/bin/lavapdu-runner      # server's location
 DAEMON_ARGS="$LOGLEVEL"               # Arguments to run the daemon with
 PIDFILE=/var/run/$DESC.pid
 SCRIPTNAME=/etc/init.d/$NAME

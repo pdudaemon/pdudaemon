@@ -28,7 +28,7 @@ from logging.handlers import WatchedFileHandler
 import daemon
 import daemon.pidlockfile
 
-from lava.pdurunner import PDURunner
+from lavapdu.pdurunner import PDURunner
 
 
 def getDaemonLogger(filePath, log_format=None, loglevel=logging.INFO):
@@ -48,7 +48,7 @@ def readSettings(filename):
     """
     Read settings from config file, to listen to all hosts, hostname should be 0.0.0.0
     """
-    settings = {"dbfile":"/var/lib/lava-pdu/pdu.db"}
+    settings = {"dbfile":"/var/lib/lavapdu/pdu.db"}
     with open(filename) as stream:
         jobdata = stream.read()
         json_default = json.loads(jobdata)
@@ -59,9 +59,9 @@ def readSettings(filename):
 if __name__ == '__main__':
     # instance settings come from django - the coordinator doesn't use django and is
     # not necessarily per-instance, so use the command line and a default conf file.
-    pidfile = "/var/run/lava-pdu-runner.pid"
-    logfile = "/var/log/lava-pdu-runner.log"
-    conffile = "/etc/lava-pdu/lava-pdu-runner.conf"
+    pidfile = "/var/run/lavapdu-runner.pid"
+    logfile = "/var/log/lavapdu-runner.log"
+    conffile = "/etc/lavapdu-runner.conf"
     settings = readSettings(conffile)
     usage = "Usage: %prog [--logfile] --[loglevel]"
     description = "LAVA PDU request listener server, host and port are handled in %s" % conffile

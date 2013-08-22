@@ -2,9 +2,9 @@
 #
 # Copyright (C) 2013 Linaro Limited
 #
-# Author: Neil Williams <neil.williams@linaro.org>
+# Author: Matthew Hart <matthew.hart@linaro.org>
 #
-# This file is part of LAVA Coordinator.
+# This file is part of LAVA-PDU.
 #
 # LAVA Coordinator is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -36,16 +36,16 @@ setup(
         "sqlite2"
     ],
     data_files=[
-        ("/etc/init.d/", ["etc/lava-pdu-runner.init"]),
-        ("/etc/init.d/", ["etc/lava-pdu-listener.init"]),
-        ("/etc/lavapdu/", ["etc/lava-pdu-listener.conf"]),
-        ("/etc/lavapdu/", ["etc/lava-pdu-runner.conf"]),
+        ("/etc/init.d/", ["etc/lavapdu-runner.init"]),
+        ("/etc/init.d/", ["etc/lavapdu-listener.init"]),
+        ("/etc/", ["etc/lavapdu-listener.conf"]),
+        ("/etc/", ["etc/lavapdu-runner.conf"]),
         ("/etc/logrotate.d/", ["etc/lavapdulogrotate"]),
-        ("/var/lib/lava-pdu/", ["var/lib/lava-pdu/pdu.db"])
+        ("/var/lib/lavapdu/", ["var/lib/lavapdu/pdu.db"])
     ],
     scripts=[
-        'lava-pdu-runner',
-        'lava-pdu-listener'
+        'lavapdu-runner',
+        'lavapdu-listener'
     ],
     zip_safe=False,
     include_package_data=True)
