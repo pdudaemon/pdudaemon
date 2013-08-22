@@ -41,7 +41,7 @@ setup(
         ("/etc/lavapdu/", ["etc/lava-pdu-listener.conf"]),
         ("/etc/lavapdu/", ["etc/lava-pdu-runner.conf"]),
         ("/etc/logrotate.d/", ["etc/lavapdulogrotate"]),
-        ("/var/lib/lava-pdu/pdu.db", ["var/lib/lava-pdu/pdu.db"])
+        ("/var/lib/lava-pdu/", ["var/lib/lava-pdu/pdu.db"])
     ],
     scripts=[
         'lava-pdu-runner',
