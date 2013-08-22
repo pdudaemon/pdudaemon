@@ -30,12 +30,14 @@ class PDUEngine():
     connection = None
     prompt = 0
     driver = None
+    USERNAME = "apc"
+    PASSWORD = "apc"
 
     def __init__(self, pdu_hostname, pdu_telnetport = 23):
         self.exec_string = "/usr/bin/telnet %s %d" % (pdu_hostname, pdu_telnetport)
         logging.debug("Created new PDUEngine: %s" % self.exec_string)
         #self.connection.logfile_read = sys.stdout
-        prompt = self._pdu_login("apc","apc")
+        prompt = self._pdu_login(self.USERNAME,self.PASSWORD)
         if prompt == 0:
             logging.debug("Found a v5 prompt")
             self.driver = apc8959(self.connection)
@@ -73,9 +75,9 @@ class PDUEngine():
         self.pduconnect()
         self.connection.send("\r")
         self.connection.expect ("User Name :")
-        self.connection.send("apc\r")
+        self.connection.send("%s\r" % username)
         self.connection.expect("Password  :")
-        self.connection.send("apc\r")
+        self.connection.send("%s\r" % password)
         return self.connection.expect(["apc>", ">"])
 
 
