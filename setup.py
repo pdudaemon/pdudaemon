@@ -36,7 +36,8 @@ setup(
         "sqlite2"
     ],
     data_files=[
-        ("/etc/init.d/", ["etc/lavapdu.init"]),
+        ("/etc/init.d/", ["etc/lava-pdu-runner.init"]),
+        ("/etc/init.d/", ["etc/lava-pdu-listener.init"]),
         ("/etc/lavapdu/", ["etc/lava-pdu-listener.conf"]),
         ("/etc/lavapdu/", ["etc/lava-pdu-runner.conf"]),
         ("/etc/logrotate.d/", ["etc/lavapdulogrotate"]),
