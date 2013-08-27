@@ -63,7 +63,7 @@ def readSettings(filename):
 if __name__ == '__main__':
     # instance settings come from django - the coordinator doesn't use django and is
     # not necessarily per-instance, so use the command line and a default conf file.
-    pidfile = "/var/run/lavapdu-listener.pid"
+    pidfile = "/var/run/lavapdu-listen.pid"
     logfile = "/var/log/lavapdu-listener.log"
     conffile = "/etc/lavapdu-listener.conf"
     settings = readSettings(conffile)

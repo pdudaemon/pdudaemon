@@ -1,6 +1,6 @@
 include etc/lavapdu-listener.conf
 include etc/lavapdu-runner.conf
 include etc/lavapdu-runner.init
-include etc/lavapdu-listener.init
+include etc/lavapdu-listen.init
 include etc/lavapdulogrotate
 include var/lib/lavapdu/pdu.db

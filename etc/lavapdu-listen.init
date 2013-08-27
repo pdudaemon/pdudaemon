@@ -1,6 +1,6 @@
 #!/bin/sh
 ### BEGIN INIT INFO
-# Provides:          lavapdu-listener
+# Provides:          lavapdu-listen
 # Required-Start:    $network
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
@@ -15,12 +15,12 @@ LOGLEVEL="--loglevel=DEBUG"
 
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
-DESC="lavapdu-listener"               # short description
+DESC="lavapdu-listen"               # short description
 NAME=lavapdu-listen                 # short server's name (truncated for 15 chars)
-DAEMON=/usr/bin/lavapdu-listener      # server's location
+DAEMON=/usr/bin/lavapdu-listen      # server's location
 DAEMON_ARGS="$LOGLEVEL"               # Arguments to run the daemon with
 PIDFILE=/var/run/$DESC.pid
-SCRIPTNAME=/etc/init.d/$DESC
+SCRIPTNAME=/etc/init.d/$NAME
 
 # Exit if the package is not installed
 [ -x $DAEMON ] || exit 0
