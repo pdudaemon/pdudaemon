@@ -16,7 +16,7 @@ LOGLEVEL="--loglevel=DEBUG"
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="lavapdu-listener"               # short description
-NAME=lavapdu-listener                 # short server's name (truncated for 15 chars)
+NAME=lavapdu-listen                 # short server's name (truncated for 15 chars)
 DAEMON=/usr/bin/lavapdu-listener      # server's location
 DAEMON_ARGS="$LOGLEVEL"               # Arguments to run the daemon with
 PIDFILE=/var/run/$DESC.pid
