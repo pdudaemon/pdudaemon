@@ -33,7 +33,7 @@ setup(
         "daemon",
         "lockfile",
         "pexpect",
-        "sqlite2"
+        "pysqlite2"
     ],
     data_files=[
         ("/etc/init.d/", ["etc/lavapdu-runner.init"]),
