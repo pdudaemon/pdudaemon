@@ -20,7 +20,7 @@ NAME=lavapdu-listen                 # short server's name (truncated for 15 char
 DAEMON=/usr/bin/lavapdu-listener      # server's location
 DAEMON_ARGS="$LOGLEVEL"               # Arguments to run the daemon with
 PIDFILE=/var/run/$DESC.pid
-SCRIPTNAME=/etc/init.d/$NAME
+SCRIPTNAME=/etc/init.d/$DESC
 
 # Exit if the package is not installed
 [ -x $DAEMON ] || exit 0
