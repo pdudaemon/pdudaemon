@@ -1,0 +1,40 @@
+#!/usr/bin/python
+
+import socket
+import optparse
+
+if __name__ == '__main__':
+    usage = "Usage: %prog [-d] deamonhostname [-h] pduhostname -[p] pduportnum [-c] pducommand"
+    description = "LAVA PDU daemon client"
+    commands = ["reboot","on","off","delayed"]
+    parser = optparse.OptionParser(usage=usage, description=description)
+    parser.add_option("--daemon", dest="pdudaemonhostname", action="store",type="string", help="LAVAPDU Daemon (ex: control)")
+    parser.add_option("--hostname", dest="pduhostname", action="store",type="string", help="PDU Hostname (ex: pdu05)")
+    parser.add_option("--port", dest="pduportnum", action="store",type="string", help="PDU Portnumber (ex: 04)")
+    parser.add_option("--command", dest="pducommand", action="store",type="string", help="PDU command (ex: reboot|on|off|delayed)")
+    (options, args) = parser.parse_args()
+    if (not (options.pdudaemonhostname) or not(options.pduhostname) or not (options.pduportnum) or not (options.pducommand)):
+        print("Missing option, try -h for help")
+        exit(1)
+    if not (options.pducommand in commands):
+        print("Unknown pdu command: %s" % options.pducommand)
+        exit(1)
+    #print(options)
+    string = ("%s %s %s" % (options.pduhostname, options.pduportnum, options.pducommand))
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    #sock.setblocking(0)  # optional non-blocking
+    reply = "nack"
+    try:
+        sock.connect((options.pdudaemonhostname, 16421))
+        sock.send(string)
+        reply = sock.recv(16384).strip()  # limit reply to 16K
+        sock.close()
+    except Exception:
+        print ("Error sending command, wrong hostname?")
+        exit(1)
+    if reply == "ack":
+        print("Command sent successfully.")
+        exit(0)
+    else:
+        print("Unknown error sending command!")
+        exit(127)

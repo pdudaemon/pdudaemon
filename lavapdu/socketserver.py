@@ -75,10 +75,17 @@ class ListenerServer(object):
 class TCPRequestHandler(SocketServer.BaseRequestHandler):
     #"One instance per connection.  Override handle(self) to customize action."
     def insert_request(self, data):
+        logging.getLogger().name = "TCPRequestHandler"
         array = data.split(" ")
+        if len(array) != 3:
+            logging.info("Wrong data size")
+            raise Exception("Unexpected data")
         hostname = array[0]
         port = int(array[1])
         request = array[2]
+        if not (request in ["reboot","on","off","delayed"]):
+            logging.info("Unknown request: %s" % request)
+            raise Exception("Unknown request: %s" % request)
         db = self.server.db
         sql = "insert into pdu_queue values (NULL,'%s',%i,'%s')" % (hostname,port,request)
         db.do_sql(sql)
