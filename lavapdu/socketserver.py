@@ -19,18 +19,17 @@
 #  MA 02110-1301, USA.
 
 import SocketServer
-import sqlite3
+#import sqlite3
+import psycopg2
 import logging
-
+import socket
 
 class DBHandler(object):
-    db_file = "pdu.db"
-
-    def __init__(self, db_file="pdu.db"):
-        self.db_file = db_file
-        logging.debug("Creating new DBHandler: %s" % self.db_file)
+    def __init__(self, config):
+        logging.debug("Creating new DBHandler: %s" % config["dbhost"])
         logging.getLogger().name = "DBHandler"
-        self.conn = sqlite3.connect(self.db_file, check_same_thread = False)
+        self.conn = psycopg2.connect(database=config["dbname"], user=config["dbuser"],
+                                     password=config["dbpass"], host=config["dbhost"])
         self.cursor = self.conn.cursor()
 
     def do_sql(self, sql):
@@ -38,14 +37,26 @@ class DBHandler(object):
         self.cursor.execute(sql)
         self.conn.commit()
 
+    def do_sql_with_fetch(self, sql):
+        logging.debug("executing sql: %s" % sql)
+        self.cursor.execute(sql)
+        row = self.cursor.fetchone()
+        self.conn.commit()
+        return row
+
+    def delete_row(self, row_id):
+        logging.debug("deleting row %i" % row_id)
+        self.do_sql("delete from pdu_queue where id=%i" % row_id)
+
     def get_res(self, sql):
         return self.cursor.execute(sql)
 
-    def get_one(self, sql):
-        res = self.get_res(sql)
-        return res.fetchone()
+    def get_next_job(self):
+        row = self.do_sql_with_fetch("select * from pdu_queue order by id asc limit 1")
+        return row
 
     def close(self):
+        logging.debug("Closing DBHandler")
         self.cursor.close()
         self.conn.close()
 
@@ -59,12 +70,15 @@ class ListenerServer(object):
         logging.getLogger().name = "ListenerServer"
         logging.getLogger().setLevel(config["logging_level"])
         logging.info("listening on %s:%s" % (config["hostname"], config["port"]))
-        self.db = DBHandler(config["dbfile"])
+        self.server.config = config
+        self.db = DBHandler(config)
         self.create_db()
-        self.server.db = self.db
+        self.db.close()
+        del(self.db)
+        #self.server.db = self.db
 
     def create_db(self):
-        sql = "create table if not exists pdu_queue (id integer primary key, hostname text, port int, request text)"
+        sql = "create table if not exists pdu_queue (id serial, hostname text, port int, request text)"
         self.db.do_sql(sql)
 
     def start(self):
@@ -86,19 +100,24 @@ class TCPRequestHandler(SocketServer.BaseRequestHandler):
         if not (request in ["reboot","on","off","delayed"]):
             logging.info("Unknown request: %s" % request)
             raise Exception("Unknown request: %s" % request)
-        db = self.server.db
-        sql = "insert into pdu_queue values (NULL,'%s',%i,'%s')" % (hostname,port,request)
+        #db = self.server.db
+        db = DBHandler(self.server.config)
+        sql = "insert into pdu_queue (hostname,port,request) values ('%s',%i,'%s')" % (hostname,port,request)
         db.do_sql(sql)
-        #db.close()
+        db.close()
+        del(db)
 
     def handle(self):
         logging.getLogger().name = "TCPRequestHandler"
         try:
             data = self.request.recv(4096).strip()
-            logging.debug("got request: %s" % data)
+            socket.setdefaulttimeout(2)
+            request_host = socket.gethostbyaddr(self.client_address[0])[0]
+            logging.info("Received a request from %s: '%s'" % (request_host, data))
             self.insert_request(data)
             self.request.sendall("ack\n")
-        except:
+        except Exception as e:
+            logging.debug(e)
             self.request.sendall("nack\n")
         self.request.close()
 
@@ -113,7 +132,10 @@ if __name__ == "__main__":
     logging.debug("Executing from __main__")
     starter = {"hostname": "0.0.0.0",
                "port":16421,
-               "dbfile": "/var/lib/lavapdu/pdu.db",
+               "dbhost":"127.0.0.1",
+               "dbuser":"pdudaemon",
+               "dbpass":"pdudaemon",
+               "dbname":"lavapdu",
                "logging_level": logging.DEBUG}
     ss = ListenerServer(starter)
     ss.start()

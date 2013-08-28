@@ -29,26 +29,23 @@ class PDURunner():
         logging.basicConfig(level=config["logging_level"])
         logging.getLogger().setLevel(config["logging_level"])
         logging.getLogger().name = "PDURunner"
-        self.db = DBHandler(config["dbfile"])
+        self.config = config
 
-    def get_one(self):
-        res = self.db.get_one("SELECT * FROM pdu_queue ORDER BY id asc limit 1")
-        if res:
-            id,hostname,port,request = res
-            logging.debug("Processing queue item: (%s %s) on hostname: %s" % (request, port, hostname))
+    def get_one(self, db):
+        job = db.get_next_job()
+        if job:
+            job_id,hostname,port,request = job
+            logging.info("Processing queue item: (%s %s) on hostname: %s" % (request, port, hostname))
             #logging.debug(id, hostname, request, port)
             res = self.do_job(hostname,port,request)
-            self.delete_row(id)
-
-    def delete_row(self, id):
-        logging.debug("deleting row %i" % id)
-        self.db.do_sql("delete from pdu_queue where id=%i" % id)
+            db.delete_row(job_id)
+        else:
+            logging.debug("Found nothing to do in database")
 
     def do_job(self, hostname, port, request):
         retries = 5
         while retries > 0:
             try:
-                logging.debug("creating a new PDUEngine")
                 pe = PDUEngine(hostname, 23)
                 if request == "reboot":
                     pe.driver.port_reboot(port)
@@ -70,13 +67,19 @@ class PDURunner():
 
 
     def run_me(self):
-        print("Starting up the PDURunner")
+        logging.info("Starting up the PDURunner")
         while 1:
-            self.get_one()
-            time.sleep(1)
+            db = DBHandler(self.config)
+            self.get_one(db)
+            db.close()
+            del(db)
+            time.sleep(2)
 
 if __name__ == "__main__":
-    starter = {"logging_level": logging.DEBUG,
-               "dbfile": "/var/lib/lavapdu/pdu.db"}
+    starter = {"dbhost":"127.0.0.1",
+               "dbuser":"pdudaemon",
+               "dbpass":"pdudaemon",
+               "dbname":"lavapdu",
+               "logging_level": logging.DEBUG}
     p = PDURunner(starter)
     p.run_me()

@@ -33,15 +33,13 @@ setup(
         "daemon",
         "lockfile",
         "pexpect",
-        "sqlite2"
+        "psycopg2"
     ],
     data_files=[
         ("/etc/init.d/", ["etc/lavapdu-runner.init"]),
         ("/etc/init.d/", ["etc/lavapdu-listen.init"]),
-        ("/etc/", ["etc/lavapdu-listener.conf"]),
-        ("/etc/", ["etc/lavapdu-runner.conf"]),
+        ("/etc/", ["etc/lavapdu.conf"]),
         ("/etc/logrotate.d/", ["etc/lavapdulogrotate"]),
-        ("/var/lib/lavapdu/", ["var/lib/lavapdu/pdu.db"])
     ],
     scripts=[
         'lavapdu-runner',

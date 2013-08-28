@@ -48,7 +48,8 @@ def readSettings(filename):
     """
     Read settings from config file, to listen to all hosts, hostname should be 0.0.0.0
     """
-    settings = {"port": 16421, "hostname": "0.0.0.0", "dbfile":"/var/lib/lava-pdu/pdu.db"}
+    settings = {"port": 16421, "hostname": "0.0.0.0", "dbuser": "pdudaemon",
+                "dbpass": "pdudaemon", "dbname": "pdu_queue", "dbhost": "127.0.0.1"}
     with open(filename) as stream:
         jobdata = stream.read()
         json_default = json.loads(jobdata)
@@ -56,8 +57,14 @@ def readSettings(filename):
         settings['port'] = json_default['port']
     if "hostname" in json_default:
         settings['hostname'] = json_default['hostname']
-    if "dbfile" in json_default:
-        settings['dbfile'] = json_default['dbfile']
+    if "dbuser" in json_default:
+        settings['dbuser'] = json_default['dbuser']
+    if "dbpass" in json_default:
+        settings['dbpass'] = json_default['dbpass']
+    if "dbname" in json_default:
+        settings['dbname'] = json_default['dbname']
+    if "dbhost" in json_default:
+        settings['dbhost'] = json_default['dbhost']
     return settings
 
 if __name__ == '__main__':
@@ -65,7 +72,7 @@ if __name__ == '__main__':
     # not necessarily per-instance, so use the command line and a default conf file.
     pidfile = "/var/run/lavapdu-listen.pid"
     logfile = "/var/log/lavapdu-listener.log"
-    conffile = "/etc/lavapdu-listener.conf"
+    conffile = "/etc/lavapdu.conf"
     settings = readSettings(conffile)
     usage = "Usage: %prog [--logfile] --[loglevel]"
     description = "LAVA PDU request listener server, host and port are handled in %s" % conffile
@@ -88,7 +95,8 @@ if __name__ == '__main__':
         level = logging.WARNING
     if options.loglevel == "ERROR":
         level = logging.ERROR
-    client_logger, watched_file_handler = getDaemonLogger(logfile, loglevel=level)
+    client_logger, watched_file_handler = getDaemonLogger(logfile, loglevel=level,
+                                                          log_format='%(asctime)s:%(levelname)s:%(name)s:%(message)s')
     if isinstance(client_logger, Exception):
         print("Fatal error creating client_logger: " + str(client_logger))
         sys.exit(os.EX_OSERR)
@@ -106,7 +114,10 @@ if __name__ == '__main__':
     starter = {"logging_level": level,
                "hostname": settings['hostname'],
                "port": settings['port'],
-               "dbfile": settings['dbfile']}
+               "dbhost": settings["dbhost"],
+               "dbuser": settings["dbuser"],
+               "dbpass": settings["dbpass"],
+               "dbname": settings["dbname"]}
     with context:
         logging.info("Running LAVA PDU Listener %s %s %d."
                      % (logfile, settings['hostname'], settings['port']))
