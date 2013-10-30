@@ -11,7 +11,7 @@
 # Author: Matthew Hart <matthew.hart@linaro.org>
 
 LOGFILE="--logfile /var/log/lavapdu-runner.log"
-LOGLEVEL="--loglevel=DEBUG"
+LOGLEVEL="--loglevel=INFO"
 
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
