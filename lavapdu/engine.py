@@ -21,6 +21,7 @@
 import pexpect
 import os
 import logging
+import sys
 
 from apcdrivers import apc8959
 from apcdrivers import apc7952
@@ -57,6 +58,7 @@ class PDUEngine():
 
     def get_connection(self, exec_string):
         connection = pexpect.spawn(exec_string)
+        connection.logfile = sys.stdout
         return connection
 
     def is_busy(self):
@@ -80,22 +82,31 @@ class PDUEngine():
 
 
 if __name__ == "__main__":
-    pe1 = PDUEngine("pdu15")
-    pe1.driver.port_off(22)
-    pe1.driver.port_on(22)
-    pe1.close()
-    pe2 = PDUEngine("pdu14")
-    pe2.driver.port_off(6)
-    pe2.driver.port_on(6)
-    pe2.close()
-    pe3 = PDUEngine("pdu01")
-    pe3.driver.port_reboot(1)
-    pe3.driver.port_off(1)
-    pe3.driver.port_on(1)
-    pe3.close()
-    pe4 = PDUEngine("pdu02")
+    #pe1 = PDUEngine("pdu15")
+    #pe1.driver.port_off(22)
+    #pe1.driver.port_on(22)
+    #pe1.close()
+    #pe2 = PDUEngine("pdu14")
+    #pe2.driver.port_off(6)
+    #pe2.driver.port_on(6)
+    #pe2.close()
+    #pe3 = PDUEngine("pdu01")
+    #pe3.driver.port_reboot(1)
+    #pe3.driver.port_off(1)
+    #pe3.driver.port_on(1)
+    #pe3.close()
+    logging.basicConfig(level=logging.DEBUG)
+    logging.getLogger().setLevel(logging.DEBUG)
+    pe4 = PDUEngine("192.168.1.153")
+    pe4.driver.port_reboot(1)
+    pe4.driver.port_reboot(2)
+    pe4.driver.port_reboot(3)
+    pe4.driver.port_reboot(4)
+    pe4.driver.port_reboot(5)
+    pe4.driver.port_reboot(6)
+    pe4.driver.port_reboot(7)
     pe4.driver.port_reboot(8)
-    pe4.driver.port_off(8)
-    pe4.driver.port_on(8)
+    #pe4.driver.port_off(8)
+    #pe4.driver.port_on(8)
     pe4.close()
 

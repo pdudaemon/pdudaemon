@@ -44,12 +44,18 @@ class apc7952(PDUDriver):
         #self.connection.expect("4- Logout")
         #self.connection.expect("> ")
 
-    def _enter_outlet(self, outlet):
-        self.connection.expect("Press <ENTER> to continue...")
+    def _enter_outlet(self, outlet, enter_needed=True):
+        outlet = "%s" % outlet
+        logging.debug("Attempting to enter outlet %s", outlet)
+        if (enter_needed):
+            self.connection.expect("Press <ENTER> to continue...")
+        logging.debug("Sending enter")
         self.connection.send("\r")
         self.connection.expect("> ")
+        logging.debug("Sending outlet number")
         self.connection.send(outlet)
         self.connection.send("\r")
+        logging.debug("Finished entering outlet")
 
     def _port_interaction(self, command, port_number):
         print("Attempting command: %s port: %i" % (command, port_number))
@@ -58,8 +64,10 @@ class apc7952(PDUDriver):
         self.connection.send("\r")
         self.connection.expect("1- Device Manager")
         self.connection.expect("> ")
+        logging.debug("Entering Device Manager")
         self.connection.send("1\r")
-        res = self.connection.expect(["3- Outlet Control/Configuration","2- Outlet Control","2- Outlet Management"])
+        res = self.connection.expect(["3- Outlet Control/Configuration","2- Outlet Control","2- Outlet Management","------- Device Manager"])
+        logging.debug("Matched pattern %s", res)
         if res == 0:
             self.connection.send("3\r")
             self._enter_outlet(port_number)
@@ -68,6 +76,9 @@ class apc7952(PDUDriver):
             self._enter_outlet(port_number)
         elif res == 2:
             self.connection.send("2\r")
+        elif res == 3:
+            logging.debug("Matched ------- Device Manager")
+            self._enter_outlet(port_number, False)
         res = self.connection.expect(["1- Control Outlet", "1- Outlet Control/Configuration"])
         self.connection.expect("> ")
         self.connection.send("1\r")
@@ -75,9 +86,13 @@ class apc7952(PDUDriver):
         if res == 1:
             logging.debug("Stupid paging thingmy detected, pressing enter")
             self.connection.send("\r")
-        logging.debug("We should now be at the outlet list")
-        self.connection.send("%s\r" % port_number)
-        self.connection.send("1\r")
+        self.connection.send("\r")
+        res = self.connection.expect(["Control Outlet %s" % port_number,"Control Outlet"])
+        if res == 0:
+            logging.debug("Already at the right port")
+        else:
+            self.connection.send("%s\r" % port_number)
+            self.connection.send("1\r")
         self.connection.expect("3- Immediate Reboot")
         self.connection.expect("> ")
         if command == "reboot":
