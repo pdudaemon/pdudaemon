@@ -23,6 +23,7 @@ import time
 from engine import PDUEngine
 from socketserver import DBHandler
 
+
 class PDURunner():
 
     def __init__(self, config):
@@ -34,10 +35,10 @@ class PDURunner():
     def get_one(self, db):
         job = db.get_next_job()
         if job:
-            job_id,hostname,port,request = job
+            job_id, hostname, port, request = job
             logging.info("Processing queue item: (%s %s) on hostname: %s" % (request, port, hostname))
             #logging.debug(id, hostname, request, port)
-            res = self.do_job(hostname,port,request)
+            res = self.do_job(hostname, port, request)
             db.delete_row(job_id)
         else:
             logging.debug("Found nothing to do in database")
@@ -60,11 +61,10 @@ class PDURunner():
                 pe.pduclose()
                 retries = 0
             except:
-                logging.warn("Failed to execute job: %s %s %s (attempts left %i)" % (hostname,port,request,retries))
+                logging.warn("Failed to execute job: %s %s %s (attempts left %i)" % (hostname, port, request, retries))
                 #logging.warn(e)
                 time.sleep(5)
                 retries -= 1
-
 
     def run_me(self):
         logging.info("Starting up the PDURunner")
@@ -76,10 +76,10 @@ class PDURunner():
             time.sleep(2)
 
 if __name__ == "__main__":
-    starter = {"dbhost":"127.0.0.1",
-               "dbuser":"pdudaemon",
-               "dbpass":"pdudaemon",
-               "dbname":"lavapdu",
+    starter = {"dbhost": "127.0.0.1",
+               "dbuser": "pdudaemon",
+               "dbpass": "pdudaemon",
+               "dbname": "lavapdu",
                "logging_level": logging.DEBUG}
     p = PDURunner(starter)
     p.run_me()

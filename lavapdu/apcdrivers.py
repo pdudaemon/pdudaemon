@@ -32,11 +32,11 @@ class apc7952(PDUDriver):
     def _back_to_main(self):
         logging.debug("Returning to main menu")
         self.connection.expect('>')
-        for i in range(1,20):
+        for i in range(1, 20):
             #print("Sending escape character")
             self.connection.send("\x1B")
             self.connection.send("\r")
-            res = self.connection.expect(["4- Logout","> "])
+            res = self.connection.expect(["4- Logout", "> "])
             if res == 0:
                 logging.debug("Back at main menu")
                 break
@@ -66,7 +66,7 @@ class apc7952(PDUDriver):
         self.connection.expect("> ")
         logging.debug("Entering Device Manager")
         self.connection.send("1\r")
-        res = self.connection.expect(["3- Outlet Control/Configuration","2- Outlet Control","2- Outlet Management","------- Device Manager"])
+        res = self.connection.expect(["3- Outlet Control/Configuration", "2- Outlet Control", "2- Outlet Management", "------- Device Manager"])
         logging.debug("Matched pattern %s", res)
         if res == 0:
             self.connection.send("3\r")
@@ -82,12 +82,12 @@ class apc7952(PDUDriver):
         res = self.connection.expect(["1- Control Outlet", "1- Outlet Control/Configuration"])
         self.connection.expect("> ")
         self.connection.send("1\r")
-        res = self.connection.expect(["> ","Press <ENTER> to continue..."])
+        res = self.connection.expect(["> ", "Press <ENTER> to continue..."])
         if res == 1:
             logging.debug("Stupid paging thingmy detected, pressing enter")
             self.connection.send("\r")
         self.connection.send("\r")
-        res = self.connection.expect(["Control Outlet %s" % port_number,"Control Outlet"])
+        res = self.connection.expect(["Control Outlet %s" % port_number, "Control Outlet"])
         if res == 0:
             logging.debug("Already at the right port")
         else:
@@ -132,9 +132,10 @@ class apc7952(PDUDriver):
     def port_reboot(self, port_number):
         self._port_interaction("reboot", port_number)
 
+
 class apc8959(PDUDriver):
     connection = None
-    pdu_commands = {"off":"olOff","on":"olOn","reboot":"olReboot","delayed":"olDlyReboot"}
+    pdu_commands = {"off": "olOff", "on": "olOn", "reboot": "olReboot", "delayed": "olDlyReboot"}
 
     def _pdu_logout(self):
         logging.debug("logging out")
@@ -145,7 +146,7 @@ class apc8959(PDUDriver):
 
     def _pdu_get_to_prompt(self):
         self.connection.send("\r")
-        self.connection.expect ('apc>')
+        self.connection.expect('apc>')
 
     def _port_interaction(self, command, port_number):
         logging.debug("Attempting %s on port %i" % (command, port_number))

@@ -18,10 +18,10 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 
+
 class PDUDriver():
     connection = None
-    pdu_commands = {"off":"olOff","on":"olOn","reboot":"olReboot","delayed":"olDlyReboot"}
+    pdu_commands = {"off": "olOff", "on": "olOn", "reboot": "olReboot", "delayed": "olDlyReboot"}
 
     def __init__(self, connection):
         self.connection = connection
-

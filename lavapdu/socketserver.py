@@ -23,6 +23,7 @@ import psycopg2
 import logging
 import socket
 
+
 class DBHandler(object):
     def __init__(self, config):
         logging.debug("Creating new DBHandler: %s" % config["dbhost"])
@@ -93,11 +94,11 @@ class TCPRequestHandler(SocketServer.BaseRequestHandler):
         hostname = array[0]
         port = int(array[1])
         request = array[2]
-        if not (request in ["reboot","on","off","delayed"]):
+        if not (request in ["reboot", "on", "off", "delayed"]):
             logging.info("Unknown request: %s" % request)
             raise Exception("Unknown request: %s" % request)
         db = DBHandler(self.server.config)
-        sql = "insert into pdu_queue (hostname,port,request) values ('%s',%i,'%s')" % (hostname,port,request)
+        sql = "insert into pdu_queue (hostname,port,request) values ('%s',%i,'%s')" % (hostname, port, request)
         db.do_sql(sql)
         db.close()
         del(db)
@@ -111,7 +112,7 @@ class TCPRequestHandler(SocketServer.BaseRequestHandler):
             try:
                 request_host = socket.gethostbyaddr(ip)[0]
             except socket.herror as e:
-                logging.debug("Unable to resolve: %s error: %s" % (ip,e))
+                logging.debug("Unable to resolve: %s error: %s" % (ip, e))
                 request_host = ip
             logging.info("Received a request from %s: '%s'" % (request_host, data))
             self.insert_request(data)
@@ -120,6 +121,7 @@ class TCPRequestHandler(SocketServer.BaseRequestHandler):
             logging.debug(e)
             self.request.sendall("nack\n")
         self.request.close()
+
 
 class TCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     allow_reuse_address = True
@@ -131,11 +133,11 @@ if __name__ == "__main__":
     logging.getLogger().setLevel(logging.DEBUG)
     logging.debug("Executing from __main__")
     starter = {"hostname": "0.0.0.0",
-               "port":16421,
-               "dbhost":"127.0.0.1",
-               "dbuser":"pdudaemon",
-               "dbpass":"pdudaemon",
-               "dbname":"lavapdu",
+               "port": 16421,
+               "dbhost": "127.0.0.1",
+               "dbuser": "pdudaemon",
+               "dbpass": "pdudaemon",
+               "dbname": "lavapdu",
                "logging_level": logging.DEBUG}
     ss = ListenerServer(starter)
     ss.start()

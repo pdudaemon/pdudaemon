@@ -32,11 +32,11 @@ class PDUEngine():
     prompt = 0
     driver = None
 
-    def __init__(self, pdu_hostname, pdu_telnetport = 23):
+    def __init__(self, pdu_hostname, pdu_telnetport=23):
         self.exec_string = "/usr/bin/telnet %s %d" % (pdu_hostname, pdu_telnetport)
         logging.debug("Created new PDUEngine: %s" % self.exec_string)
         #self.connection.logfile_read = sys.stdout
-        prompt = self._pdu_login("apc","apc")
+        prompt = self._pdu_login("apc", "apc")
         if prompt == 0:
             logging.debug("Found a v5 prompt")
             self.driver = apc8959(self.connection)
@@ -71,10 +71,10 @@ class PDUEngine():
         self.connection.close(True)
 
     def _pdu_login(self, username, password):
-        logging.debug("attempting login with username %s, password %s" % (username,password))
+        logging.debug("attempting login with username %s, password %s" % (username, password))
         self.pduconnect()
         self.connection.send("\r")
-        self.connection.expect ("User Name :")
+        self.connection.expect("User Name :")
         self.connection.send("apc\r")
         self.connection.expect("Password  :")
         self.connection.send("apc\r")
@@ -109,4 +109,3 @@ if __name__ == "__main__":
     #pe4.driver.port_off(8)
     #pe4.driver.port_on(8)
     pe4.close()
-
