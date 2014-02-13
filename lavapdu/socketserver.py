@@ -19,7 +19,6 @@
 #  MA 02110-1301, USA.
 
 import SocketServer
-#import sqlite3
 import psycopg2
 import logging
 import socket
@@ -62,8 +61,6 @@ class DBHandler(object):
 
 
 class ListenerServer(object):
-#    conn = sqlite3.connect("/var/lib/lavapdu/pdu.db", check_same_thread = False)
-#    cursor = conn.cursor()
 
     def __init__(self, config):
         self.server = TCPServer((config["hostname"], config["port"]), TCPRequestHandler)
@@ -75,7 +72,6 @@ class ListenerServer(object):
         self.create_db()
         self.db.close()
         del(self.db)
-        #self.server.db = self.db
 
     def create_db(self):
         sql = "create table if not exists pdu_queue (id serial, hostname text, port int, request text)"
@@ -100,7 +96,6 @@ class TCPRequestHandler(SocketServer.BaseRequestHandler):
         if not (request in ["reboot","on","off","delayed"]):
             logging.info("Unknown request: %s" % request)
             raise Exception("Unknown request: %s" % request)
-        #db = self.server.db
         db = DBHandler(self.server.config)
         sql = "insert into pdu_queue (hostname,port,request) values ('%s',%i,'%s')" % (hostname,port,request)
         db.do_sql(sql)
@@ -109,10 +104,15 @@ class TCPRequestHandler(SocketServer.BaseRequestHandler):
 
     def handle(self):
         logging.getLogger().name = "TCPRequestHandler"
+        ip = self.client_address[0]
         try:
             data = self.request.recv(4096).strip()
             socket.setdefaulttimeout(2)
-            request_host = socket.gethostbyaddr(self.client_address[0])[0]
+            try:
+                request_host = socket.gethostbyaddr(ip)[0]
+            except socket.herror as e:
+                logging.debug("Unable to resolve: %s error: %s" % (ip,e))
+                request_host = ip
             logging.info("Received a request from %s: '%s'" % (request_host, data))
             self.insert_request(data)
             self.request.sendall("ack\n")
