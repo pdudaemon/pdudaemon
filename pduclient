@@ -23,7 +23,7 @@ if __name__ == '__main__':
     string = ("%s %s %s" % (options.pduhostname, options.pduportnum, options.pducommand))
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     #sock.setblocking(0)  # optional non-blocking
-    reply = "nack"
+    reply = ""
     try:
         sock.connect((options.pdudaemonhostname, 16421))
         sock.send(string)
@@ -36,5 +36,6 @@ if __name__ == '__main__':
         print("Command sent successfully.")
         exit(0)
     else:
-        print("Unknown error sending command!")
+        print("Unknown error sending command! %s replied: %s" % (options.pdudaemonhostname, reply))
         exit(127)
+

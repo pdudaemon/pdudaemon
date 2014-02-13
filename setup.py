@@ -23,7 +23,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='lavapdu',
-    version="0.0.1",
+    version="0.0.2",
     author="Matthew Hart",
     author_email="matthew.hart@linaro.org",
     license="GPL2+",
@@ -43,7 +43,8 @@ setup(
     ],
     scripts=[
         'lavapdu-runner',
-        'lavapdu-listen'
+        'lavapdu-listen',
+        'pduclient'
     ],
     zip_safe=False,
     include_package_data=True)
