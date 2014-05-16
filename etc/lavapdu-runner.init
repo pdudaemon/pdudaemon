@@ -18,7 +18,7 @@ LOGLEVEL="--loglevel=INFO"
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="lavapdu-runner"               # short description
 NAME=lavapdu-runner                 # short server's name (truncated for 15 chars)
-DAEMON=/usr/bin/lavapdu-runner      # server's location
+DAEMON=/usr/sbin/lavapdu-runner      # server's location
 DAEMON_ARGS="$LOGLEVEL"               # Arguments to run the daemon with
 PIDFILE=/var/run/$DESC.pid
 SCRIPTNAME=/etc/init.d/$NAME

@@ -4,7 +4,7 @@ import socket
 import optparse
 
 if __name__ == '__main__':
-    usage = "Usage: %prog [-d] deamonhostname [-h] pduhostname -[p] pduportnum [-c] pducommand"
+    usage = "Usage: %prog --daemon deamonhostname --hostname pduhostname --port pduportnum --command pducommand"
     description = "LAVA PDU daemon client"
     commands = ["reboot", "on", "off", "delayed"]
     parser = optparse.OptionParser(usage=usage, description=description)
