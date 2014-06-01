@@ -21,7 +21,7 @@
 import logging
 import time
 from engine import PDUEngine
-from socketserver import DBHandler
+from dbhandler import DBHandler
 
 
 class PDURunner():
@@ -36,6 +36,7 @@ class PDURunner():
         job = db.get_next_job()
         if job:
             job_id, hostname, port, request = job
+            logging.debug(job)
             logging.info("Processing queue item: (%s %s) on hostname: %s" % (request, port, hostname))
             #logging.debug(id, hostname, request, port)
             res = self.do_job(hostname, port, request)
@@ -44,27 +45,29 @@ class PDURunner():
             logging.debug("Found nothing to do in database")
 
     def do_job(self, hostname, port, request):
-        retries = 5
+        retries = 10
         while retries > 0:
             try:
                 pe = PDUEngine(hostname, 23)
-                if request == "reboot":
-                    pe.driver.port_reboot(port)
-                elif request == "on":
+                if request == "on":
                     pe.driver.port_on(port)
+                    return true
                 elif request == "off":
                     pe.driver.port_off(port)
-                elif request == "delayed":
-                    pe.driver.port_delayed(port)
+                    return true
                 else:
                     logging.debug("Unknown request type: %s" % request)
+                    return false
                 pe.pduclose()
+                del(pe)
                 retries = 0
-            except:
-                logging.warn("Failed to execute job: %s %s %s (attempts left %i)" % (hostname, port, request, retries))
+            except Exception as e:
+                logging.warn("Failed to execute job: %s %s %s (attempts left %i) error was %s" %
+                             (hostname, port, request, retries, e.message))
                 #logging.warn(e)
                 time.sleep(5)
                 retries -= 1
+        return false
 
     def run_me(self):
         logging.info("Starting up the PDURunner")

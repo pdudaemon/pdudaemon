@@ -1,17 +1,36 @@
 #!/usr/bin/python
 
+#  Copyright 2013 Linaro Limited
+#  Author Matt Hart <matthew.hart@linaro.org>
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+#  MA 02110-1301, USA.
+
 import socket
 import optparse
 
 if __name__ == '__main__':
     usage = "Usage: %prog --daemon deamonhostname --hostname pduhostname --port pduportnum --command pducommand"
     description = "LAVA PDU daemon client"
-    commands = ["reboot", "on", "off", "delayed"]
+    commands = ["reboot", "on", "off"]
     parser = optparse.OptionParser(usage=usage, description=description)
     parser.add_option("--daemon", dest="pdudaemonhostname", action="store", type="string", help="LAVAPDU Daemon (ex: control)")
     parser.add_option("--hostname", dest="pduhostname", action="store", type="string", help="PDU Hostname (ex: pdu05)")
     parser.add_option("--port", dest="pduportnum", action="store", type="string", help="PDU Portnumber (ex: 04)")
-    parser.add_option("--command", dest="pducommand", action="store", type="string", help="PDU command (ex: reboot|on|off|delayed)")
+    parser.add_option("--command", dest="pducommand", action="store", type="string", help="PDU command (ex: reboot|on|off)")
+    parser.add_option("--delay", dest="pdudelay", action="store", type="int", help="Delay before command runs, or between off/on when rebooting")
     (options, args) = parser.parse_args()
     if (not (options.pdudaemonhostname) or not(options.pduhostname) or not (options.pduportnum) or not (options.pducommand)):
         print("Missing option, try -h for help")
@@ -20,7 +39,10 @@ if __name__ == '__main__':
         print("Unknown pdu command: %s" % options.pducommand)
         exit(1)
     #print(options)
-    string = ("%s %s %s" % (options.pduhostname, options.pduportnum, options.pducommand))
+    if options.pdudelay:
+        string = ("%s %s %s" % (options.pduhostname, options.pduportnum, options.pducommand, options.pdudelay))
+    else:
+        string = ("%s %s %s" % (options.pduhostname, options.pduportnum, options.pducommand))
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     #sock.setblocking(0)  # optional non-blocking
     reply = ""

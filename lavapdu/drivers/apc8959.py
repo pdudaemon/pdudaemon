@@ -18,5 +18,30 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 
-import pdurunner
-import socketserver
+import logging
+from driver import PDUDriver
+
+
+class apc8959(PDUDriver):
+    pdu_commands = {"off": "olOff", "on": "olOn"}
+
+    def _pdu_logout(self):
+        logging.debug("logging out")
+        self.connection.send("\r")
+        self.connection.send("exit")
+        self.connection.send("\r")
+        logging.debug("done")
+
+    def _pdu_get_to_prompt(self):
+        self.connection.send("\r")
+        self.connection.expect('apc>')
+
+    def _port_interaction(self, command, port_number):
+        logging.debug("Attempting %s on port %i" % (command, port_number))
+        self._pdu_get_to_prompt()
+        self.connection.sendline(self.pdu_commands[command] + (" %i" % port_number))
+        self.connection.expect("E000: Success")
+        logging.debug("done")
+
+    class Meta():
+        handled_firmware = ["v5.1.9"]

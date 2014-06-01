@@ -18,10 +18,29 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 
+import logging
 
-class PDUDriver():
+
+class NoDriverException(Exception):
+    pass
+
+
+class PDUDriver(object):
     connection = None
-    pdu_commands = {"off": "olOff", "on": "olOn", "reboot": "olReboot", "delayed": "olDlyReboot"}
+    firmware_dict = {}
 
     def __init__(self, connection):
         self.connection = connection
+
+        # return the driver that provides the firmware version
+    def _port_interaction(self, command, port_number):
+        pass
+
+    def _pdu_logout(self):
+        pass
+
+    def port_on(self, port_number):
+        self._port_interaction("on", port_number)
+
+    def port_off(self, port_number):
+        self._port_interaction("off", port_number)

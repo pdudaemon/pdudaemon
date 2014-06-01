@@ -19,46 +19,10 @@
 #  MA 02110-1301, USA.
 
 import SocketServer
-import psycopg2
 import logging
 import socket
-
-
-class DBHandler(object):
-    def __init__(self, config):
-        logging.debug("Creating new DBHandler: %s" % config["dbhost"])
-        logging.getLogger().name = "DBHandler"
-        self.conn = psycopg2.connect(database=config["dbname"], user=config["dbuser"],
-                                     password=config["dbpass"], host=config["dbhost"])
-        self.cursor = self.conn.cursor()
-
-    def do_sql(self, sql):
-        logging.debug("executing sql: %s" % sql)
-        self.cursor.execute(sql)
-        self.conn.commit()
-
-    def do_sql_with_fetch(self, sql):
-        logging.debug("executing sql: %s" % sql)
-        self.cursor.execute(sql)
-        row = self.cursor.fetchone()
-        self.conn.commit()
-        return row
-
-    def delete_row(self, row_id):
-        logging.debug("deleting row %i" % row_id)
-        self.do_sql("delete from pdu_queue where id=%i" % row_id)
-
-    def get_res(self, sql):
-        return self.cursor.execute(sql)
-
-    def get_next_job(self):
-        row = self.do_sql_with_fetch("select * from pdu_queue order by id asc limit 1")
-        return row
-
-    def close(self):
-        logging.debug("Closing DBHandler")
-        self.cursor.close()
-        self.conn.close()
+import time
+from dbhandler import DBHandler
 
 
 class ListenerServer(object):
@@ -75,8 +39,15 @@ class ListenerServer(object):
         del(self.db)
 
     def create_db(self):
-        sql = "create table if not exists pdu_queue (id serial, hostname text, port int, request text)"
+        sql = "create table if not exists pdu_queue (id serial, hostname text, port int, request text, exectime int)"
         self.db.do_sql(sql)
+        sql = "select column_name from information_schema.columns where table_name='pdu_queue'" \
+              "and column_name='exectime'"
+        res = self.db.do_sql_with_fetch(sql)
+        if not res:
+            logging.info("Old db schema discovered, upgrading")
+            sql = "alter table pdu_queue add column exectime int default 1"
+            self.db.do_sql(sql)
 
     def start(self):
         logging.info("Starting the ListenerServer")
@@ -88,20 +59,40 @@ class TCPRequestHandler(SocketServer.BaseRequestHandler):
     def insert_request(self, data):
         logging.getLogger().name = "TCPRequestHandler"
         array = data.split(" ")
-        if len(array) != 3:
+        delay = 10
+        custom_delay = False
+        now = int(time.time())
+        if len(array) < 3:
             logging.info("Wrong data size")
             raise Exception("Unexpected data")
+        if len(array) == 4:
+            delay = int(array[3])
+            custom_delay = True
         hostname = array[0]
         port = int(array[1])
         request = array[2]
-        if not (request in ["reboot", "on", "off", "delayed"]):
+        if not (request in ["reboot","on","off"]):
             logging.info("Unknown request: %s" % request)
             raise Exception("Unknown request: %s" % request)
+        if request == "reboot":
+            logging.debug("reboot requested, submitting off/on")
+            self.queue_request(hostname,port,"off",now)
+            self.queue_request(hostname,port,"on",now+delay)
+        else:
+            if custom_delay:
+                logging.debug("using delay as requested")
+                self.queue_request(hostname,port,request,now+delay)
+            else:
+                self.queue_request(hostname,port,request,now)
+
+    def queue_request(self, hostname, port, request, exectime):
         db = DBHandler(self.server.config)
-        sql = "insert into pdu_queue (hostname,port,request) values ('%s',%i,'%s')" % (hostname, port, request)
+        sql = "insert into pdu_queue (hostname,port,request,exectime)" \
+              "values ('%s',%i,'%s')" % (hostname,port,request,exectime)
         db.do_sql(sql)
         db.close()
         del(db)
+
 
     def handle(self):
         logging.getLogger().name = "TCPRequestHandler"
@@ -112,7 +103,7 @@ class TCPRequestHandler(SocketServer.BaseRequestHandler):
             try:
                 request_host = socket.gethostbyaddr(ip)[0]
             except socket.herror as e:
-                logging.debug("Unable to resolve: %s error: %s" % (ip, e))
+                logging.debug("Unable to resolve: %s error: %s" % (ip,e))
                 request_host = ip
             logging.info("Received a request from %s: '%s'" % (request_host, data))
             self.insert_request(data)
@@ -121,7 +112,6 @@ class TCPRequestHandler(SocketServer.BaseRequestHandler):
             logging.debug(e)
             self.request.sendall("nack\n")
         self.request.close()
-
 
 class TCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     allow_reuse_address = True
@@ -133,11 +123,11 @@ if __name__ == "__main__":
     logging.getLogger().setLevel(logging.DEBUG)
     logging.debug("Executing from __main__")
     starter = {"hostname": "0.0.0.0",
-               "port": 16421,
-               "dbhost": "127.0.0.1",
-               "dbuser": "pdudaemon",
-               "dbpass": "pdudaemon",
-               "dbname": "lavapdu",
+               "port":16421,
+               "dbhost":"127.0.0.1",
+               "dbuser":"pdudaemon",
+               "dbpass":"pdudaemon",
+               "dbname":"lavapdu",
                "logging_level": logging.DEBUG}
     ss = ListenerServer(starter)
     ss.start()
