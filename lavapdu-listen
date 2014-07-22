@@ -48,23 +48,17 @@ def readSettings(filename):
     """
     Read settings from config file, to listen to all hosts, hostname should be 0.0.0.0
     """
-    settings = {"port": 16421, "hostname": "0.0.0.0", "dbuser": "pdudaemon",
-                "dbpass": "pdudaemon", "dbname": "pdu_queue", "dbhost": "127.0.0.1"}
+    settings = {}
+    print("Reading settings from %s" % conffile)
     with open(filename) as stream:
         jobdata = stream.read()
-        json_default = json.loads(jobdata)
-    if "port" in json_default:
-        settings['port'] = json_default['port']
-    if "hostname" in json_default:
-        settings['hostname'] = json_default['hostname']
-    if "dbuser" in json_default:
-        settings['dbuser'] = json_default['dbuser']
-    if "dbpass" in json_default:
-        settings['dbpass'] = json_default['dbpass']
-    if "dbname" in json_default:
-        settings['dbname'] = json_default['dbname']
-    if "dbhost" in json_default:
-        settings['dbhost'] = json_default['dbhost']
+        json_data = json.loads(jobdata)
+        settings['port'] = json_data["daemon"]['port']
+        settings['hostname'] = json_data["daemon"]['hostname']
+        settings['dbuser'] = json_data["daemon"]['dbuser']
+        settings['dbpass'] = json_data["daemon"]['dbpass']
+        settings['dbname'] = json_data["daemon"]['dbname']
+        settings['dbhost'] = json_data["daemon"]['dbhost']
     return settings
 
 if __name__ == '__main__':
@@ -72,7 +66,7 @@ if __name__ == '__main__':
     # not necessarily per-instance, so use the command line and a default conf file.
     pidfile = "/var/run/lavapdu-listen.pid"
     logfile = "/var/log/lavapdu-listener.log"
-    conffile = "/etc/lavapdu.conf"
+    conffile = "/etc/lavapdu/lavapdu.conf"
     settings = readSettings(conffile)
     usage = "Usage: %prog [--logfile] --[loglevel]"
     description = "LAVA PDU request listener server, host and port are handled in %s" % conffile
@@ -114,12 +108,7 @@ if __name__ == '__main__':
         stderr=watched_file_handler.stream,
         stdout=watched_file_handler.stream)
     starter = {"logging_level": level,
-               "hostname": settings['hostname'],
-               "port": settings['port'],
-               "dbhost": settings["dbhost"],
-               "dbuser": settings["dbuser"],
-               "dbpass": settings["dbpass"],
-               "dbname": settings["dbname"]}
+               "settings": settings}
     with context:
         logging.info("Running LAVA PDU Listener %s %s %d."
                      % (logfile, settings['hostname'], settings['port']))

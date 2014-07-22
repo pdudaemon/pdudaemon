@@ -19,10 +19,9 @@
 #  MA 02110-1301, USA.
 
 import logging
-from apc7952 import apc7952
+from apc7952 import APC7952
 
-class apc9218(apc7952):
-    handled_firmware = ["v3.0.3","v3.0.1"]
+class APC9218(APC7952):
 
     def _port_interaction(self, command, port_number):
         print("Attempting command: %s port: %i" % (command, port_number))
@@ -57,6 +56,3 @@ class apc9218(apc7952):
             self._do_it()
         else:
             logging.debug("Unknown command!")
-
-    class Meta():
-        handled_firmware = ["v3.0.3","v3.0.1"]

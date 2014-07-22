@@ -19,10 +19,10 @@
 #  MA 02110-1301, USA.
 
 import logging
-from driver import PDUDriver
+from apcbase import APCBase
 
 
-class apc8959(PDUDriver):
+class APC8959(APCBase):
     pdu_commands = {"off": "olOff", "on": "olOn"}
 
     def _pdu_logout(self):
@@ -42,6 +42,3 @@ class apc8959(PDUDriver):
         self.connection.sendline(self.pdu_commands[command] + (" %i" % port_number))
         self.connection.expect("E000: Success")
         logging.debug("done")
-
-    class Meta():
-        handled_firmware = ["v5.1.9"]

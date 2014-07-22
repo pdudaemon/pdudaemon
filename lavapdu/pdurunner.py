@@ -20,9 +20,8 @@
 
 import logging
 import time
-from engine import PDUEngine
 from dbhandler import DBHandler
-
+import traceback
 
 class PDURunner():
 
@@ -31,6 +30,7 @@ class PDURunner():
         logging.getLogger().setLevel(config["logging_level"])
         logging.getLogger().name = "PDURunner"
         self.config = config
+        self.pdus = config["pdus"]
 
     def get_one(self, db):
         job = db.get_next_job()
@@ -38,51 +38,53 @@ class PDURunner():
             job_id, hostname, port, request = job
             logging.debug(job)
             logging.info("Processing queue item: (%s %s) on hostname: %s" % (request, port, hostname))
-            #logging.debug(id, hostname, request, port)
             res = self.do_job(hostname, port, request)
             db.delete_row(job_id)
         else:
             logging.debug("Found nothing to do in database")
 
-    def do_job(self, hostname, port, request):
+    def driver_from_hostname(self, hostname):
+        logging.debug("Trying to find a driver for %s" % hostname)
+        logging.debug(self.pdus)
+        driver = self.pdus[hostname]["driver"]
+        logging.debug("Driver: %s" % driver)
+        module = __import__("drivers.%s" % driver.lower(), fromlist=[driver])
+        class_ = getattr(module, driver)
+        return class_(hostname)
+
+    def do_job(self, hostname, port, request, delay=0):
         retries = 10
         while retries > 0:
             try:
-                pe = PDUEngine(hostname, 23)
-                if request == "on":
-                    pe.driver.port_on(port)
-                    return true
-                elif request == "off":
-                    pe.driver.port_off(port)
-                    return true
-                else:
-                    logging.debug("Unknown request type: %s" % request)
-                    return false
-                pe.pduclose()
-                del(pe)
-                retries = 0
+                driver = self.driver_from_hostname(hostname)
+                return driver.handle(request, port, delay)
             except Exception as e:
+                driver.cleanup()
+                logging.warn(traceback.format_exc())
                 logging.warn("Failed to execute job: %s %s %s (attempts left %i) error was %s" %
                              (hostname, port, request, retries, e.message))
-                #logging.warn(e)
                 time.sleep(5)
                 retries -= 1
-        return false
+        return False
 
     def run_me(self):
         logging.info("Starting up the PDURunner")
         while 1:
-            db = DBHandler(self.config)
+            db = DBHandler(self.config["settings"])
             self.get_one(db)
             db.close()
             del(db)
             time.sleep(2)
 
 if __name__ == "__main__":
-    starter = {"dbhost": "127.0.0.1",
+    starter = { "settings": {"dbhost": "127.0.0.1",
                "dbuser": "pdudaemon",
                "dbpass": "pdudaemon",
-               "dbname": "lavapdu",
+               "dbname": "lavapdu"},
+                "pdus": { "pdu14": { "driver": "APC9218" },"pdu15": {"driver": "APC8959"} },
                "logging_level": logging.DEBUG}
     p = PDURunner(starter)
-    p.run_me()
+    p.do_job("pdu15",18,"off",10)
+    p.do_job("pdu15",18,"reboot",10)
+    p.do_job("pdu15",18,"on",10)
+    #p.run_me()

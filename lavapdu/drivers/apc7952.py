@@ -19,9 +19,10 @@
 #  MA 02110-1301, USA.
 
 import logging
-from driver import PDUDriver
+from apcbase import APCBase
 
-class apc7952(PDUDriver):
+
+class APC7952(APCBase):
 
     def _pdu_logout(self):
         self._back_to_main()
@@ -30,6 +31,7 @@ class apc7952(PDUDriver):
 
     def _back_to_main(self):
         logging.debug("Returning to main menu")
+        self.connection.send("\r")
         self.connection.expect('>')
         for i in range(1, 20):
             self.connection.send("\x1B")
@@ -90,6 +92,3 @@ class apc7952(PDUDriver):
         self.connection.send("YES\r")
         self.connection.expect("Press <ENTER> to continue...")
         self.connection.send("\r")
-
-    class Meta():
-        handled_firmware = ["v3.7.3"]

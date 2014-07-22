@@ -28,12 +28,12 @@ from dbhandler import DBHandler
 class ListenerServer(object):
 
     def __init__(self, config):
-        self.server = TCPServer((config["hostname"], config["port"]), TCPRequestHandler)
+        self.server = TCPServer((config["settings"]["hostname"], config["settings"]["port"]), TCPRequestHandler)
         logging.getLogger().name = "ListenerServer"
         logging.getLogger().setLevel(config["logging_level"])
-        logging.info("listening on %s:%s" % (config["hostname"], config["port"]))
-        self.server.config = config
-        self.db = DBHandler(config)
+        logging.info("listening on %s:%s" % (config["settings"]["hostname"], config["settings"]["port"]))
+        self.server.settings = config["settings"]
+        self.db = DBHandler(self.server.settings)
         self.create_db()
         self.db.close()
         del(self.db)
@@ -86,9 +86,9 @@ class TCPRequestHandler(SocketServer.BaseRequestHandler):
                 self.queue_request(hostname,port,request,now)
 
     def queue_request(self, hostname, port, request, exectime):
-        db = DBHandler(self.server.config)
+        db = DBHandler(self.server.settings)
         sql = "insert into pdu_queue (hostname,port,request,exectime)" \
-              "values ('%s',%i,'%s')" % (hostname,port,request,exectime)
+              "values ('%s',%i,'%s',%i)" % (hostname,port,request,exectime)
         db.do_sql(sql)
         db.close()
         del(db)
@@ -109,7 +109,8 @@ class TCPRequestHandler(SocketServer.BaseRequestHandler):
             self.insert_request(data)
             self.request.sendall("ack\n")
         except Exception as e:
-            logging.debug(e)
+            logging.debug(e.__class__)
+            logging.debug(e.message)
             self.request.sendall("nack\n")
         self.request.close()
 
