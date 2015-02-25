@@ -19,11 +19,20 @@
 #  MA 02110-1301, USA.
 
 import logging
-from apcbase import APCBase
+from lavapdu.drivers.apcbase import APCBase
 
 
 class APC8959(APCBase):
     pdu_commands = {"off": "olOff", "on": "olOn"}
+
+#    def __init__(self, hostname):
+#        super(APC8959, self).__init__(hostname)
+
+    @classmethod
+    def accepts(cls, drivername):
+        if drivername == "apc8959":
+            return True
+        return False
 
     def _pdu_logout(self):
         logging.debug("logging out")
@@ -41,4 +50,5 @@ class APC8959(APCBase):
         self._pdu_get_to_prompt()
         self.connection.sendline(self.pdu_commands[command] + (" %i" % port_number))
         self.connection.expect("E000: Success")
+        self._pdu_get_to_prompt()
         logging.debug("done")

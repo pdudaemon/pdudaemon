@@ -20,37 +20,47 @@
 
 import logging
 import pexpect
-from driver import PDUDriver
+from lavapdu.drivers.driver import PDUDriver
 import sys
+
 
 class APCBase(PDUDriver):
     connection = None
 
-    def __init__(self, pdu_hostname, pdu_telnetport=23):
-        self.exec_string = "/usr/bin/telnet %s %d" % (pdu_hostname, pdu_telnetport)
+    def __init__(self, hostname, settings):
+        self.hostname = hostname
+        logging.debug(settings)
+        self.settings = settings
+        telnetport = 23
+        if "telnetport" in settings:
+            telnetport = settings["telnetport"]
+        self.exec_string = "/usr/bin/telnet %s %d" % (hostname, telnetport)
         self.get_connection()
-        super(APCBase, self).__init__(pdu_hostname)
+        super(APCBase, self).__init__()
 
-    #def port_on(self, port_number):
-    #    self.port_interaction("on", port_number)
-
-    #def port_off(self, port_number):
-    #    self.port_interaction("off", port_number)
+    @classmethod
+    def accepts(cls, drivername):
+        return False
 
     def port_interaction(self, command, port_number):
         logging.debug("Running port_interaction from APCBase")
         self._port_interaction(command, port_number)
-        self._cleanup()
+        #self._cleanup()
 
     def get_connection(self):
         logging.debug("Connecting to APC PDU with: %s" % self.exec_string)
-        self.connection = pexpect.spawn(self.exec_string, logfile=sys.stdout)
+        if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
+            self.connection = pexpect.spawn(self.exec_string, logfile=sys.stdout)
+        else:
+            self.connection = pexpect.spawn(self.exec_string)
         self._pdu_login("apc","apc")
 
     def _cleanup(self):
         self._pdu_logout()
-        logging.debug("Closing connection: %s" % self.connection)
-        self.connection.close(True)
+
+    def _bombout(self):
+        logging.debug("Bombing out of driver: %s" % self.connection)
+        self.connection.close(force=True)
         del(self)
 
     def _pdu_login(self, username, password):

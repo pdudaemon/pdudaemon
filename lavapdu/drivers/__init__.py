@@ -17,7 +17,3 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
-
-#from apc9218 import apc9218
-#from apc7952 import apc7952
-#from apc8959 import apc8959

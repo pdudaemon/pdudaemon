@@ -26,11 +26,11 @@ if __name__ == '__main__':
     description = "LAVA PDU daemon client"
     commands = ["reboot", "on", "off"]
     parser = optparse.OptionParser(usage=usage, description=description)
-    parser.add_option("--daemon", dest="pdudaemonhostname", action="store", type="string", help="LAVAPDU Daemon (ex: control)")
+    parser.add_option("--daemon", dest="pdudaemonhostname", action="store", type="string", help="LAVAPDU Daemon hostname (ex: localhost)")
     parser.add_option("--hostname", dest="pduhostname", action="store", type="string", help="PDU Hostname (ex: pdu05)")
     parser.add_option("--port", dest="pduportnum", action="store", type="string", help="PDU Portnumber (ex: 04)")
     parser.add_option("--command", dest="pducommand", action="store", type="string", help="PDU command (ex: reboot|on|off)")
-    parser.add_option("--delay", dest="pdudelay", action="store", type="int", help="Delay before command runs, or between off/on when rebooting")
+    parser.add_option("--delay", dest="pdudelay", action="store", type="int", help="Delay before command runs, or between off/on when rebooting (ex: 5)")
     (options, args) = parser.parse_args()
     if (not (options.pdudaemonhostname) or not(options.pduhostname) or not (options.pduportnum) or not (options.pducommand)):
         print("Missing option, try -h for help")
@@ -38,9 +38,8 @@ if __name__ == '__main__':
     if not (options.pducommand in commands):
         print("Unknown pdu command: %s" % options.pducommand)
         exit(1)
-    #print(options)
     if options.pdudelay:
-        string = ("%s %s %s" % (options.pduhostname, options.pduportnum, options.pducommand, options.pdudelay))
+        string = ("%s %s %s %s" % (options.pduhostname, options.pduportnum, options.pducommand, options.pdudelay))
     else:
         string = ("%s %s %s" % (options.pduhostname, options.pduportnum, options.pducommand))
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -52,7 +51,7 @@ if __name__ == '__main__':
         reply = sock.recv(16384).strip()  # limit reply to 16K
         sock.close()
     except Exception:
-        print ("Error sending command, wrong hostname?")
+        print ("Error sending command, wrong daemon hostname?")
         exit(1)
     if reply == "ack":
         print("Command sent successfully.")

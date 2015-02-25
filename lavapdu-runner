@@ -54,15 +54,7 @@ def readSettings(filename):
     with open(filename) as stream:
         jobdata = stream.read()
         json_data = json.loads(jobdata)
-        settings['port'] = json_data["daemon"]['port']
-        settings['hostname'] = json_data["daemon"]['hostname']
-        settings['dbuser'] = json_data["daemon"]['dbuser']
-        settings['dbpass'] = json_data["daemon"]['dbpass']
-        settings['dbname'] = json_data["daemon"]['dbname']
-        settings['dbhost'] = json_data["daemon"]['dbhost']
-        pdus = json_data["pdus"]
-    return (settings, pdus)
-
+    return json_data
 
 if __name__ == '__main__':
     # instance settings come from django - the coordinator doesn't use django and is
@@ -70,7 +62,7 @@ if __name__ == '__main__':
     pidfile = "/var/run/lavapdu-runner.pid"
     logfile = "/var/log/lavapdu-runner.log"
     conffile = "/etc/lavapdu/lavapdu.conf"
-    settings, pdus = readSettings(conffile)
+    settings = readSettings(conffile)
     usage = "Usage: %prog [--logfile] --[loglevel]"
     description = "LAVA PDU request listener server, host and port are handled in %s" % conffile
     parser = optparse.OptionParser(usage=usage, description=description)
@@ -86,13 +78,14 @@ if __name__ == '__main__':
             print "No such directory for specified logfile '%s'" % logfile
     open(logfile, 'w').close()
     level = logging.DEBUG
-    if options.loglevel == "DEBUG":
+    daemon_settings = settings["daemon"]
+    if daemon_settings["logging_level"] == "DEBUG":
         level = logging.DEBUG
-    if options.loglevel == "WARNING":
+    if daemon_settings["logging_level"] == "WARNING":
         level = logging.WARNING
-    if options.loglevel == "ERROR":
+    if daemon_settings["logging_level"] == "ERROR":
         level = logging.ERROR
-    if options.loglevel == "INFO":
+    if daemon_settings["logging_level"] == "INFO":
         level = logging.INFO
     client_logger, watched_file_handler = getDaemonLogger(logfile, loglevel=level,
                                                           log_format='%(asctime)s:%(levelname)s:%(name)s:%(message)s')
@@ -110,11 +103,8 @@ if __name__ == '__main__':
         files_preserve=[watched_file_handler.stream],
         stderr=watched_file_handler.stream,
         stdout=watched_file_handler.stream)
-    starter = {"logging_level": level,
-               "settings": settings,
-               "pdus": pdus}
     with context:
         logging.info("Running LAVA PDU Runner %s dbhost: %s"
-                     % (logfile, settings["dbhost"]))
-        p = PDURunner(starter)
+                     % (logfile, settings["daemon"]["dbhost"]))
+        p = PDURunner(settings)
         p.run_me()

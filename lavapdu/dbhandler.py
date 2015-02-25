@@ -51,7 +51,7 @@ class DBHandler(object):
 
     def get_next_job(self):
         now = int(time.time())
-        row = self.do_sql_with_fetch("select id,hostname,port,request from pdu_queue where exectime < %i order by id asc limit 1" % now)
+        row = self.do_sql_with_fetch("select id,hostname,port,request from pdu_queue where (exectime < %i or exectime is null) order by id asc limit 1" % now)
         return row
 
     def close(self):

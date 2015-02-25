@@ -22,18 +22,23 @@ import SocketServer
 import logging
 import socket
 import time
+import json
 from dbhandler import DBHandler
-
 
 class ListenerServer(object):
 
-    def __init__(self, config):
-        self.server = TCPServer((config["settings"]["hostname"], config["settings"]["port"]), TCPRequestHandler)
+    def __init__(self, settings):
+        listen_host = settings["hostname"]
+        listen_port = settings["port"]
+
         logging.getLogger().name = "ListenerServer"
-        logging.getLogger().setLevel(config["logging_level"])
-        logging.info("listening on %s:%s" % (config["settings"]["hostname"], config["settings"]["port"]))
-        self.server.settings = config["settings"]
-        self.db = DBHandler(self.server.settings)
+        logging.getLogger().setLevel(settings["logging_level"])
+        logging.debug("ListenerServer __init__")
+        logging.info("listening on %s:%s" % (listen_host, listen_port))
+
+        self.server = TCPServer((listen_host, listen_port), TCPRequestHandler)
+        self.server.settings = settings
+        self.db = DBHandler(settings)
         self.create_db()
         self.db.close()
         del(self.db)
@@ -58,11 +63,12 @@ class TCPRequestHandler(SocketServer.BaseRequestHandler):
     #"One instance per connection.  Override handle(self) to customize action."
     def insert_request(self, data):
         logging.getLogger().name = "TCPRequestHandler"
+        logging.getLogger().setLevel(self.server.settings["logging_level"])
         array = data.split(" ")
         delay = 10
         custom_delay = False
         now = int(time.time())
-        if len(array) < 3:
+        if (len(array) < 3) or (len(array) > 4):
             logging.info("Wrong data size")
             raise Exception("Unexpected data")
         if len(array) == 4:
@@ -87,7 +93,7 @@ class TCPRequestHandler(SocketServer.BaseRequestHandler):
 
     def queue_request(self, hostname, port, request, exectime):
         db = DBHandler(self.server.settings)
-        sql = "insert into pdu_queue (hostname,port,request,exectime)" \
+        sql = "insert into pdu_queue (hostname,port,request,exectime) " \
               "values ('%s',%i,'%s',%i)" % (hostname,port,request,exectime)
         db.do_sql(sql)
         db.close()
@@ -103,7 +109,7 @@ class TCPRequestHandler(SocketServer.BaseRequestHandler):
             try:
                 request_host = socket.gethostbyaddr(ip)[0]
             except socket.herror as e:
-                logging.debug("Unable to resolve: %s error: %s" % (ip,e))
+                #logging.debug("Unable to resolve: %s error: %s" % (ip,e))
                 request_host = ip
             logging.info("Received a request from %s: '%s'" % (request_host, data))
             self.insert_request(data)
@@ -123,12 +129,19 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     logging.getLogger().setLevel(logging.DEBUG)
     logging.debug("Executing from __main__")
-    starter = {"hostname": "0.0.0.0",
-               "port":16421,
-               "dbhost":"127.0.0.1",
-               "dbuser":"pdudaemon",
-               "dbpass":"pdudaemon",
-               "dbname":"lavapdu",
-               "logging_level": logging.DEBUG}
-    ss = ListenerServer(starter)
+    settings = {}
+    filename = "/etc/lavapdu/lavapdu.conf"
+    print("Reading settings from %s" % filename)
+    with open(filename) as stream:
+        jobdata = stream.read()
+        json_data = json.loads(jobdata)
+
+    #starter = {"daemon": {"dbhost":"127.0.0.1",
+    #                      "dbuser":"pdudaemon",
+    #                      "dbpass":"pdudaemon",
+    #                     "dbname":"lavapdu",
+    #                     "logging_level": logging.DEBUG,
+    #                     "hostname": "0.0.0.0", "port": 16421}}
+    #ss = ListenerServer(starter)
+    ss = ListenerServer(json_data)
     ss.start()

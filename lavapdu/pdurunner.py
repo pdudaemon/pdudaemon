@@ -20,17 +20,20 @@
 
 import logging
 import time
-from dbhandler import DBHandler
+import json
 import traceback
+from lavapdu.dbhandler import DBHandler
+from lavapdu.drivers.driver import PDUDriver
+import lavapdu.drivers.strategies
 
-class PDURunner():
+class PDURunner(object):
 
     def __init__(self, config):
-        logging.basicConfig(level=config["logging_level"])
-        logging.getLogger().setLevel(config["logging_level"])
-        logging.getLogger().name = "PDURunner"
-        self.config = config
         self.pdus = config["pdus"]
+        self.settings = config["daemon"]
+        logging.basicConfig(level=self.settings["logging_level"])
+        logging.getLogger().setLevel(self.settings["logging_level"])
+        logging.getLogger().name = "PDURunner"
 
     def get_one(self, db):
         job = db.get_next_job()
@@ -44,25 +47,31 @@ class PDURunner():
             logging.debug("Found nothing to do in database")
 
     def driver_from_hostname(self, hostname):
-        logging.debug("Trying to find a driver for %s" % hostname)
+        logging.debug("Trying to find a driver for hostname %s" % hostname)
         logging.debug(self.pdus)
-        driver = self.pdus[hostname]["driver"]
-        logging.debug("Driver: %s" % driver)
-        module = __import__("drivers.%s" % driver.lower(), fromlist=[driver])
-        class_ = getattr(module, driver)
-        return class_(hostname)
+        if hostname in self.pdus:
+            drivername = (self.pdus[hostname]["driver"])
+        else:
+            raise NotImplementedError("No configuration available for hostname %s\n"
+                                      "Is there a section in the lavapdu.conf?" % hostname)
+        logging.debug("Config file wants driver: %s" % drivername)
+        driver = PDUDriver.select(drivername)(hostname, self.pdus[hostname])
+        return driver
 
     def do_job(self, hostname, port, request, delay=0):
-        retries = 10
+        retries = self.settings["retries"]
+        driver = False
         while retries > 0:
             try:
                 driver = self.driver_from_hostname(hostname)
                 return driver.handle(request, port, delay)
             except Exception as e:
-                driver.cleanup()
                 logging.warn(traceback.format_exc())
                 logging.warn("Failed to execute job: %s %s %s (attempts left %i) error was %s" %
                              (hostname, port, request, retries, e.message))
+                if driver:
+                    #driver._cleanup()
+                    driver._bombout()
                 time.sleep(5)
                 retries -= 1
         return False
@@ -70,21 +79,20 @@ class PDURunner():
     def run_me(self):
         logging.info("Starting up the PDURunner")
         while 1:
-            db = DBHandler(self.config["settings"])
+            db = DBHandler(self.settings)
             self.get_one(db)
             db.close()
             del(db)
             time.sleep(2)
 
 if __name__ == "__main__":
-    starter = { "settings": {"dbhost": "127.0.0.1",
-               "dbuser": "pdudaemon",
-               "dbpass": "pdudaemon",
-               "dbname": "lavapdu"},
-                "pdus": { "pdu14": { "driver": "APC9218" },"pdu15": {"driver": "APC8959"} },
-               "logging_level": logging.DEBUG}
-    p = PDURunner(starter)
-    p.do_job("pdu15",18,"off",10)
-    p.do_job("pdu15",18,"reboot",10)
-    p.do_job("pdu15",18,"on",10)
-    #p.run_me()
+    settings = {}
+    filename = "/etc/lavapdu/lavapdu.conf"
+    print("Reading settings from %s" % filename)
+    with open(filename) as stream:
+        jobdata = stream.read()
+        json_data = json.loads(jobdata)
+
+    p = PDURunner(json_data)
+    #p.do_job("192.168.10.5",18,"reboot",2)
+    p.run_me()

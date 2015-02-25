@@ -19,10 +19,16 @@
 #  MA 02110-1301, USA.
 
 import logging
-from apcbase import APCBase
+from lavapdu.drivers.apcbase import APCBase
 
 
 class APC7952(APCBase):
+
+    @classmethod
+    def accepts(cls, drivername):
+        if drivername == "apc7952":
+            return True
+        return False
 
     def _pdu_logout(self):
         self._back_to_main()

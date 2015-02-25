@@ -22,11 +22,11 @@ import logging
 from lavapdu.drivers.apc7952 import APC7952
 
 
-class APC9218(APC7952):
+class APC9210(APC7952):
 
     @classmethod
     def accepts(cls, drivername):
-        if drivername == "apc9218":
+        if drivername == "apc9210":
             return True
         return False
 
@@ -35,31 +35,25 @@ class APC9218(APC7952):
         ### make sure in main menu here
         self._back_to_main()
         self.connection.send("\r")
-        self.connection.expect("1- Device Manager")
+        self.connection.expect("1- Outlet Manager")
         self.connection.expect("> ")
-        logging.debug("Entering Device Manager")
+        logging.debug("Entering Outlet Manager")
         self.connection.send("1\r")
-        self.connection.expect("------- Device Manager")
+        self.connection.expect("------- Outlet Manager")
         logging.debug("Got to Device Manager")
         self._enter_outlet(port_number, False)
-        res = self.connection.expect(["1- Control Outlet", "1- Outlet Control/Configuration"])
+        self.connection.expect(["1- Control of Outlet", "1- Outlet Control/Configuration"])
         self.connection.expect("> ")
         self.connection.send("1\r")
-        res = self.connection.expect(["> ", "Press <ENTER> to continue..."])
-        if res == 1:
-            logging.debug("Stupid paging thingmy detected, pressing enter")
-            self.connection.send("\r")
-        self.connection.send("\r")
-        res = self.connection.expect(["Control Outlet %s" % port_number, "Control Outlet"])
-        self.connection.expect("3- Immediate Reboot")
+        self.connection.expect("Turn Outlet On")
         self.connection.expect("> ")
         if command == "on":
             self.connection.send("1\r")
-            self.connection.expect("Immediate On")
+            self.connection.expect("Turn Outlet On")
             self._do_it()
         elif command == "off":
             self.connection.send("2\r")
-            self.connection.expect("Immediate Off")
+            self.connection.expect("Turn Outlet Off")
             self._do_it()
         else:
             logging.debug("Unknown command!")

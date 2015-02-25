@@ -18,33 +18,7 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 
-import pexpect
-import os
-import logging
-import pkgutil
-import sys
-
-
-class PDUEngine():
-    connection = None
-    prompt = 0
-    driver = None
-    firmware_dict = {}
-
-    def __init__(self, pdu_hostname):
-        pass
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-    logging.getLogger().setLevel(logging.DEBUG)
-    pe = PDUEngine("pdu01")
-    pe.driver.port_off(1)
-    pe.driver.port_on(1)
-    pe.close()
-    pe = PDUEngine("pdu03")
-    pe.driver.port_off(3)
-    pe.driver.port_on(3)
-    pe.close()
-
-    #pe = PDUEngine("pdu16")
-    #pe.close()
+from lavapdu.drivers.apc7952 import APC7952
+from lavapdu.drivers.apc9218 import APC9218
+from lavapdu.drivers.apc8959 import APC8959
+from lavapdu.drivers.apc9210 import APC9210
