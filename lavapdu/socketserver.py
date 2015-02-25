@@ -143,5 +143,5 @@ if __name__ == "__main__":
     #                     "logging_level": logging.DEBUG,
     #                     "hostname": "0.0.0.0", "port": 16421}}
     #ss = ListenerServer(starter)
-    ss = ListenerServer(json_data)
+    ss = ListenerServer(json_data["daemon"])
     ss.start()
