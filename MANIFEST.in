@@ -1,4 +1,4 @@
-include etc/lavapdu.conf
+include etc/lavapdu/lavapdu.conf
 include etc/lavapdu-runner.init
 include etc/lavapdu-listen.init
 include etc/lavapdulogrotate

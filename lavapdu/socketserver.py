@@ -23,7 +23,7 @@ import logging
 import socket
 import time
 import json
-from dbhandler import DBHandler
+from lavapdu.dbhandler import DBHandler
 
 class ListenerServer(object):
 
@@ -34,25 +34,14 @@ class ListenerServer(object):
         logging.getLogger().name = "ListenerServer"
         logging.getLogger().setLevel(settings["logging_level"])
         logging.debug("ListenerServer __init__")
-        logging.info("listening on %s:%s" % (listen_host, listen_port))
+        logging.info("listening on %s:%s", listen_host, listen_port)
 
         self.server = TCPServer((listen_host, listen_port), TCPRequestHandler)
         self.server.settings = settings
-        self.db = DBHandler(settings)
-        self.create_db()
-        self.db.close()
-        del(self.db)
-
-    def create_db(self):
-        sql = "create table if not exists pdu_queue (id serial, hostname text, port int, request text, exectime int)"
-        self.db.do_sql(sql)
-        sql = "select column_name from information_schema.columns where table_name='pdu_queue'" \
-              "and column_name='exectime'"
-        res = self.db.do_sql_with_fetch(sql)
-        if not res:
-            logging.info("Old db schema discovered, upgrading")
-            sql = "alter table pdu_queue add column exectime int default 1"
-            self.db.do_sql(sql)
+        dbh = DBHandler(settings)
+        dbh.create_db()
+        dbh.close()
+        del dbh
 
     def start(self):
         logging.info("Starting the ListenerServer")
@@ -77,27 +66,27 @@ class TCPRequestHandler(SocketServer.BaseRequestHandler):
         hostname = array[0]
         port = int(array[1])
         request = array[2]
-        if not (request in ["reboot","on","off"]):
+        if not (request in ["reboot", "on", "off"]):
             logging.info("Unknown request: %s" % request)
             raise Exception("Unknown request: %s" % request)
         if request == "reboot":
             logging.debug("reboot requested, submitting off/on")
-            self.queue_request(hostname,port,"off",now)
-            self.queue_request(hostname,port,"on",now+delay)
+            self.queue_request(hostname, port, "off", now)
+            self.queue_request(hostname, port, "on", now+delay)
         else:
             if custom_delay:
                 logging.debug("using delay as requested")
-                self.queue_request(hostname,port,request,now+delay)
+                self.queue_request(hostname, port, request, now+delay)
             else:
-                self.queue_request(hostname,port,request,now)
+                self.queue_request(hostname, port, request, now)
 
     def queue_request(self, hostname, port, request, exectime):
         db = DBHandler(self.server.settings)
         sql = "insert into pdu_queue (hostname,port,request,exectime) " \
-              "values ('%s',%i,'%s',%i)" % (hostname,port,request,exectime)
+              "values ('%s',%i,'%s',%i)" % (hostname, port, request, exectime)
         db.do_sql(sql)
         db.close()
-        del(db)
+        del db
 
 
     def handle(self):
@@ -111,7 +100,8 @@ class TCPRequestHandler(SocketServer.BaseRequestHandler):
             except socket.herror as e:
                 #logging.debug("Unable to resolve: %s error: %s" % (ip,e))
                 request_host = ip
-            logging.info("Received a request from %s: '%s'" % (request_host, data))
+            logging.info("Received a request from %s: '%s'"
+                         % (request_host, data))
             self.insert_request(data)
             self.request.sendall("ack\n")
         except Exception as e:
@@ -129,7 +119,6 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     logging.getLogger().setLevel(logging.DEBUG)
     logging.debug("Executing from __main__")
-    settings = {}
     filename = "/etc/lavapdu/lavapdu.conf"
     print("Reading settings from %s" % filename)
     with open(filename) as stream:

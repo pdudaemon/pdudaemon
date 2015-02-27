@@ -42,6 +42,22 @@ class DBHandler(object):
         self.conn.commit()
         return row
 
+    def create_db(self):
+        logging.info("Creating db table if it doesn't exist")
+        sql = "create table if not exists pdu_queue (id serial, hostname " \
+              "text, port int, request text, exectime int)"
+        self.cursor.execute(sql)
+        self.conn.commit()
+        sql = "select column_name from information_schema.columns where " \
+              "table_name='pdu_queue' and column_name='exectime'"
+        self.cursor.execute(sql)
+        res = self.cursor.fetchone()
+        if not res:
+            logging.info("Old db schema discovered, upgrading")
+            sql = "alter table pdu_queue add column exectime int default 1"
+            self.cursor.execute(sql)
+        self.conn.commit()
+
     def delete_row(self, row_id):
         logging.debug("deleting row %i" % row_id)
         self.do_sql("delete from pdu_queue where id=%i" % row_id)
