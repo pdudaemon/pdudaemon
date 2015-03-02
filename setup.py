@@ -38,7 +38,7 @@ setup(
     data_files=[
         ("/etc/init.d/", ["etc/lavapdu-runner.init"]),
         ("/etc/init.d/", ["etc/lavapdu-listen.init"]),
-        ("/etc/", ["etc/lavapdu.conf"]),
+        ("/etc/lavapdu/", ["etc/lavapdu/lavapdu.conf"]),
         ("/etc/logrotate.d/", ["etc/lavapdulogrotate"]),
     ],
     scripts=[

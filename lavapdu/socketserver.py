@@ -67,8 +67,8 @@ class TCPRequestHandler(SocketServer.BaseRequestHandler):
         port = int(array[1])
         request = array[2]
         if not (request in ["reboot", "on", "off"]):
-            logging.info("Unknown request: %s" % request)
-            raise Exception("Unknown request: %s" % request)
+            logging.info("Unknown request: %s", request)
+            raise Exception("Unknown request: %s", request)
         if request == "reboot":
             logging.debug("reboot requested, submitting off/on")
             self.queue_request(hostname, port, "off", now)
@@ -81,39 +81,39 @@ class TCPRequestHandler(SocketServer.BaseRequestHandler):
                 self.queue_request(hostname, port, request, now)
 
     def queue_request(self, hostname, port, request, exectime):
-        db = DBHandler(self.server.settings)
+        dbhandler = DBHandler(self.server.settings)
         sql = "insert into pdu_queue (hostname,port,request,exectime) " \
               "values ('%s',%i,'%s',%i)" % (hostname, port, request, exectime)
-        db.do_sql(sql)
-        db.close()
-        del db
+        dbhandler.do_sql(sql)
+        dbhandler.close()
+        del dbhandler
 
 
     def handle(self):
         logging.getLogger().name = "TCPRequestHandler"
-        ip = self.client_address[0]
+        request_ip = self.client_address[0]
         try:
             data = self.request.recv(4096).strip()
             socket.setdefaulttimeout(2)
             try:
-                request_host = socket.gethostbyaddr(ip)[0]
-            except socket.herror as e:
+                request_host = socket.gethostbyaddr(request_ip)[0]
+            except socket.herror as e: #pylint: disable=invalid-name
                 #logging.debug("Unable to resolve: %s error: %s" % (ip,e))
-                request_host = ip
-            logging.info("Received a request from %s: '%s'"
-                         % (request_host, data))
+                request_host = request_ip
+            logging.info("Received a request from %s: '%s'", request_host, data)
             self.insert_request(data)
             self.request.sendall("ack\n")
-        except Exception as e:
+        except Exception as e: #pylint: disable=invalid-name
             logging.debug(e.__class__)
             logging.debug(e.message)
             self.request.sendall("nack\n")
         self.request.close()
 
+
 class TCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     allow_reuse_address = True
     daemon_threads = True
-    pass
+    #pass
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
@@ -124,13 +124,5 @@ if __name__ == "__main__":
     with open(filename) as stream:
         jobdata = stream.read()
         json_data = json.loads(jobdata)
-
-    #starter = {"daemon": {"dbhost":"127.0.0.1",
-    #                      "dbuser":"pdudaemon",
-    #                      "dbpass":"pdudaemon",
-    #                     "dbname":"lavapdu",
-    #                     "logging_level": logging.DEBUG,
-    #                     "hostname": "0.0.0.0", "port": 16421}}
-    #ss = ListenerServer(starter)
     ss = ListenerServer(json_data["daemon"])
     ss.start()
