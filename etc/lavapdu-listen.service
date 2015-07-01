@@ -1,0 +1,11 @@
+[Unit]
+Description=TCP Listening daemon to accept PDU requests
+After=postgresql.service
+
+[Service]
+ExecStart=/usr/sbin/lavapdu-listen
+Type=forking
+PIDFile=/var/run/lavapdu-listen.pid
+
+[Install]
+WantedBy=network.target

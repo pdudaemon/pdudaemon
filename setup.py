@@ -23,7 +23,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='lavapdu',
-    version="0.0.4",
+    version="0.0.5",
     author="Matthew Hart",
     author_email="matthew.hart@linaro.org",
     license="GPL2+",
@@ -38,6 +38,10 @@ setup(
     data_files=[
         ("/etc/init.d/", ["etc/lavapdu-runner.init"]),
         ("/etc/init.d/", ["etc/lavapdu-listen.init"]),
+        ("/usr/share/lavapdu/", [
+            "etc/lavapdu-listen.service",
+            "etc/lavapdu-runner.service"
+        ]),
         ("/etc/lavapdu/", ["etc/lavapdu/lavapdu.conf"]),
         ("/etc/logrotate.d/", ["etc/lavapdulogrotate"]),
     ],
