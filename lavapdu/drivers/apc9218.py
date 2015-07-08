@@ -26,7 +26,8 @@ class APC9218(APC7952):
 
     @classmethod
     def accepts(cls, drivername):
-        if drivername == "apc9218":
+        models = ["ap9606","apc9606","ap9218","apc9218"]
+        if drivername.lower() in models:
             return True
         return False
 

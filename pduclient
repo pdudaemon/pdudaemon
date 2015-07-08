@@ -57,5 +57,5 @@ if __name__ == '__main__':
         print("Command sent successfully.")
         exit(0)
     else:
-        print("Unknown error sending command! %s replied: %s" % (options.pdudaemonhostname, reply))
+        print("Error sending command! %s replied: %s" % (options.pdudaemonhostname, reply))
         exit(127)

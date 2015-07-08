@@ -24,10 +24,13 @@ import socket
 import time
 import json
 from lavapdu.dbhandler import DBHandler
+from lavapdu.shared import drivername_from_hostname
 
 class ListenerServer(object):
 
-    def __init__(self, settings):
+    def __init__(self, config):
+        self.config = config
+        settings = config["daemon"]
         listen_host = settings["hostname"]
         listen_port = settings["port"]
 
@@ -38,6 +41,7 @@ class ListenerServer(object):
 
         self.server = TCPServer((listen_host, listen_port), TCPRequestHandler)
         self.server.settings = settings
+        self.server.config = config
         dbh = DBHandler(settings)
         dbh.create_db()
         dbh.close()
@@ -66,6 +70,7 @@ class TCPRequestHandler(SocketServer.BaseRequestHandler):
         hostname = array[0]
         port = int(array[1])
         request = array[2]
+        drivername_from_hostname(hostname, self.server.config["pdus"])
         if not (request in ["reboot", "on", "off"]):
             logging.info("Unknown request: %s", request)
             raise Exception("Unknown request: %s", request)
@@ -106,7 +111,7 @@ class TCPRequestHandler(SocketServer.BaseRequestHandler):
         except Exception as e: #pylint: disable=invalid-name
             logging.debug(e.__class__)
             logging.debug(e.message)
-            self.request.sendall("nack\n")
+            self.request.sendall(e.message)
         self.request.close()
 
 
@@ -124,5 +129,5 @@ if __name__ == "__main__":
     with open(filename) as stream:
         jobdata = stream.read()
         json_data = json.loads(jobdata)
-    ss = ListenerServer(json_data["daemon"])
+    ss = ListenerServer(json_data)
     ss.start()

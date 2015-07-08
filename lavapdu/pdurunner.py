@@ -25,6 +25,7 @@ import traceback
 from lavapdu.dbhandler import DBHandler
 from lavapdu.drivers.driver import PDUDriver
 import lavapdu.drivers.strategies
+from lavapdu.shared import drivername_from_hostname
 
 class PDURunner(object):
 
@@ -47,14 +48,7 @@ class PDURunner(object):
             logging.debug("Found nothing to do in database")
 
     def driver_from_hostname(self, hostname):
-        logging.debug("Trying to find a driver for hostname %s" % hostname)
-        logging.debug(self.pdus)
-        if hostname in self.pdus:
-            drivername = (self.pdus[hostname]["driver"])
-        else:
-            raise NotImplementedError("No configuration available for hostname %s\n"
-                                      "Is there a section in the lavapdu.conf?" % hostname)
-        logging.debug("Config file wants driver: %s" % drivername)
+        drivername = drivername_from_hostname(hostname, self.pdus)
         driver = PDUDriver.select(drivername)(hostname, self.pdus[hostname])
         return driver
 

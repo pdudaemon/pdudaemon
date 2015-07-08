@@ -24,6 +24,8 @@ import os
 import sys
 import optparse
 from logging.handlers import WatchedFileHandler
+from lavapdu.shared import getDaemonLogger
+from lavapdu.shared import readSettings
 
 import daemon
 try:
@@ -33,31 +35,6 @@ except ImportError:
 
 from lavapdu.pdurunner import PDURunner
 
-
-def getDaemonLogger(filePath, log_format=None, loglevel=logging.INFO):
-    logger = logging.getLogger()
-    logger.setLevel(loglevel)
-    try:
-        watchedHandler = WatchedFileHandler(filePath)
-    except Exception as e:
-        return e
-
-    watchedHandler.setFormatter(logging.Formatter(log_format or '%(asctime)s %(msg)s'))
-    logger.addHandler(watchedHandler)
-    return logger, watchedHandler
-
-
-def readSettings(filename):
-    """
-    Read settings from config file, to listen to all hosts, hostname should be 0.0.0.0
-    """
-    pdus = {}
-    settings = {}
-    print("Reading settings from %s" % conffile)
-    with open(filename) as stream:
-        jobdata = stream.read()
-        json_data = json.loads(jobdata)
-    return json_data
 
 if __name__ == '__main__':
     # instance settings come from django - the coordinator doesn't use django and is
