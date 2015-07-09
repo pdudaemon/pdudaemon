@@ -26,13 +26,13 @@ class APC9218(APC7952):
 
     @classmethod
     def accepts(cls, drivername):
-        models = ["ap9606","apc9606","ap9218","apc9218"]
+        models = ["ap9606", "apc9606", "ap9218", "apc9218"]
         if drivername.lower() in models:
             return True
         return False
 
     def _port_interaction(self, command, port_number):
-        ### make sure in main menu here
+        # make sure in main menu here
         self._back_to_main()
         self.connection.send("\r")
         self.connection.expect("1- Device Manager")
@@ -42,7 +42,8 @@ class APC9218(APC7952):
         self.connection.expect("------- Device Manager")
         logging.debug("Got to Device Manager")
         self._enter_outlet(port_number, False)
-        res = self.connection.expect(["1- Control Outlet", "1- Outlet Control/Configuration"])
+        self.connection.expect(["1- Control Outlet",
+                                "1- Outlet Control/Configuration"])
         self.connection.expect("> ")
         self.connection.send("1\r")
         res = self.connection.expect(["> ", "Press <ENTER> to continue..."])
@@ -50,7 +51,8 @@ class APC9218(APC7952):
             logging.debug("Stupid paging thingmy detected, pressing enter")
             self.connection.send("\r")
         self.connection.send("\r")
-        res = self.connection.expect(["Control Outlet %s" % port_number, "Control Outlet"])
+        self.connection.expect(["Control Outlet %s" % port_number,
+                                "Control Outlet"])
         self.connection.expect("3- Immediate Reboot")
         self.connection.expect("> ")
         if command == "on":

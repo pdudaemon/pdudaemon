@@ -22,21 +22,24 @@ import logging
 import psycopg2
 import time
 
+
 class DBHandler(object):
     def __init__(self, config):
-        logging.debug("Creating new DBHandler: %s" % config["dbhost"])
+        logging.debug("Creating new DBHandler: %s", config["dbhost"])
         logging.getLogger().name = "DBHandler"
-        self.conn = psycopg2.connect(database=config["dbname"], user=config["dbuser"],
-                                     password=config["dbpass"], host=config["dbhost"])
+        self.conn = psycopg2.connect(database=config["dbname"],
+                                     user=config["dbuser"],
+                                     password=config["dbpass"],
+                                     host=config["dbhost"])
         self.cursor = self.conn.cursor()
 
     def do_sql(self, sql):
-        logging.debug("executing sql: %s" % sql)
+        logging.debug("executing sql: %s", sql)
         self.cursor.execute(sql)
         self.conn.commit()
 
     def do_sql_with_fetch(self, sql):
-        logging.debug("executing sql: %s" % sql)
+        logging.debug("executing sql: %s", sql)
         self.cursor.execute(sql)
         row = self.cursor.fetchone()
         self.conn.commit()
@@ -59,7 +62,7 @@ class DBHandler(object):
         self.conn.commit()
 
     def delete_row(self, row_id):
-        logging.debug("deleting row %i" % row_id)
+        logging.debug("deleting row %i", row_id)
         self.do_sql("delete from pdu_queue where id=%i" % row_id)
 
     def get_res(self, sql):
@@ -67,7 +70,10 @@ class DBHandler(object):
 
     def get_next_job(self):
         now = int(time.time())
-        row = self.do_sql_with_fetch("select id,hostname,port,request from pdu_queue where (exectime < %i or exectime is null) order by id asc limit 1" % now)
+        row = self.do_sql_with_fetch("select id, hostname, port, "
+                                     "request from pdu_queue where "
+                                     "(exectime < %i or exectime is null)"
+                                     "order by id asc limit 1" % now)
         return row
 
     def close(self):

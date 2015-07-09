@@ -24,8 +24,10 @@ import json
 import traceback
 from lavapdu.dbhandler import DBHandler
 from lavapdu.drivers.driver import PDUDriver
-import lavapdu.drivers.strategies
+import lavapdu.drivers.strategies  # pylint: disable=W0611
 from lavapdu.shared import drivername_from_hostname
+assert lavapdu.drivers.strategies
+
 
 class PDURunner(object):
 
@@ -41,8 +43,9 @@ class PDURunner(object):
         if job:
             job_id, hostname, port, request = job
             logging.debug(job)
-            logging.info("Processing queue item: (%s %s) on hostname: %s" % (request, port, hostname))
-            res = self.do_job(hostname, port, request)
+            logging.info("Processing queue item: (%s %s) on hostname: %s",
+                         request, port, hostname)
+            self.do_job(hostname, port, request)
             db.delete_row(job_id)
         else:
             logging.debug("Found nothing to do in database")
@@ -59,13 +62,13 @@ class PDURunner(object):
             try:
                 driver = self.driver_from_hostname(hostname)
                 return driver.handle(request, port, delay)
-            except Exception as e:
+            except Exception as e:  # pylint: disable=broad-except
                 logging.warn(traceback.format_exc())
-                logging.warn("Failed to execute job: %s %s %s (attempts left %i) error was %s" %
-                             (hostname, port, request, retries, e.message))
+                logging.warn("Failed to execute job: %s %s %s "
+                             "(attempts left %i) error was %s",
+                             hostname, port, request, retries, e.message)
                 if driver:
-                    #driver._cleanup()
-                    driver._bombout()
+                    driver._bombout()  # pylint: disable=no-member,protected-access
                 time.sleep(5)
                 retries -= 1
         return False
@@ -76,17 +79,16 @@ class PDURunner(object):
             db = DBHandler(self.settings)
             self.get_one(db)
             db.close()
-            del(db)
+            del db
             time.sleep(2)
 
 if __name__ == "__main__":
     settings = {}
     filename = "/etc/lavapdu/lavapdu.conf"
-    print("Reading settings from %s" % filename)
+    print("Reading settings from %s", filename)
     with open(filename) as stream:
         jobdata = stream.read()
         json_data = json.loads(jobdata)
 
     p = PDURunner(json_data)
-    #p.do_job("192.168.10.5",18,"reboot",2)
     p.run_me()

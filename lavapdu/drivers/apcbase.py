@@ -40,31 +40,34 @@ class APCBase(PDUDriver):
 
     @classmethod
     def accepts(cls, drivername):
+        logging.debug(drivername)
         return False
 
     def port_interaction(self, command, port_number):
         logging.debug("Running port_interaction from APCBase")
-        self._port_interaction(command, port_number)
-        #self._cleanup()
+        self._port_interaction(command,  # pylint: disable=no-member
+                               port_number)
 
     def get_connection(self):
-        logging.debug("Connecting to APC PDU with: %s" % self.exec_string)
+        logging.debug("Connecting to APC PDU with: %s", self.exec_string)
         if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
-            self.connection = pexpect.spawn(self.exec_string, logfile=sys.stdout)
+            self.connection = pexpect.spawn(self.exec_string,
+                                            logfile=sys.stdout)
         else:
             self.connection = pexpect.spawn(self.exec_string)
-        self._pdu_login("apc","apc")
+        self._pdu_login("apc", "apc")
 
     def _cleanup(self):
-        self._pdu_logout()
+        self._pdu_logout()  # pylint: disable=no-member
 
     def _bombout(self):
-        logging.debug("Bombing out of driver: %s" % self.connection)
+        logging.debug("Bombing out of driver: %s", self.connection)
         self.connection.close(force=True)
-        del(self)
+        del self
 
     def _pdu_login(self, username, password):
-        logging.debug("attempting login with username %s, password %s" % (username, password))
+        logging.debug("attempting login with username %s, password %s",
+                      username, password)
         self.connection.send("\r")
         self.connection.expect("User Name :")
         self.connection.send("%s\r" % username)

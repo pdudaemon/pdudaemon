@@ -19,13 +19,11 @@
 #  MA 02110-1301, USA.
 
 import logging
-import json
 import os
 import sys
 import optparse
-from logging.handlers import WatchedFileHandler
-from lavapdu.shared import getDaemonLogger
-from lavapdu.shared import readSettings
+from lavapdu.shared import get_daemon_logger
+from lavapdu.shared import read_settings
 
 import daemon
 try:
@@ -37,14 +35,13 @@ from lavapdu.socketserver import ListenerServer
 
 
 if __name__ == '__main__':
-    # instance settings come from django - the coordinator doesn't use django and is
-    # not necessarily per-instance, so use the command line and a default conf file.
     pidfile = "/var/run/lavapdu-listen.pid"
     logfile = "/var/log/lavapdu-listener.log"
     conffile = "/etc/lavapdu/lavapdu.conf"
-    settings = readSettings(conffile)
+    settings = read_settings(conffile)
     usage = "Usage: %prog [--logfile] --[loglevel]"
-    description = "LAVA PDU request listener server, host and port are handled in %s" % conffile
+    description = "LAVA PDU request listener server," \
+                  "host and port are handled in %s" % conffile
     parser = optparse.OptionParser(usage=usage, description=description)
     parser.add_option("--logfile", dest="logfile", action="store",
                       type="string", help="log file [%s]" % logfile)
@@ -67,8 +64,10 @@ if __name__ == '__main__':
         level = logging.ERROR
     if daemon_settings["logging_level"] == "INFO":
         level = logging.INFO
-    client_logger, watched_file_handler = getDaemonLogger(logfile, loglevel=level,
-                                                          log_format='%(asctime)s:%(levelname)s:%(name)s:%(message)s')
+    client_logger, watched_file_handler = get_daemon_logger(
+        logfile,
+        loglevel=level,
+        log_format='%(asctime)s:%(levelname)s:%(name)s:%(message)s')
     if isinstance(client_logger, Exception):
         print("Fatal error creating client_logger: " + str(client_logger))
         sys.exit(os.EX_OSERR)
@@ -86,5 +85,7 @@ if __name__ == '__main__':
         stdout=watched_file_handler.stream)
     with context:
         logging.info("Running LAVA PDU Listener %s %s %d."
-                     % (logfile, daemon_settings['hostname'], daemon_settings['port']))
+                     % (logfile,
+                        daemon_settings['hostname'],
+                        daemon_settings['port']))
         ListenerServer(settings).start()

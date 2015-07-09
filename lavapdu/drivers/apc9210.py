@@ -31,8 +31,8 @@ class APC9210(APC7952):
         return False
 
     def _port_interaction(self, command, port_number):
-        print("Attempting command: %s port: %i" % (command, port_number))
-        ### make sure in main menu here
+        logging.debug("Attempting command: %s port: %i", command, port_number)
+        # make sure in main menu here
         self._back_to_main()
         self.connection.send("\r")
         self.connection.expect("1- Outlet Manager")
@@ -42,7 +42,8 @@ class APC9210(APC7952):
         self.connection.expect("------- Outlet Manager")
         logging.debug("Got to Device Manager")
         self._enter_outlet(port_number, False)
-        self.connection.expect(["1- Control of Outlet", "1- Outlet Control/Configuration"])
+        self.connection.expect(["1- Control of Outlet",
+                                "1- Outlet Control/Configuration"])
         self.connection.expect("> ")
         self.connection.send("1\r")
         self.connection.expect("Turn Outlet On")

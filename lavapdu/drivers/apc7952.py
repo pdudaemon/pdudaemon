@@ -39,7 +39,7 @@ class APC7952(APCBase):
         logging.debug("Returning to main menu")
         self.connection.send("\r")
         self.connection.expect('>')
-        for i in range(1, 20):
+        for _ in range(1, 20):
             self.connection.send("\x1B")
             self.connection.send("\r")
             res = self.connection.expect(["4- Logout", "> "])
@@ -50,7 +50,7 @@ class APC7952(APCBase):
     def _enter_outlet(self, outlet, enter_needed=True):
         outlet = "%s" % outlet
         logging.debug("Attempting to enter outlet %s", outlet)
-        if (enter_needed):
+        if enter_needed:
             self.connection.expect("Press <ENTER> to continue...")
         logging.debug("Sending enter")
         self.connection.send("\r")
@@ -61,8 +61,9 @@ class APC7952(APCBase):
         logging.debug("Finished entering outlet")
 
     def _port_interaction(self, command, port_number):
-        print("Attempting command: %s port: %i" % (command, port_number))
-        ### make sure in main menu here
+        logging.debug("Attempting command: %s port: %i",
+                      command, port_number)
+        # make sure in main menu here
         self._back_to_main()
         self.connection.send("\r")
         self.connection.expect("1- Device Manager")
@@ -71,7 +72,7 @@ class APC7952(APCBase):
         self.connection.send("1\r")
         self.connection.expect("------- Device Manager")
         self.connection.send("2\r")
-        res = self.connection.expect("1- Outlet Control/Configuration")
+        self.connection.expect("1- Outlet Control/Configuration")
         self.connection.expect("> ")
         self.connection.send("1\r")
         self._enter_outlet(port_number, False)
@@ -94,7 +95,8 @@ class APC7952(APCBase):
             logging.debug("Unknown command!")
 
     def _do_it(self):
-        self.connection.expect("Enter 'YES' to continue or <ENTER> to cancel :")
+        self.connection.expect("Enter 'YES' to continue or "
+                               "<ENTER> to cancel :")
         self.connection.send("YES\r")
         self.connection.expect("Press <ENTER> to continue...")
         self.connection.send("\r")

@@ -25,9 +25,6 @@ from lavapdu.drivers.apcbase import APCBase
 class APC8959(APCBase):
     pdu_commands = {"off": "olOff", "on": "olOn"}
 
-#    def __init__(self, hostname):
-#        super(APC8959, self).__init__(hostname)
-
     @classmethod
     def accepts(cls, drivername):
         if drivername == "apc8959":
@@ -46,9 +43,10 @@ class APC8959(APCBase):
         self.connection.expect('apc>')
 
     def _port_interaction(self, command, port_number):
-        logging.debug("Attempting %s on port %i" % (command, port_number))
+        logging.debug("Attempting %s on port %i", command, port_number)
         self._pdu_get_to_prompt()
-        self.connection.sendline(self.pdu_commands[command] + (" %i" % port_number))
+        self.connection.sendline(self.pdu_commands[command] +
+                                 (" %i" % port_number))
         self.connection.expect("E000: Success")
         self._pdu_get_to_prompt()
         logging.debug("done")

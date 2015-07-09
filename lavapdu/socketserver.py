@@ -26,6 +26,7 @@ import json
 from lavapdu.dbhandler import DBHandler
 from lavapdu.shared import drivername_from_hostname
 
+
 class ListenerServer(object):
 
     def __init__(self, config):
@@ -53,7 +54,8 @@ class ListenerServer(object):
 
 
 class TCPRequestHandler(SocketServer.BaseRequestHandler):
-    #"One instance per connection.  Override handle(self) to customize action."
+    # "One instance per connection.  Override handle(self) to customize
+    # action."
     def insert_request(self, data):
         logging.getLogger().name = "TCPRequestHandler"
         logging.getLogger().setLevel(self.server.settings["logging_level"])
@@ -77,11 +79,11 @@ class TCPRequestHandler(SocketServer.BaseRequestHandler):
         if request == "reboot":
             logging.debug("reboot requested, submitting off/on")
             self.queue_request(hostname, port, "off", now)
-            self.queue_request(hostname, port, "on", now+delay)
+            self.queue_request(hostname, port, "on", now + delay)
         else:
             if custom_delay:
                 logging.debug("using delay as requested")
-                self.queue_request(hostname, port, request, now+delay)
+                self.queue_request(hostname, port, request, now + delay)
             else:
                 self.queue_request(hostname, port, request, now)
 
@@ -93,7 +95,6 @@ class TCPRequestHandler(SocketServer.BaseRequestHandler):
         dbhandler.close()
         del dbhandler
 
-
     def handle(self):
         logging.getLogger().name = "TCPRequestHandler"
         request_ip = self.client_address[0]
@@ -102,30 +103,30 @@ class TCPRequestHandler(SocketServer.BaseRequestHandler):
             socket.setdefaulttimeout(2)
             try:
                 request_host = socket.gethostbyaddr(request_ip)[0]
-            except socket.herror as e: #pylint: disable=invalid-name
-                #logging.debug("Unable to resolve: %s error: %s" % (ip,e))
+            except socket.herror:
                 request_host = request_ip
-            logging.info("Received a request from %s: '%s'", request_host, data)
+            logging.info("Received a request from %s: '%s'",
+                         request_host,
+                         data)
             self.insert_request(data)
             self.request.sendall("ack\n")
-        except Exception as e: #pylint: disable=invalid-name
-            logging.debug(e.__class__)
-            logging.debug(e.message)
-            self.request.sendall(e.message)
+        except Exception as global_error:  # pylint: disable=broad-except
+            logging.debug(global_error.__class__)
+            logging.debug(global_error.message)
+            self.request.sendall(global_error.message)
         self.request.close()
 
 
 class TCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     allow_reuse_address = True
     daemon_threads = True
-    #pass
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     logging.getLogger().setLevel(logging.DEBUG)
     logging.debug("Executing from __main__")
     filename = "/etc/lavapdu/lavapdu.conf"
-    print("Reading settings from %s" % filename)
+    logging.debug("Reading settings from %s", filename)
     with open(filename) as stream:
         jobdata = stream.read()
         json_data = json.loads(jobdata)
