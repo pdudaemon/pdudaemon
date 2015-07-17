@@ -33,7 +33,8 @@ setup(
         "daemon",
         "lockfile",
         "pexpect",
-        "psycopg2"
+        "psycopg2",
+        "setproctitle"
     ],
     data_files=[
         ("/etc/init.d/", ["etc/lavapdu-runner.init"]),

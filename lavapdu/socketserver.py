@@ -22,9 +22,9 @@ import SocketServer
 import logging
 import socket
 import time
-import json
 from lavapdu.dbhandler import DBHandler
 from lavapdu.shared import drivername_from_hostname
+log = logging.getLogger(__name__)
 
 
 class ListenerServer(object):
@@ -34,22 +34,16 @@ class ListenerServer(object):
         settings = config["daemon"]
         listen_host = settings["hostname"]
         listen_port = settings["port"]
-
-        logging.getLogger().name = "ListenerServer"
-        logging.getLogger().setLevel(settings["logging_level"])
-        logging.debug("ListenerServer __init__")
-        logging.info("listening on %s:%s", listen_host, listen_port)
+        log.debug("ListenerServer __init__")
+        log.info("listening on %s:%s", listen_host, listen_port)
 
         self.server = TCPServer((listen_host, listen_port), TCPRequestHandler)
         self.server.settings = settings
         self.server.config = config
-        dbh = DBHandler(settings)
-        dbh.create_db()
-        dbh.close()
-        del dbh
+        self.server.dbh = DBHandler(settings)
 
     def start(self):
-        logging.info("Starting the ListenerServer")
+        log.info("Starting the ListenerServer")
         self.server.serve_forever()
 
 
@@ -57,14 +51,12 @@ class TCPRequestHandler(SocketServer.BaseRequestHandler):
     # "One instance per connection.  Override handle(self) to customize
     # action."
     def insert_request(self, data):
-        logging.getLogger().name = "TCPRequestHandler"
-        logging.getLogger().setLevel(self.server.settings["logging_level"])
         array = data.split(" ")
         delay = 10
         custom_delay = False
         now = int(time.time())
         if (len(array) < 3) or (len(array) > 4):
-            logging.info("Wrong data size")
+            log.info("Wrong data size")
             raise Exception("Unexpected data")
         if len(array) == 4:
             delay = int(array[3])
@@ -72,31 +64,24 @@ class TCPRequestHandler(SocketServer.BaseRequestHandler):
         hostname = array[0]
         port = int(array[1])
         request = array[2]
+        # this will throw if the pdu is not found
         drivername_from_hostname(hostname, self.server.config["pdus"])
+        dbh = self.server.dbh
         if not (request in ["reboot", "on", "off"]):
-            logging.info("Unknown request: %s", request)
+            log.info("Unknown request: %s", request)
             raise Exception("Unknown request: %s", request)
         if request == "reboot":
-            logging.debug("reboot requested, submitting off/on")
-            self.queue_request(hostname, port, "off", now)
-            self.queue_request(hostname, port, "on", now + delay)
+            log.debug("reboot requested, submitting off/on")
+            dbh.insert_request(hostname, port, "off", now)
+            dbh.insert_request(hostname, port, "on", now + delay)
         else:
             if custom_delay:
-                logging.debug("using delay as requested")
-                self.queue_request(hostname, port, request, now + delay)
+                log.debug("using delay as requested")
+                dbh.insert_request(hostname, port, request, now + delay)
             else:
-                self.queue_request(hostname, port, request, now)
-
-    def queue_request(self, hostname, port, request, exectime):
-        dbhandler = DBHandler(self.server.settings)
-        sql = "insert into pdu_queue (hostname,port,request,exectime) " \
-              "values ('%s',%i,'%s',%i)" % (hostname, port, request, exectime)
-        dbhandler.do_sql(sql)
-        dbhandler.close()
-        del dbhandler
+                dbh.insert_request(hostname, port, request, now)
 
     def handle(self):
-        logging.getLogger().name = "TCPRequestHandler"
         request_ip = self.client_address[0]
         try:
             data = self.request.recv(4096).strip()
@@ -105,14 +90,14 @@ class TCPRequestHandler(SocketServer.BaseRequestHandler):
                 request_host = socket.gethostbyaddr(request_ip)[0]
             except socket.herror:
                 request_host = request_ip
-            logging.info("Received a request from %s: '%s'",
-                         request_host,
-                         data)
+            log.info("Received a request from %s: '%s'",
+                     request_host,
+                     data)
             self.insert_request(data)
             self.request.sendall("ack\n")
         except Exception as global_error:  # pylint: disable=broad-except
-            logging.debug(global_error.__class__)
-            logging.debug(global_error.message)
+            log.debug(global_error.__class__)
+            log.debug(global_error.message)
             self.request.sendall(global_error.message)
         self.request.close()
 
@@ -120,15 +105,3 @@ class TCPRequestHandler(SocketServer.BaseRequestHandler):
 class TCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     allow_reuse_address = True
     daemon_threads = True
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-    logging.getLogger().setLevel(logging.DEBUG)
-    logging.debug("Executing from __main__")
-    filename = "/etc/lavapdu/lavapdu.conf"
-    logging.debug("Reading settings from %s", filename)
-    with open(filename) as stream:
-        jobdata = stream.read()
-        json_data = json.loads(jobdata)
-    ss = ListenerServer(json_data)
-    ss.start()

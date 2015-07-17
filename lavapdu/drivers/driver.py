@@ -19,6 +19,7 @@
 #  MA 02110-1301, USA.
 
 import logging
+log = logging.getLogger(__name__)
 
 
 class PDUDriver(object):
@@ -30,18 +31,18 @@ class PDUDriver(object):
 
     @classmethod
     def select(cls, drivername):
-        logging.debug("adding PDUDriver subclasses: %s",
-                      cls.__subclasses__())  # pylint: disable=no-member
+        log.debug("adding PDUDriver subclasses: %s",
+                  cls.__subclasses__())  # pylint: disable=no-member
         candidates = cls.__subclasses__()  # pylint: disable=no-member
         for subc in cls.__subclasses__():  # pylint: disable=no-member
-            logging.debug("adding %s subclasses: %s", subc,
-                          subc.__subclasses__())
+            log.debug("adding %s subclasses: %s", subc,
+                      subc.__subclasses__())
             candidates = candidates + (subc.__subclasses__())
             for subsubc in subc.__subclasses__():
-                logging.debug("adding %s subclasses: %s", subsubc,
-                              subsubc.__subclasses__())
+                log.debug("adding %s subclasses: %s", subsubc,
+                          subsubc.__subclasses__())
                 candidates = candidates + (subsubc.__subclasses__())
-        logging.debug(candidates)
+        log.debug(candidates)
         willing = [c for c in candidates if c.accepts(drivername)]
         if len(willing) == 0:
             raise NotImplementedError(
@@ -49,19 +50,19 @@ class PDUDriver(object):
                 "'%s' with the specified job parameters. %s" %
                 (drivername, cls)
             )
-        logging.debug("%s accepted the request", willing[0])
+        log.debug("%s accepted the request", willing[0])
         return willing[0]
 
     def handle(self, request, port_number, delay=0):
-        logging.debug("Driving PDU hostname: %s "
-                      "PORT: %s REQUEST: %s (delay %s)",
-                      self.hostname, port_number, request, delay)
+        log.debug("Driving PDU hostname: %s "
+                  "PORT: %s REQUEST: %s (delay %s)",
+                  self.hostname, port_number, request, delay)
         if request == "on":
             self.port_on(port_number)
         elif request == "off":
             self.port_off(port_number)
         else:
-            logging.debug("Unknown request to handle - oops")
+            log.debug("Unknown request to handle - oops")
             raise NotImplementedError(
                 "Driver doesn't know how to %s " % request
             )

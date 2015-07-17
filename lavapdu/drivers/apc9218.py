@@ -20,6 +20,7 @@
 
 import logging
 from lavapdu.drivers.apc7952 import APC7952
+log = logging.getLogger(__name__)
 
 
 class APC9218(APC7952):
@@ -37,10 +38,10 @@ class APC9218(APC7952):
         self.connection.send("\r")
         self.connection.expect("1- Device Manager")
         self.connection.expect("> ")
-        logging.debug("Entering Device Manager")
+        log.debug("Entering Device Manager")
         self.connection.send("1\r")
         self.connection.expect("------- Device Manager")
-        logging.debug("Got to Device Manager")
+        log.debug("Got to Device Manager")
         self._enter_outlet(port_number, False)
         self.connection.expect(["1- Control Outlet",
                                 "1- Outlet Control/Configuration"])
@@ -48,7 +49,7 @@ class APC9218(APC7952):
         self.connection.send("1\r")
         res = self.connection.expect(["> ", "Press <ENTER> to continue..."])
         if res == 1:
-            logging.debug("Stupid paging thingmy detected, pressing enter")
+            log.debug("Stupid paging thingmy detected, pressing enter")
             self.connection.send("\r")
         self.connection.send("\r")
         self.connection.expect(["Control Outlet %s" % port_number,
@@ -64,4 +65,4 @@ class APC9218(APC7952):
             self.connection.expect("Immediate Off")
             self._do_it()
         else:
-            logging.debug("Unknown command!")
+            log.debug("Unknown command!")

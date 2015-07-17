@@ -20,6 +20,7 @@
 
 import logging
 from lavapdu.drivers.apc7952 import APC7952
+log = logging.getLogger(__name__)
 
 
 class APC9210(APC7952):
@@ -31,16 +32,16 @@ class APC9210(APC7952):
         return False
 
     def _port_interaction(self, command, port_number):
-        logging.debug("Attempting command: %s port: %i", command, port_number)
+        log.debug("Attempting command: %s port: %i", command, port_number)
         # make sure in main menu here
         self._back_to_main()
         self.connection.send("\r")
         self.connection.expect("1- Outlet Manager")
         self.connection.expect("> ")
-        logging.debug("Entering Outlet Manager")
+        log.debug("Entering Outlet Manager")
         self.connection.send("1\r")
         self.connection.expect("------- Outlet Manager")
-        logging.debug("Got to Device Manager")
+        log.debug("Got to Device Manager")
         self._enter_outlet(port_number, False)
         self.connection.expect(["1- Control of Outlet",
                                 "1- Outlet Control/Configuration"])
@@ -57,4 +58,4 @@ class APC9210(APC7952):
             self.connection.expect("Turn Outlet Off")
             self._do_it()
         else:
-            logging.debug("Unknown command!")
+            log.debug("Unknown command!")

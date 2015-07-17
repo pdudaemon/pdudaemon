@@ -21,12 +21,13 @@
 import logging
 import psycopg2
 import time
+log = logging.getLogger(__name__)
 
 
 class DBHandler(object):
     def __init__(self, config):
-        logging.debug("Creating new DBHandler: %s", config["dbhost"])
-        logging.getLogger().name = "DBHandler"
+        log.debug("Creating new DBHandler: %s %s", config["dbhost"],
+                  config["dbname"])
         self.conn = psycopg2.connect(database=config["dbname"],
                                      user=config["dbuser"],
                                      password=config["dbpass"],
@@ -34,49 +35,55 @@ class DBHandler(object):
         self.cursor = self.conn.cursor()
 
     def do_sql(self, sql):
-        logging.debug("executing sql: %s", sql)
+        log.debug("executing sql: %s", sql)
         self.cursor.execute(sql)
         self.conn.commit()
 
     def do_sql_with_fetch(self, sql):
-        logging.debug("executing sql: %s", sql)
+        log.debug("executing sql: %s", sql)
         self.cursor.execute(sql)
         row = self.cursor.fetchone()
         self.conn.commit()
         return row
 
     def create_db(self):
-        logging.info("Creating db table if it doesn't exist")
+        log.info("Creating db table if it doesn't exist")
         sql = "create table if not exists pdu_queue (id serial, hostname " \
               "text, port int, request text, exectime int)"
-        self.cursor.execute(sql)
-        self.conn.commit()
+        self.do_sql(sql)
         sql = "select column_name from information_schema.columns where " \
               "table_name='pdu_queue' and column_name='exectime'"
-        self.cursor.execute(sql)
-        res = self.cursor.fetchone()
+        res = self.do_sql_with_fetch(sql)
         if not res:
-            logging.info("Old db schema discovered, upgrading")
+            log.info("Old db schema discovered, upgrading")
             sql = "alter table pdu_queue add column exectime int default 1"
-            self.cursor.execute(sql)
-        self.conn.commit()
+            self.do_sql(sql)
+
+    def insert_request(self, hostname, port, request, exectime):
+        sql = "insert into pdu_queue (hostname,port,request,exectime) " \
+              "values ('%s',%i,'%s',%i)" % (hostname, port, request, exectime)
+        self.do_sql(sql)
 
     def delete_row(self, row_id):
-        logging.debug("deleting row %i", row_id)
+        log.debug("deleting row %i", row_id)
         self.do_sql("delete from pdu_queue where id=%i" % row_id)
 
     def get_res(self, sql):
         return self.cursor.execute(sql)
 
-    def get_next_job(self):
+    def get_next_job(self, single_pdu=False):
         now = int(time.time())
-        row = self.do_sql_with_fetch("select id, hostname, port, "
-                                     "request from pdu_queue where "
-                                     "(exectime < %i or exectime is null)"
-                                     "order by id asc limit 1" % now)
+        extra_sql = ""
+        if single_pdu:
+            log.debug("Looking for jobs for PDU: %s", single_pdu)
+            extra_sql = "and hostname='%s'" % single_pdu
+        row = self.do_sql_with_fetch("select id, hostname, port, request "
+                                     "from pdu_queue where ((exectime < %i "
+                                     "or exectime is null) %s) order by id asc"
+                                     " limit 1" % (now, extra_sql))
         return row
 
     def close(self):
-        logging.debug("Closing DBHandler")
+        log.debug("Closing DBHandler")
         self.cursor.close()
         self.conn.close()

@@ -20,6 +20,7 @@
 
 import logging
 from lavapdu.drivers.apcbase import APCBase
+log = logging.getLogger(__name__)
 
 
 class APC7952(APCBase):
@@ -32,11 +33,11 @@ class APC7952(APCBase):
 
     def _pdu_logout(self):
         self._back_to_main()
-        logging.debug("Logging out")
+        log.debug("Logging out")
         self.connection.send("4\r")
 
     def _back_to_main(self):
-        logging.debug("Returning to main menu")
+        log.debug("Returning to main menu")
         self.connection.send("\r")
         self.connection.expect('>')
         for _ in range(1, 20):
@@ -44,31 +45,31 @@ class APC7952(APCBase):
             self.connection.send("\r")
             res = self.connection.expect(["4- Logout", "> "])
             if res == 0:
-                logging.debug("Back at main menu")
+                log.debug("Back at main menu")
                 break
 
     def _enter_outlet(self, outlet, enter_needed=True):
         outlet = "%s" % outlet
-        logging.debug("Attempting to enter outlet %s", outlet)
+        log.debug("Attempting to enter outlet %s", outlet)
         if enter_needed:
             self.connection.expect("Press <ENTER> to continue...")
-        logging.debug("Sending enter")
+        log.debug("Sending enter")
         self.connection.send("\r")
         self.connection.expect("> ")
-        logging.debug("Sending outlet number")
+        log.debug("Sending outlet number")
         self.connection.send(outlet)
         self.connection.send("\r")
-        logging.debug("Finished entering outlet")
+        log.debug("Finished entering outlet")
 
     def _port_interaction(self, command, port_number):
-        logging.debug("Attempting command: %s port: %i",
-                      command, port_number)
+        log.debug("Attempting command: %s port: %i",
+                  command, port_number)
         # make sure in main menu here
         self._back_to_main()
         self.connection.send("\r")
         self.connection.expect("1- Device Manager")
         self.connection.expect("> ")
-        logging.debug("Entering Device Manager")
+        log.debug("Entering Device Manager")
         self.connection.send("1\r")
         self.connection.expect("------- Device Manager")
         self.connection.send("2\r")
@@ -80,7 +81,7 @@ class APC7952(APCBase):
         self.connection.send("1\r")
         res = self.connection.expect(["> ", "Press <ENTER> to continue..."])
         if res == 1:
-            logging.debug("Stupid paging thingmy detected, pressing enter")
+            log.debug("Stupid paging thingmy detected, pressing enter")
             self.connection.send("\r")
         self.connection.send("\r")
         if command == "on":
@@ -92,7 +93,7 @@ class APC7952(APCBase):
             self.connection.expect("Immediate Off")
             self._do_it()
         else:
-            logging.debug("Unknown command!")
+            log.debug("Unknown command!")
 
     def _do_it(self):
         self.connection.expect("Enter 'YES' to continue or "

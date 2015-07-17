@@ -20,6 +20,7 @@
 
 import logging
 from lavapdu.drivers.apcbase import APCBase
+log = logging.getLogger(__name__)
 
 
 class APC8959(APCBase):
@@ -32,21 +33,21 @@ class APC8959(APCBase):
         return False
 
     def _pdu_logout(self):
-        logging.debug("logging out")
+        log.debug("logging out")
         self.connection.send("\r")
         self.connection.send("exit")
         self.connection.send("\r")
-        logging.debug("done")
+        log.debug("done")
 
     def _pdu_get_to_prompt(self):
         self.connection.send("\r")
         self.connection.expect('apc>')
 
     def _port_interaction(self, command, port_number):
-        logging.debug("Attempting %s on port %i", command, port_number)
+        log.debug("Attempting %s on port %i", command, port_number)
         self._pdu_get_to_prompt()
         self.connection.sendline(self.pdu_commands[command] +
                                  (" %i" % port_number))
         self.connection.expect("E000: Success")
         self._pdu_get_to_prompt()
-        logging.debug("done")
+        log.debug("done")

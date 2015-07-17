@@ -20,35 +20,36 @@
 
 import logging
 import time
-import json
 import traceback
 from lavapdu.dbhandler import DBHandler
 from lavapdu.drivers.driver import PDUDriver
 import lavapdu.drivers.strategies  # pylint: disable=W0611
 from lavapdu.shared import drivername_from_hostname
+from lavapdu.shared import pdus_from_config
 assert lavapdu.drivers.strategies
+log = logging.getLogger(__name__)
 
 
 class PDURunner(object):
 
-    def __init__(self, config):
-        self.pdus = config["pdus"]
+    def __init__(self, config, single_pdu=False):
         self.settings = config["daemon"]
-        logging.basicConfig(level=self.settings["logging_level"])
-        logging.getLogger().setLevel(self.settings["logging_level"])
-        logging.getLogger().name = "PDURunner"
+        self.pdus = config["pdus"]
+        if single_pdu:
+            if single_pdu not in pdus_from_config(config):
+                raise NotImplementedError
+        self.single_pdu = single_pdu
+        self.dbh = DBHandler(self.settings)
 
-    def get_one(self, db):
-        job = db.get_next_job()
+    def get_one(self):
+        job = self.dbh.get_next_job(self.single_pdu)
         if job:
             job_id, hostname, port, request = job
-            logging.debug(job)
-            logging.info("Processing queue item: (%s %s) on hostname: %s",
-                         request, port, hostname)
+            log.debug(job)
+            log.info("Processing queue item: (%s %s) on hostname: %s",
+                     request, port, hostname)
             self.do_job(hostname, port, request)
-            db.delete_row(job_id)
-        else:
-            logging.debug("Found nothing to do in database")
+            self.dbh.delete_row(job_id)
 
     def driver_from_hostname(self, hostname):
         drivername = drivername_from_hostname(hostname, self.pdus)
@@ -63,32 +64,21 @@ class PDURunner(object):
                 driver = self.driver_from_hostname(hostname)
                 return driver.handle(request, port, delay)
             except Exception as e:  # pylint: disable=broad-except
-                logging.warn(traceback.format_exc())
-                logging.warn("Failed to execute job: %s %s %s "
-                             "(attempts left %i) error was %s",
-                             hostname, port, request, retries, e.message)
+                log.warn(traceback.format_exc())
+                log.warn("Failed to execute job: %s %s %s "
+                         "(attempts left %i) error was %s",
+                         hostname, port, request, retries, e.message)
                 if driver:
-                    driver._bombout()  # pylint: disable=no-member,protected-access
+                    driver._bombout()  # pylint: disable=W0212,E1101
                 time.sleep(5)
                 retries -= 1
         return False
 
     def run_me(self):
-        logging.info("Starting up the PDURunner")
+        if self.single_pdu:
+            log.info("Starting a PDURunner for PDU: %s", self.single_pdu)
+        else:
+            log.info("Starting a PDURunner for all PDUS")
         while 1:
-            db = DBHandler(self.settings)
-            self.get_one(db)
-            db.close()
-            del db
+            self.get_one()
             time.sleep(2)
-
-if __name__ == "__main__":
-    settings = {}
-    filename = "/etc/lavapdu/lavapdu.conf"
-    print("Reading settings from %s", filename)
-    with open(filename) as stream:
-        jobdata = stream.read()
-        json_data = json.loads(jobdata)
-
-    p = PDURunner(json_data)
-    p.run_me()

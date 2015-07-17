@@ -18,7 +18,6 @@ def get_daemon_logger(filepath, log_format=None, loglevel=logging.INFO):
 
 
 def read_settings(filename):
-    logging.debug("Reading settings from %s", filename)
     with open(filename) as stream:
         jobdata = stream.read()
         json_data = json.loads(jobdata)
@@ -33,3 +32,10 @@ def drivername_from_hostname(hostname, pdus):
                                   "is there a section in the lavapdu.conf?" %
                                   hostname)
     return drivername
+
+
+def pdus_from_config(data):
+    output = []
+    for pdu in data["pdus"]:
+        output.append(pdu)
+    return output
