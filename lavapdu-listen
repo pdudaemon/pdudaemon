@@ -47,6 +47,7 @@ if __name__ == '__main__':
                       type="string", help="log file [%s]" % logfile)
     parser.add_option("--loglevel", dest="loglevel", action="store",
                       type="string", help="logging level [INFO]")
+    parser.add_option("--purge", dest="purge", action="store_true")
     (options, args) = parser.parse_args()
     if options.logfile:
         if os.path.exists(os.path.dirname(options.logfile)):
@@ -83,6 +84,8 @@ if __name__ == '__main__':
         files_preserve=[watched_file_handler.stream],
         stderr=watched_file_handler.stream,
         stdout=watched_file_handler.stream)
+    if options.purge:
+        settings["purge"] = True
     with context:
         logging.info("Running LAVA PDU Listener %s %s %d."
                      % (logfile,

@@ -22,6 +22,8 @@ import SocketServer
 import logging
 import socket
 import time
+import sys
+import os
 from lavapdu.dbhandler import DBHandler
 from lavapdu.shared import drivername_from_hostname
 log = logging.getLogger(__name__)
@@ -35,12 +37,16 @@ class ListenerServer(object):
         listen_host = settings["hostname"]
         listen_port = settings["port"]
         log.debug("ListenerServer __init__")
+        if "purge" in config:
+            self.server.dbh.purge()
+            sys.exit(os.EX_OK)
         log.info("listening on %s:%s", listen_host, listen_port)
 
         self.server = TCPServer((listen_host, listen_port), TCPRequestHandler)
         self.server.settings = settings
         self.server.config = config
         self.server.dbh = DBHandler(settings)
+
 
     def start(self):
         log.info("Starting the ListenerServer")

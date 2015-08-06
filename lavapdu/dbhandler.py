@@ -71,6 +71,11 @@ class DBHandler(object):
     def get_res(self, sql):
         return self.cursor.execute(sql)
 
+    def purge(self):
+        log.debug("Purging all jobs from database")
+        self.do_sql("delete from pdu_queue")
+        self.close()
+
     def get_next_job(self, single_pdu=False):
         now = int(time.time())
         extra_sql = ""
