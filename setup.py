@@ -32,6 +32,7 @@ setup(
     install_requires=[
         "daemon",
         "lockfile",
+        "paramiko",
         "pexpect",
         "psycopg2",
         "setproctitle"
