@@ -24,6 +24,7 @@ from paramiko import RejectPolicy, WarningPolicy
 from lavapdu.drivers.driver import PDUDriver
 log = logging.getLogger(__name__)
 
+
 class UbiquityBase(PDUDriver):
     client = None
     # overwrite power_count
@@ -79,7 +80,9 @@ class UbiquityBase(PDUDriver):
             command = "sh -c 'echo 0 > /proc/power/relay%d'" % port_number
 
         try:
-            stdin, stdout, stderr = self.client.exec_command(command, bufsize=-1, timeout=3)
+            stdin, stdout, stderr = self.client.exec_command(command,
+                                                             bufsize=-1,
+                                                             timeout=3)
             stdin.close()
         except SSHException:
             pass
@@ -95,6 +98,7 @@ class UbiquityBase(PDUDriver):
         log.debug(drivername)
         return False
 
+
 class Ubiquity3Port(UbiquityBase):
     port_count = 3
 
@@ -104,6 +108,7 @@ class Ubiquity3Port(UbiquityBase):
         if drivername == "ubntmfi3port":
             return True
         return False
+
 
 class Ubiquity6Port(UbiquityBase):
     port_count = 6
