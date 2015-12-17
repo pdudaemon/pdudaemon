@@ -18,9 +18,33 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 
-from lavapdu.drivers.apc7952 import APC7952
-from lavapdu.drivers.apc9218 import APC9218
-from lavapdu.drivers.apc8959 import APC8959
-from lavapdu.drivers.apc9210 import APC9210
-from lavapdu.drivers.localcmdline import LocalCmdline
+import logging
+import pexpect
+from lavapdu.drivers.driver import PDUDriver
+import sys
+
+
+class LocalBase(PDUDriver):
+    connection = None
+
+    def __init__(self, hostname, settings):
+        self.hostname = hostname
+        logging.debug(settings)
+        self.settings = settings
+        super(LocalBase, self).__init__()
+
+    @classmethod
+    def accepts(cls, drivername):
+        return False
+
+    def port_interaction(self, command, port_number):
+        logging.debug("Running port_interaction from LocalBase")
+        self._port_interaction(command, port_number)
+
+    def _bombout(self):
+        logging.debug("Bombing out of driver: %s" % self.connection)
+        del(self)
+
+    def _cleanup(self):
+        logging.debug("Cleaning up driver: %s" % self.connection)
 
