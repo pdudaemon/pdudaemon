@@ -19,6 +19,7 @@
 #  MA 02110-1301, USA.
 
 from lavapdu.drivers.acme import ACME  # pylint: disable=W0611
+from lavapdu.drivers.apc7932 import APC7932  # pylint: disable=W0611
 from lavapdu.drivers.apc7952 import APC7952  # pylint: disable=W0611
 from lavapdu.drivers.apc9218 import APC9218  # pylint: disable=W0611
 from lavapdu.drivers.apc8959 import APC8959  # pylint: disable=W0611
@@ -28,6 +29,7 @@ from lavapdu.drivers.ubiquity import Ubiquity6Port  # pylint: disable=W0611
 from lavapdu.drivers.localcmdline import LocalCmdline
 
 assert ACME
+assert APC7932
 assert APC7952
 assert APC9218
 assert APC8959
