@@ -31,9 +31,17 @@ class APCBase(PDUDriver):
         self.hostname = hostname
         log.debug(settings)
         self.settings = settings
+        self.username = "apc"
+        self.password = "apc"
         telnetport = 23
+
         if "telnetport" in settings:
             telnetport = settings["telnetport"]
+        if "username" in settings:
+	       self.username = settings["username"]
+        if "password" in settings:
+	       self.password = settings["password"]
+
         self.exec_string = "/usr/bin/telnet %s %d" % (hostname, telnetport)
         self.get_connection()
         super(APCBase, self).__init__()
@@ -53,7 +61,7 @@ class APCBase(PDUDriver):
         # only uncomment this line for FULL debug when developing
         # self.connection = pexpect.spawn(self.exec_string, logfile=sys.stdout)
         self.connection = pexpect.spawn(self.exec_string)
-        self._pdu_login("apc", "apc")
+        self._pdu_login(self.username,self.password)
 
     def _cleanup(self):
         self._pdu_logout()  # pylint: disable=no-member
