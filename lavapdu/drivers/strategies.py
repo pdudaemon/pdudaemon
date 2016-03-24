@@ -27,6 +27,7 @@ from lavapdu.drivers.apc9210 import APC9210  # pylint: disable=W0611
 from lavapdu.drivers.ubiquity import Ubiquity3Port  # pylint: disable=W0611
 from lavapdu.drivers.ubiquity import Ubiquity6Port  # pylint: disable=W0611
 from lavapdu.drivers.localcmdline import LocalCmdline
+from lavapdu.drivers.ip9258 import IP9258
 
 assert ACME
 assert APC7932
@@ -36,4 +37,4 @@ assert APC8959
 assert APC9210
 assert Ubiquity3Port
 assert Ubiquity6Port
-
+assert IP9258
