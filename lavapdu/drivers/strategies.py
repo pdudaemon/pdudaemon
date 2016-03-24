@@ -39,3 +39,4 @@ assert APC9210
 assert Ubiquity3Port
 assert Ubiquity6Port
 assert IP9258
+assert Sainsmart
