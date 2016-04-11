@@ -22,8 +22,15 @@ import logging
 from subprocess import call
 from lavapdu.drivers.localbase import LocalBase
 
+log = logging.getLogger(__name__)
 
 class LocalCmdline(LocalBase):
+
+    def __init__(self, hostname, settings):
+        self.hostname = hostname
+        self.settings = settings
+        self.cmd_on = settings.get("cmd_on", None)
+        self.cmd_off = settings.get("cmd_off", None)
 
     @classmethod
     def accepts(cls, drivername):
@@ -33,15 +40,18 @@ class LocalCmdline(LocalBase):
 
     def _port_interaction(self, command, port_number):
 
-        if command == "on":
-            print("Attempting local commandline ON control: %s port: %i" % (command, port_number))
-            # replace the call arguments below with your command line for the ON and OFF commands
-            # call(["relay-ctrl.py", str(port_number) , "POWER_ON"])
+        cmd = None
 
-        elif command == "off":
-            print("Attempting local commandline OFF control: %s port: %i" % (command, port_number))
-            # call(["relay-ctrl.py", str(port_number) , "POWER_OFF"])
+        log.debug("Attempting control: %s port: %i" % (command, port_number))
+        if command == "on" and self.cmd_on:
+            cmd = self.cmd_on % port_number
+
+        elif command == "off" and self.cmd_off:
+            cmd = self.cmd_off % port_number
 
         else:
-            logging.debug("Unknown command!")
+            log.debug("Unknown command!")
 
+        if cmd:
+            log.debug("running %s" % cmd)
+            call(cmd, shell = True)
