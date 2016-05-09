@@ -29,6 +29,11 @@ from lavapdu.drivers.ubiquity import Ubiquity6Port  # pylint: disable=W0611
 from lavapdu.drivers.localcmdline import LocalCmdline
 from lavapdu.drivers.ip9258 import IP9258
 from lavapdu.drivers.sainsmart import Sainsmart
+from lavapdu.drivers.devantech import DevantechETH002
+from lavapdu.drivers.devantech import DevantechETH0621
+from lavapdu.drivers.devantech import DevantechETH484
+from lavapdu.drivers.devantech import DevantechETH008
+from lavapdu.drivers.devantech import DevantechETH8020
 
 assert ACME
 assert APC7932
@@ -40,3 +45,8 @@ assert Ubiquity3Port
 assert Ubiquity6Port
 assert IP9258
 assert Sainsmart
+assert DevantechETH002
+assert DevantechETH0621
+assert DevantechETH484
+assert DevantechETH008
+assert DevantechETH8020
