@@ -34,6 +34,7 @@ from lavapdu.drivers.devantech import DevantechETH0621
 from lavapdu.drivers.devantech import DevantechETH484
 from lavapdu.drivers.devantech import DevantechETH008
 from lavapdu.drivers.devantech import DevantechETH8020
+from lavapdu.drivers.synaccess import SynNetBooter
 
 assert ACME
 assert APC7932
@@ -50,3 +51,4 @@ assert DevantechETH0621
 assert DevantechETH484
 assert DevantechETH008
 assert DevantechETH8020
+assert SynNetBooter
