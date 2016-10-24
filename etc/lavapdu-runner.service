@@ -3,7 +3,7 @@ Description=Runner daemon to process PDU requests
 After=postgresql.service
 
 [Service]
-ExecStart=/usr/sbin/lavapdu-runner
+ExecStart=/usr/sbin/lavapdu-runner -j
 Type=forking
 PIDFile=/var/run/lavapdu-runner.pid
 
