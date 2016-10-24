@@ -20,7 +20,8 @@ def get_daemon_logger(filepath, log_format=None, loglevel=logging.INFO):
         else:
             handler = StreamHandler()
     except Exception as e:  # pylint: disable=broad-except
-        return e
+        print("Fatal error creating client_logger: " + str(e))
+        sys.exit(os.EX_OSERR)
 
     handler.setFormatter(logging.Formatter(log_format
                                            or '%(asctime)s %(msg)s'))
@@ -67,9 +68,6 @@ def setup_daemon(options, settings, pidfile):
         None if options.foreground else logfile,
         loglevel=level,
         log_format='%(asctime)s:%(levelname)s:%(name)s:%(message)s')
-    if isinstance(client_logger, Exception):
-        print("Fatal error creating client_logger: " + str(client_logger))
-        sys.exit(os.EX_OSERR)
     # noinspection PyArgumentList
     lockfile = pidlockfile.PIDLockFile(pidfile)
     if lockfile.is_locked():
