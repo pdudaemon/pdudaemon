@@ -3,19 +3,24 @@ import sys
 import logging
 import json
 import argparse
+from os.path import basename
 from logging.handlers import WatchedFileHandler
 from logging import StreamHandler
+
 import daemon
 try:
     import daemon.pidlockfile as pidlockfile
 except ImportError:
     from lockfile import pidlockfile
 
-def get_daemon_logger(filepath, log_format=None, loglevel=logging.INFO):
+def get_daemon_logger(filepath, log_format=None, loglevel=logging.INFO, journal=False):
     logger = logging.getLogger()
     logger.setLevel(loglevel)
     try:
-        if filepath:
+        if journal:
+            from systemd.journal import JournalHandler
+            handler = JournalHandler(SYSLOG_IDENTIFIER=basename(sys.argv[0]))
+        elif filepath:
             handler = WatchedFileHandler(filepath)
         else:
             handler = StreamHandler()
@@ -23,8 +28,8 @@ def get_daemon_logger(filepath, log_format=None, loglevel=logging.INFO):
         print("Fatal error creating client_logger: " + str(e))
         sys.exit(os.EX_OSERR)
 
-    handler.setFormatter(logging.Formatter(log_format
-                                           or '%(asctime)s %(msg)s'))
+    if (log_format):
+        handler.setFormatter(logging.Formatter(log_format))
     logger.addHandler(handler)
     return logger, handler
 
@@ -67,7 +72,9 @@ def setup_daemon(options, settings, pidfile):
     client_logger, handler = get_daemon_logger(
         None if options.foreground else logfile,
         loglevel=level,
-        log_format='%(asctime)s:%(levelname)s:%(name)s:%(message)s')
+        log_format=None if options.journal
+                        else '%(asctime)s:%(levelname)s:%(name)s:%(message)s',
+        journal=options.journal)
     # noinspection PyArgumentList
     lockfile = pidlockfile.PIDLockFile(pidfile)
     if lockfile.is_locked():
@@ -77,9 +84,9 @@ def setup_daemon(options, settings, pidfile):
         detach_process=not options.foreground,
         working_directory=os.getcwd(),
         pidfile=lockfile,
-        files_preserve=[handler.stream],
-        stderr=handler.stream,
-        stdout=handler.stream)
+        files_preserve=None if options.journal else [handler.stream],
+        stderr=sys.stderr if options.journal else handler.stream,
+        stdout=sys.stdout if options.journal else handler.stream)
 
     return context
 
@@ -88,6 +95,9 @@ def get_common_argparser(description, logfile):
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("--foreground", "-f",
                         help="Stay in the foreground",
+                        action="store_true", default=False)
+    parser.add_argument("--journal", "-j",
+                        help="Log to the journal",
                         action="store_true", default=False)
     parser.add_argument("--logfile", dest="logfile", action="store",
                         type=str, default=logfile,
