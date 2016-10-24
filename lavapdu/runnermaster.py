@@ -36,7 +36,7 @@ def start_runner(config, pdu):
     p.run_me()
 
 
-def start_em_up(config, pidfile):
+def start_em_up(config):
     pdus = pdus_from_config(config)
     for pdu in pdus:
         p = Process(target=start_runner, args=(config, pdu))

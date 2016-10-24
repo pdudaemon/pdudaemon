@@ -19,18 +19,10 @@
 #  MA 02110-1301, USA.
 
 import logging
-import os
-import sys
-import optparse
-from lavapdu.shared import get_daemon_logger
 from lavapdu.shared import read_settings
+from lavapdu.shared import get_common_argparser
+from lavapdu.shared import setup_daemon
 import lavapdu.runnermaster as runnermaster
-
-import daemon
-try:
-    import daemon.pidlockfile as pidlockfile
-except ImportError:
-    from lockfile import pidlockfile
 
 from lavapdu.pdurunner import PDURunner
 
@@ -39,35 +31,12 @@ if __name__ == '__main__':
     pidfile = "/var/run/lavapdu-runner.pid"
     logfile = "/var/log/lavapdu-runner.log"
     conffile = "/etc/lavapdu/lavapdu.conf"
+
+    parser = get_common_argparser(None, logfile)
+    options = parser.parse_args()
+
     settings = read_settings(conffile)
-    level = logging.DEBUG
-    daemon_settings = settings["daemon"]
-    if daemon_settings["logging_level"] == "DEBUG":
-        level = logging.DEBUG
-    if daemon_settings["logging_level"] == "WARNING":
-        level = logging.WARNING
-    if daemon_settings["logging_level"] == "ERROR":
-        level = logging.ERROR
-    if daemon_settings["logging_level"] == "INFO":
-        level = logging.INFO
-    client_logger, watched_file_handler = get_daemon_logger(
-        logfile,
-        loglevel=level,
-        log_format='%(asctime)s:%(levelname)s:%(name)s:%(message)s')
-    if isinstance(client_logger, Exception):
-        print("Fatal error creating client_logger: " + str(client_logger))
-        sys.exit(os.EX_OSERR)
-    # noinspection PyArgumentList
-    lockfile = pidlockfile.PIDLockFile(pidfile)
-    if lockfile.is_locked():
-        logging.error("PIDFile %s already locked" % pidfile)
-        sys.exit(os.EX_OSERR)
-    context = daemon.DaemonContext(
-        detach_process=True,
-        working_directory=os.getcwd(),
-        pidfile=lockfile,
-        files_preserve=[watched_file_handler.stream],
-        stderr=watched_file_handler.stream,
-        stdout=watched_file_handler.stream)
+
+    context = setup_daemon(options, settings, pidfile)
     with context:
-        runnermaster.start_em_up(settings, pidfile)
+        runnermaster.start_em_up(settings)
