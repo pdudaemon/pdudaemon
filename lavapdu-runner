@@ -57,9 +57,15 @@ if __name__ == '__main__':
     if isinstance(client_logger, Exception):
         print("Fatal error creating client_logger: " + str(client_logger))
         sys.exit(os.EX_OSERR)
+    # noinspection PyArgumentList
+    lockfile = pidlockfile.PIDLockFile(pidfile)
+    if lockfile.is_locked():
+        logging.error("PIDFile %s already locked" % pidfile)
+        sys.exit(os.EX_OSERR)
     context = daemon.DaemonContext(
         detach_process=True,
         working_directory=os.getcwd(),
+        pidfile=lockfile,
         files_preserve=[watched_file_handler.stream],
         stderr=watched_file_handler.stream,
         stdout=watched_file_handler.stream)
