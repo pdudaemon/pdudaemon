@@ -36,6 +36,7 @@ from lavapdu.drivers.devantech import DevantechETH484
 from lavapdu.drivers.devantech import DevantechETH008
 from lavapdu.drivers.devantech import DevantechETH8020
 from lavapdu.drivers.synaccess import SynNetBooter
+from lavapdu.drivers.egpms import EgPMS
 
 assert ACME
 assert APC7932
@@ -44,6 +45,7 @@ assert APC9218
 assert APC8959
 assert APC9210
 assert APC7921
+assert EgPMS
 assert Ubiquity3Port
 assert Ubiquity6Port
 assert IP9258
