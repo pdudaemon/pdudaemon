@@ -46,6 +46,7 @@ class ListenerServer(object):
         self.server.settings = settings
         self.server.config = config
         self.server.dbh = DBHandler(settings)
+        self.server.dbh.create_db()
 
     def start(self):
         log.info("Starting the ListenerServer")

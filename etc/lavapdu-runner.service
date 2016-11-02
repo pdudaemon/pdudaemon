@@ -1,6 +1,6 @@
 [Unit]
 Description=Runner daemon to process PDU requests
-After=postgresql.service
+After=postgresql.service lavapdu-listen.service
 
 [Service]
 ExecStart=/usr/sbin/lavapdu-runner -j
