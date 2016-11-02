@@ -3,7 +3,7 @@ Description=TCP Listening daemon to accept PDU requests
 After=postgresql.service
 
 [Service]
-ExecStart=/usr/sbin/lavapdu-listen
+ExecStart=/usr/sbin/lavapdu-listen -j
 Type=forking
 PIDFile=/var/run/lavapdu-listen.pid
 

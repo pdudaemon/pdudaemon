@@ -36,21 +36,15 @@ def start_runner(config, pdu):
     p.run_me()
 
 
-def start_em_up(config, pidfile):
-    pid = os.getpid()
-    if os.path.isfile(pidfile):
-        log.error("Pidfile already exists")
-        sys.exit(1)
-    f = open(pidfile, 'w')
-    f.write(str(pid))
-    f.close()
+def start_em_up(config):
     pdus = pdus_from_config(config)
     for pdu in pdus:
         p = Process(target=start_runner, args=(config, pdu))
         p.start()
         processes.append(p)
     signal.signal(signal.SIGTERM, signal_term_handler)
-
+    for proc in processes:
+        proc.join()
 
 def signal_term_handler(a, b):
     del a, b
