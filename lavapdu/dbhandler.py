@@ -33,6 +33,7 @@ class DBHandler(object):
                                      password=config["dbpass"],
                                      host=config["dbhost"])
         self.cursor = self.conn.cursor()
+        self.create_db()
 
     def do_sql(self, sql):
         log.debug("executing sql: %s", sql)
