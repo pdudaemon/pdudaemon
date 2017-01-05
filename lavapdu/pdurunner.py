@@ -50,6 +50,8 @@ class PDURunner(object):
                      request, port, hostname)
             self.do_job(hostname, port, request)
             self.dbh.delete_row(job_id)
+        else:
+            time.sleep(1)
 
     def driver_from_hostname(self, hostname):
         drivername = drivername_from_hostname(hostname, self.pdus)
@@ -81,4 +83,3 @@ class PDURunner(object):
             log.info("Starting a PDURunner for all PDUS")
         while 1:
             self.get_one()
-            time.sleep(2)
