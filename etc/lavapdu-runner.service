@@ -6,6 +6,7 @@ After=postgresql.service lavapdu-listen.service
 ExecStart=/usr/sbin/lavapdu-runner -j
 Type=forking
 PIDFile=/var/run/lavapdu-runner.pid
+Restart=on-abnormal
 
 [Install]
 WantedBy=network.target
