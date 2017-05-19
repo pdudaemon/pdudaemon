@@ -35,6 +35,8 @@ from lavapdu.drivers.devantech import DevantechETH0621
 from lavapdu.drivers.devantech import DevantechETH484
 from lavapdu.drivers.devantech import DevantechETH008
 from lavapdu.drivers.devantech import DevantechETH8020
+from lavapdu.drivers.devantechusb import DevantechUSB2
+from lavapdu.drivers.devantechusb import DevantechUSB8
 from lavapdu.drivers.synaccess import SynNetBooter
 from lavapdu.drivers.egpms import EgPMS
 
