@@ -28,23 +28,51 @@ class DBHandler(object):
     def __init__(self, config):
         log.debug("Creating new DBHandler: %s %s", config["dbhost"],
                   config["dbname"])
-        self.conn = psycopg2.connect(database=config["dbname"],
-                                     user=config["dbuser"],
-                                     password=config["dbpass"],
-                                     host=config["dbhost"])
-        self.cursor = self.conn.cursor()
+        self.config = config
+        self.open_connection()
+
+    def open_connection(self):
+        retry = self.config.get("dbretry", 10)
+        while retry >= 0:
+            try:
+                log.debug("Opening DB connection")
+                self.conn = psycopg2.connect(database=self.config["dbname"],
+                                             user=self.config["dbuser"],
+                                             password=self.config["dbpass"],
+                                             host=self.config["dbhost"])
+                self.cursor = self.conn.cursor()
+                break
+            except Exception as e:
+                log.debug("DB connection opening failed: %s" % repr(e))
+                log.debug("Retrying for %s more time" % retry)
+                retry -= 1
+                time.sleep(self.config.get("dbretryinterval", 60))
 
     def do_sql(self, sql):
         log.debug("executing sql: %s", sql)
-        self.cursor.execute(sql)
-        self.conn.commit()
+        try:
+            self.cursor.execute(sql)
+            self.conn.commit()
+        except:
+            self.close()
+            self.open_connection()
+            self.cursor.execute(sql)
+            self.conn.commit()
 
     def do_sql_with_fetch(self, sql):
         log.debug("executing sql: %s", sql)
-        self.cursor.execute(sql)
-        row = self.cursor.fetchone()
-        self.conn.commit()
-        return row
+        try:
+            self.cursor.execute(sql)
+            row = self.cursor.fetchone()
+            self.conn.commit()
+            return row
+        except:
+            self.close()
+            self.open_connection()
+            self.cursor.execute(sql)
+            row = self.cursor.fetchone()
+            self.conn.commit()
+            return row
 
     def create_db(self):
         log.info("Creating db table if it doesn't exist")
@@ -90,5 +118,8 @@ class DBHandler(object):
 
     def close(self):
         log.debug("Closing DBHandler")
-        self.cursor.close()
-        self.conn.close()
+        try:
+            self.cursor.close()
+            self.conn.close()
+        except Exception as e:
+            log.warning("Failed to close DBHandler: %s" % repr(e))
