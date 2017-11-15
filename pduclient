@@ -24,12 +24,12 @@ import optparse
 if __name__ == '__main__':
     usage = "Usage: %prog --daemon deamonhostname --hostname pduhostname " \
             "--port pduportnum --command pducommand"
-    description = "LAVA PDU daemon client"
+    description = "PDUDaemon client"
     commands = ["reboot", "on", "off"]
     parser = optparse.OptionParser(usage=usage, description=description)
     parser.add_option("--daemon", dest="pdudaemonhostname", action="store",
                       type="string",
-                      help="LAVAPDU Daemon hostname (ex: localhost)")
+                      help="PDUDaemon listener hostname (ex: localhost)")
     parser.add_option("--hostname", dest="pduhostname", action="store",
                       type="string", help="PDU Hostname (ex: pdu05)")
     parser.add_option("--port", dest="pduportnum", action="store",

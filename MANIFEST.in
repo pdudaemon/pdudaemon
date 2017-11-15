@@ -1,6 +1,6 @@
-include etc/lavapdu/lavapdu.conf
-include etc/lavapdu-runner.init
-include etc/lavapdu-listen.init
-include etc/lavapdu-runner.service
-include etc/lavapdu-listen.service
-include etc/lavapdulogrotate
+include etc/pdudaemon/pdudaemon.conf
+include etc/pdudaemon-runner.init
+include etc/pdudaemon-listen.init
+include etc/pdudaemon-runner.service
+include etc/pdudaemon-listen.service
+include etc/pdudaemonlogrotate

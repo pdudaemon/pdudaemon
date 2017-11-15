@@ -22,12 +22,12 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='lavapdu',
+    name='pdudaemon',
     version="0.0.5",
     author="Matthew Hart",
-    author_email="matthew.hart@linaro.org",
+    author_email="matt@mattface.org",
     license="GPL2+",
-    description="LAVA PDU Deamon for APC PDU's",
+    description="Queueing daemon for PDUs",
     packages=find_packages(),
     install_requires=[
         "daemon",
@@ -38,18 +38,18 @@ setup(
         "setproctitle"
     ],
     data_files=[
-        ("/etc/init.d/", ["etc/lavapdu-runner.init"]),
-        ("/etc/init.d/", ["etc/lavapdu-listen.init"]),
-        ("/usr/share/lavapdu/", [
-            "etc/lavapdu-listen.service",
-            "etc/lavapdu-runner.service"
+        ("/etc/init.d/", ["etc/pdudaemon-runner.init"]),
+        ("/etc/init.d/", ["etc/pdudaemon-listen.init"]),
+        ("/usr/share/pdudaemon/", [
+            "etc/pdudaemon-listen.service",
+            "etc/pdudaemon-runner.service"
         ]),
-        ("/etc/lavapdu/", ["etc/lavapdu/lavapdu.conf"]),
-        ("/etc/logrotate.d/", ["etc/lavapdulogrotate"]),
+        ("/etc/pdudaemon/", ["etc/pdudaemon/pdudaemon.conf"]),
+        ("/etc/logrotate.d/", ["etc/pdudaemonlogrotate"]),
     ],
     scripts=[
-        'lavapdu-runner',
-        'lavapdu-listen',
+        'pdudaemon-runner',
+        'pdudaemon-listen',
         'pduclient'
     ],
     zip_safe=False,

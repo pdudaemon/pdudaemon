@@ -1,0 +1,51 @@
+#! /usr/bin/python
+
+#  Copyright 2013 Linaro Limited
+#  Author Matt Hart <matthew.hart@linaro.org>
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+#  MA 02110-1301, USA.
+
+import logging
+from pdudaemon.shared import read_settings
+from pdudaemon.shared import get_common_argparser
+from pdudaemon.shared import setup_daemon
+
+from pdudaemon.socketserver import ListenerServer
+
+
+if __name__ == '__main__':
+    pidfile = "/var/run/pdudaemon-listen.pid"
+    logfile = "/var/log/pdudaemon-listener.log"
+    conffile = "/etc/pdudaemon/pdudaemon.conf"
+    description = "PDUDaemon listener server," \
+                  "host and port are handled in %s" % conffile
+
+    parser = get_common_argparser(description, logfile)
+    parser.add_argument("--purge", dest="purge", action="store_true")
+
+    options = parser.parse_args()
+
+    settings = read_settings(conffile)
+    if options.purge:
+        settings["purge"] = True
+
+    context = setup_daemon(options, settings, pidfile)
+    with context:
+        logging.info("Running PDUDaemon Listener %s %s %d."
+                     % (logfile,
+                        settings['daemon']['hostname'],
+                        settings['daemon']['port']))
+        ListenerServer(settings).start()

@@ -1,0 +1,19 @@
+/var/log/pdudaemon-listener.log {
+	weekly
+	rotate 12
+	compress
+	delaycompress
+	missingok
+	notifempty
+	create 644 root root
+}
+
+/var/log/pdudaemon-runner.log {
+	weekly
+	rotate 12
+	compress
+	delaycompress
+	missingok
+	notifempty
+	create 644 root root
+}

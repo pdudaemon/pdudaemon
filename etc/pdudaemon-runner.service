@@ -1,0 +1,11 @@
+[Unit]
+Description=Runner daemon to process PDU requests
+After=postgresql.service pdudaemon-listen.service
+
+[Service]
+ExecStart=/usr/sbin/pdudaemon-runner -j
+Type=forking
+PIDFile=/var/run/pdudaemon-runner.pid
+
+[Install]
+WantedBy=network.target
