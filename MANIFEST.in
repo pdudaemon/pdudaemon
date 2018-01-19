@@ -1,4 +1,3 @@
 include etc/pdudaemon/pdudaemon.conf
-include etc/pdudaemon-runner.service
-include etc/pdudaemon-listen.service
+include etc/pdudaemon.service
 include etc/pdudaemonlogrotate

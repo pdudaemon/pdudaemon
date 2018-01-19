@@ -3,9 +3,9 @@ Description=TCP Listening daemon to accept PDU requests
 After=postgresql.service
 
 [Service]
-ExecStart=/usr/sbin/pdudaemon-listen -j
+ExecStart=/usr/sbin/pdudaemon-start -j
 Type=forking
-PIDFile=/var/run/pdudaemon-listen.pid
+PIDFile=/var/run/pdudaemon.pid
 
 [Install]
 WantedBy=network.target

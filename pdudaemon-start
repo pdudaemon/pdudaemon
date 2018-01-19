@@ -27,8 +27,8 @@ from pdudaemon.socketserver import ListenerServer
 
 
 if __name__ == '__main__':
-    pidfile = "/var/run/pdudaemon-listen.pid"
-    logfile = "/var/log/pdudaemon-listener.log"
+    pidfile = "/var/run/pdudaemon.pid"
+    logfile = "/var/log/pdudaemon.log"
     conffile = "/etc/pdudaemon/pdudaemon.conf"
     description = "PDUDaemon listener server," \
                   "host and port are handled in %s" % conffile

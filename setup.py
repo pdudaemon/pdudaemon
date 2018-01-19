@@ -23,7 +23,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='pdudaemon',
-    version="0.0.5",
+    version="0.0.6",
     author="Matthew Hart",
     author_email="matt@mattface.org",
     license="GPL2+",
@@ -38,18 +38,12 @@ setup(
         "setproctitle"
     ],
     data_files=[
-        ("/etc/init.d/", ["etc/pdudaemon-runner.init"]),
-        ("/etc/init.d/", ["etc/pdudaemon-listen.init"]),
-        ("/usr/share/pdudaemon/", [
-            "etc/pdudaemon-listen.service",
-            "etc/pdudaemon-runner.service"
-        ]),
+        ("/lib/systemd/system/", ["etc/pdudaemon.service"]),
         ("/etc/pdudaemon/", ["etc/pdudaemon/pdudaemon.conf"]),
         ("/etc/logrotate.d/", ["etc/pdudaemonlogrotate"]),
     ],
     scripts=[
-        'pdudaemon-runner',
-        'pdudaemon-listen',
+        'pdudaemon',
         'pduclient'
     ],
     zip_safe=False,
