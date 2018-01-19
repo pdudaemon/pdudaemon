@@ -43,7 +43,7 @@ setup(
         ("/etc/logrotate.d/", ["etc/pdudaemonlogrotate"]),
     ],
     scripts=[
-        'pdudaemon',
+        'pdudaemon-start',
         'pduclient'
     ],
     zip_safe=False,
