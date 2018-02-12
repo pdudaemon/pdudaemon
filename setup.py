@@ -33,6 +33,7 @@ setup(
         "daemon",
         "lockfile",
         "paramiko",
+        "requests",
         "pexpect",
         "psycopg2",
         "setproctitle"

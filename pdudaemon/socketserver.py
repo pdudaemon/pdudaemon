@@ -26,6 +26,8 @@ import sys
 import os
 from pdudaemon.dbhandler import DBHandler
 from pdudaemon.shared import drivername_from_hostname
+import pdudaemon.runnermaster as RunnerServer
+
 log = logging.getLogger(__name__)
 
 
@@ -50,7 +52,10 @@ class ListenerServer(object):
 
     def start(self):
         log.info("Starting the ListenerServer")
+        RunnerServer.start_em_up(self.config)
         self.server.serve_forever()
+        RunnerServer.stop_runner()
+
 
 
 class TCPRequestHandler(SocketServer.BaseRequestHandler):

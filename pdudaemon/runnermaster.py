@@ -27,6 +27,7 @@ import sys
 import os
 import logging
 processes = []
+pdus = []
 log = logging.getLogger(__name__)
 
 
@@ -36,6 +37,7 @@ def start_runner(config, pdu):
     p.run_me()
 
 
+
 def start_em_up(config):
     pdus = pdus_from_config(config)
     for pdu in pdus:
@@ -43,6 +45,8 @@ def start_em_up(config):
         p.start()
         processes.append(p)
     signal.signal(signal.SIGTERM, signal_term_handler)
+
+def stop_runner():
     for proc in processes:
         proc.join()
 
