@@ -30,7 +30,7 @@ setup(
     description="Queueing daemon for PDUs",
     packages=find_packages(),
     install_requires=[
-        "daemon",
+        "python_daemon",
         "lockfile",
         "paramiko",
         "requests",
