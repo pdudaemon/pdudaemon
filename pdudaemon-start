@@ -19,6 +19,7 @@
 #  MA 02110-1301, USA.
 
 import logging
+import pdudaemon.runnermaster as RunnerServer
 from pdudaemon.shared import read_settings
 from pdudaemon.shared import get_common_argparser
 from pdudaemon.shared import setup_daemon
@@ -48,4 +49,5 @@ if __name__ == '__main__':
                      % (logfile,
                         settings['daemon']['hostname'],
                         settings['daemon']['port']))
+        RunnerServer.start_em_up(settings)
         ListenerServer(settings).start()

@@ -43,8 +43,6 @@ def start_em_up(config):
         p.start()
         processes.append(p)
     signal.signal(signal.SIGTERM, signal_term_handler)
-    for proc in processes:
-        proc.join()
 
 def signal_term_handler(a, b):
     del a, b
@@ -52,4 +50,5 @@ def signal_term_handler(a, b):
     for proc in processes:
         log.debug("Terminate %s", proc.pid)
         proc.terminate()
+        proc.join()
     sys.exit(0)
