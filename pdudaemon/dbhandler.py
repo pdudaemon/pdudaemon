@@ -61,7 +61,7 @@ class DBHandler(object):
 
     def insert_request(self, hostname, port, request, exectime):
         sql = "insert into pdu_queue (hostname,port,request,exectime) " \
-              "values ('%s',%i,'%s',%i)" % (hostname, port, request, exectime)
+              "values ('%s',%i,'%s',%i)" % (hostname, int(port), request, int(exectime))
         self.do_sql(sql)
 
     def delete_row(self, row_id):
