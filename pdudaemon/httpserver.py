@@ -38,8 +38,11 @@ class PDUHTTPHandler(BaseHTTPRequestHandler):
         self.send_header('Content-type', 'text/plain')
         self.end_headers()
 
+    def log_message(self, format, *args):
+        pass
+
     def do_GET(self):
-        logging.info("Handling HTTP request from %s: %s" % (self.client_address, self.path))
+        log.info("Handling HTTP request from %s: %s" % (self.client_address, self.path))
         data = urlparse.parse_qs(urlparse.urlparse(self.path).query)
         res = self.insert_request(data)
         if res:
