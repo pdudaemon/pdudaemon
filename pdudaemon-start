@@ -24,6 +24,7 @@ from pdudaemon.shared import read_settings
 from pdudaemon.shared import get_common_argparser
 from pdudaemon.shared import setup_daemon
 
+from pdudaemon.httpserver import PDUHTTPListener
 from pdudaemon.socketserver import ListenerServer
 
 
@@ -50,4 +51,8 @@ if __name__ == '__main__':
                         settings['daemon']['hostname'],
                         settings['daemon']['port']))
         RunnerServer.start_em_up(settings)
-        ListenerServer(settings).start()
+        listener = settings['daemon'].get('listener', 'tcp')
+        if listener == 'tcp':
+          ListenerServer(settings).start()
+        elif listener == 'http':
+          PDUHTTPListener(settings).start()

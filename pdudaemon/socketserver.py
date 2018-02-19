@@ -38,7 +38,9 @@ class ListenerServer(object):
         listen_port = settings["port"]
         log.debug("ListenerServer __init__")
         if "purge" in config:
-            self.server.dbh.purge()
+            log.info("Running a DB purge and exiting.")
+            temp_dbh = DBHandler(settings)
+            temp_dbh.purge()
             sys.exit(os.EX_OK)
         log.info("listening on %s:%s", listen_host, listen_port)
 
