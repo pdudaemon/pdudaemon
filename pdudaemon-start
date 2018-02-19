@@ -41,8 +41,6 @@ if __name__ == '__main__':
     options = parser.parse_args()
 
     settings = read_settings(conffile)
-    if options.purge:
-        settings["purge"] = True
 
     context = setup_daemon(options, settings, pidfile)
     with context:
@@ -50,9 +48,12 @@ if __name__ == '__main__':
                      % (logfile,
                         settings['daemon']['hostname'],
                         settings['daemon']['port']))
-        RunnerServer.start_em_up(settings)
+        if options.purge:
+            settings["purge"] = True
+        else:
+            RunnerServer.start_em_up(settings)
         listener = settings['daemon'].get('listener', 'tcp')
         if listener == 'tcp':
-          ListenerServer(settings).start()
+            ListenerServer(settings).start()
         elif listener == 'http':
-          PDUHTTPListener(settings).start()
+            PDUHTTPListener(settings).start()
