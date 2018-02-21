@@ -35,6 +35,8 @@ from pdudaemon.drivers.devantech import DevantechETH0621
 from pdudaemon.drivers.devantech import DevantechETH484
 from pdudaemon.drivers.devantech import DevantechETH008
 from pdudaemon.drivers.devantech import DevantechETH8020
+from pdudaemon.drivers.devantechusb import DevantechUSB2
+from pdudaemon.drivers.devantechusb import DevantechUSB8
 from pdudaemon.drivers.synaccess import SynNetBooter
 from pdudaemon.drivers.egpms import EgPMS
 
@@ -55,4 +57,6 @@ assert DevantechETH0621
 assert DevantechETH484
 assert DevantechETH008
 assert DevantechETH8020
+assert DevantechUSB2
+assert DevantechUSB8
 assert SynNetBooter
