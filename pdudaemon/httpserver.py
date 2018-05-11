@@ -32,6 +32,7 @@ from pdudaemon.dbhandler import DBHandler
 from pdudaemon.shared import drivername_from_hostname
 log = logging.getLogger(__name__)
 
+
 class PDUHTTPHandler(BaseHTTPRequestHandler):
     def _set_headers(self, code):
         self.send_response(code)
