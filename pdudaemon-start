@@ -19,6 +19,8 @@
 #  MA 02110-1301, USA.
 
 import logging
+import sys
+import os
 import pdudaemon.runnermaster as RunnerServer
 from pdudaemon.shared import read_settings
 from pdudaemon.shared import get_common_argparser
@@ -26,6 +28,7 @@ from pdudaemon.shared import setup_daemon
 
 from pdudaemon.httpserver import PDUHTTPListener
 from pdudaemon.socketserver import ListenerServer
+from pdudaemon.dbhandler import DBHandler
 
 
 if __name__ == '__main__':
@@ -49,7 +52,10 @@ if __name__ == '__main__':
                         settings['daemon']['hostname'],
                         settings['daemon']['port']))
         if options.purge:
-            settings["purge"] = True
+            logging.info("Running a DB purge and exiting.")
+            temp_dbh = DBHandler(settings['daemon'])
+            temp_dbh.purge()
+            sys.exit(os.EX_OK)
         else:
             RunnerServer.start_em_up(settings)
         listener = settings['daemon'].get('listener', 'tcp')

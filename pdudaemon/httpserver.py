@@ -44,16 +44,25 @@ class PDUHTTPHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         log.info("Handling HTTP request from %s: %s" % (self.client_address, self.path))
         data = urlparse.parse_qs(urlparse.urlparse(self.path).query)
-        res = self.insert_request(data)
+        path = urlparse.urlparse(self.path).path
+        res = self.insert_request(data, path)
         if res:
             self._set_headers(200)
-            self.wfile.write("OK - accepted request\n")
+            self.wfile.write("OK - accepted request\n".encode('utf-8'))
         else:
             self._set_headers(500)
-            self.wfile.write("Invalid request\n")
+            self.wfile.write("Invalid request\n".encode('utf-8'))
 
-    def insert_request(self, data):
-        delay = 10
+    def insert_request(self, data, path):
+        delay = 5
+        entry = path.lstrip('/').split('/')
+        if len(entry) != 3:
+            log.info("Request path was invalid: %s" % entry)
+            return False
+        if not (entry[0] == 'power' and entry[1] == 'control'):
+            log.info("Unknown request, path was %s" % path)
+            return False
+        request = entry[2]
         custom_delay = False
         now = int(time.time())
         if data.get('delay', None):
@@ -61,8 +70,8 @@ class PDUHTTPHandler(BaseHTTPRequestHandler):
             custom_delay = True
         hostname = data.get('hostname', [None])[0]
         port = data.get('port', [None])[0]
-        request = data.get('command', [None])[0]
         if not hostname or not port or not request:
+            log.info("One of hostname,port,request was not set")
             return False
         drivername_from_hostname(hostname, self.server.config["pdus"])
         dbh = self.server.dbh
@@ -90,13 +99,8 @@ class PDUHTTPListener(object):
         self.config = config
         settings = config["daemon"]
         listen_host = settings["hostname"]
-        listen_port = settings["port"]
+        listen_port = settings.get("port", 16421)
         log.debug("PDUHTTPListener __init__")
-        if "purge" in config:
-            log.info("Running a DB purge and exiting.")
-            temp_dbh = DBHandler(settings)
-            temp_dbh.purge()
-            sys.exit(os.EX_OK)
         log.info("listening on %s:%s", listen_host, listen_port)
 
         self.server = HTTPServer((listen_host, listen_port), PDUHTTPHandler)
