@@ -18,7 +18,7 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 
-import SocketServer
+import socketserver
 import logging
 import socket
 import time
@@ -53,7 +53,7 @@ class ListenerServer(object):
         self.server.serve_forever()
 
 
-class TCPRequestHandler(SocketServer.BaseRequestHandler):
+class TCPRequestHandler(socketserver.BaseRequestHandler):
     # "One instance per connection.  Override handle(self) to customize
     # action."
     def insert_request(self, data):
@@ -90,7 +90,9 @@ class TCPRequestHandler(SocketServer.BaseRequestHandler):
     def handle(self):
         request_ip = self.client_address[0]
         try:
-            data = self.request.recv(4096).strip()
+            data = self.request.recv(16384)
+            data = data.decode('utf-8')
+            data = data.strip()
             socket.setdefaulttimeout(2)
             try:
                 request_host = socket.gethostbyaddr(request_ip)[0]
@@ -100,7 +102,7 @@ class TCPRequestHandler(SocketServer.BaseRequestHandler):
                      request_host,
                      data)
             self.insert_request(data)
-            self.request.sendall("ack\n")
+            self.request.sendall("ack\n".encode('utf-8'))
         except Exception as global_error:  # pylint: disable=broad-except
             log.debug(global_error.__class__)
             log.debug(global_error.message)
@@ -108,6 +110,6 @@ class TCPRequestHandler(SocketServer.BaseRequestHandler):
         self.request.close()
 
 
-class TCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
+class TCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     allow_reuse_address = True
     daemon_threads = True

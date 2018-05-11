@@ -44,9 +44,10 @@ def start_em_up(config):
         processes.append(p)
     signal.signal(signal.SIGTERM, signal_term_handler)
 
+
 def signal_term_handler(a, b):
     del a, b
-    print 'Sending sigterm to all children'
+    print('Sending sigterm to all children')
     for proc in processes:
         log.debug("Terminate %s", proc.pid)
         proc.terminate()

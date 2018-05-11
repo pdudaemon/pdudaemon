@@ -32,6 +32,7 @@ try:
 except ImportError:
     from lockfile import pidlockfile
 
+
 def get_daemon_logger(filepath, log_format=None, loglevel=logging.INFO, journal=False):
     logger = logging.getLogger()
     logger.setLevel(loglevel)
@@ -44,7 +45,7 @@ def get_daemon_logger(filepath, log_format=None, loglevel=logging.INFO, journal=
         else:
             handler = StreamHandler()
     except Exception as e:  # pylint: disable=broad-except
-        print("Fatal error creating client_logger: " + str(e))
+        print("Fatal error creating client_logger: %s" % str(e))
         sys.exit(os.EX_OSERR)
 
     if (log_format):
@@ -76,6 +77,7 @@ def pdus_from_config(data):
         output.append(pdu)
     return output
 
+
 def setup_daemon(options, settings, pidfile):
     logfile = options.logfile
     level = logging.DEBUG
@@ -89,10 +91,8 @@ def setup_daemon(options, settings, pidfile):
     if daemon_settings["logging_level"] == "INFO":
         level = logging.INFO
     client_logger, handler = get_daemon_logger(
-        None if options.foreground else logfile,
-        loglevel=level,
-        log_format=None if options.journal
-                        else '%(asctime)s:%(levelname)s:%(name)s:%(message)s',
+        None if options.foreground else logfile, loglevel=level,
+        log_format=None if options.journal else '%(asctime)s:%(levelname)s:%(name)s:%(message)s',
         journal=options.journal)
     # noinspection PyArgumentList
     lockfile = pidlockfile.PIDLockFile(pidfile)
@@ -124,4 +124,3 @@ def get_common_argparser(description, logfile):
     parser.add_argument("--loglevel", dest="loglevel", action="store",
                         type=str, help="logging level [INFO]")
     return parser
-

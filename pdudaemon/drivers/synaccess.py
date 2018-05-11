@@ -41,9 +41,9 @@ class SynBase(PDUDriver):
         if "telnetport" in settings:
             telnetport = settings["telnetport"]
         if "username" in settings:
-	       self.username = settings["username"]
+            self.username = settings["username"]
         if "password" in settings:
-	       self.password = settings["password"]
+            self.password = settings["password"]
 
         self.exec_string = "/usr/bin/telnet %s %d" % (hostname, telnetport)
         log.debug("Telnet command: [%s]" % self.exec_string)
@@ -65,7 +65,7 @@ class SynBase(PDUDriver):
         # only uncomment this line for FULL debug when developing
         # self.connection = pexpect.spawn(self.exec_string, logfile=sys.stdout)
         self.connection = pexpect.spawn(self.exec_string)
-        self._pdu_login(self.username,self.password)
+        self._pdu_login(self.username, self.password)
 
     def _cleanup(self):
         self._pdu_logout()  # pylint: disable=no-member
@@ -76,11 +76,11 @@ class SynBase(PDUDriver):
         del self
 
     def _pdu_login(self, username, password):
-	# Expected sequence:
-	# >login
-	# User ID: admin
-	# Password:******
-	# >
+        # Expected sequence:
+        # >login
+        # User ID: admin
+        # Password:******
+        # >
 
         log.debug("attempting login with username %s, password %s",
                   username, password)
@@ -90,12 +90,13 @@ class SynBase(PDUDriver):
         self.connection.send("%s\r" % username)
         self.connection.expect("Password:")
         self.connection.send("%s\r" % password)
-        self.connection.expect(">");
+        self.connection.expect(">")
 
 #
 # Only Synaccess product support at this point
 # Synaccess Networks netBooter Series B
 # Login identifies as: System Model: NP-08B
+
 
 class SynNetBooter(SynBase):
     pdu_commands = {"off": "pset %s 0", "on": "pset %s 1"}
