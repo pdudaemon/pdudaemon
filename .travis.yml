@@ -1,5 +1,10 @@
+language: python
+addons:
+    apt:
+        update: true
+
 before_install:
-    - pip install pep8
+    - sudo apt-get install -y pep8
     
 script:
     - pep8 --ignore=E501 .
