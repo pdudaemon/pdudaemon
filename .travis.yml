@@ -5,6 +5,9 @@ addons:
     apt:
         update: true
 
+notifications:
+    irc: "chat.freenode.net#pdudaemon"
+
 before_install:
     - sudo apt-get install -y pep8
     
