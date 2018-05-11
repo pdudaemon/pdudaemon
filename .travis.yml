@@ -7,6 +7,10 @@ addons:
 
 notifications:
     irc: "chat.freenode.net#pdudaemon"
+    on_success: always
+    on_failure: always
+    use_notice: false
+    skip_join: false
 
 before_install:
     - sudo apt-get install -y pep8
