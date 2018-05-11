@@ -37,11 +37,6 @@ class ListenerServer(object):
         listen_host = settings["hostname"]
         listen_port = settings["port"]
         log.debug("ListenerServer __init__")
-        if "purge" in config:
-            log.info("Running a DB purge and exiting.")
-            temp_dbh = DBHandler(settings)
-            temp_dbh.purge()
-            sys.exit(os.EX_OK)
         log.info("listening on %s:%s", listen_host, listen_port)
 
         self.server = TCPServer((listen_host, listen_port), TCPRequestHandler)

@@ -72,7 +72,7 @@ class DBHandler(object):
         return self.cursor.execute(sql)
 
     def purge(self):
-        log.debug("Purging all jobs from database")
+        log.info("Purging all jobs from database")
         self.do_sql("delete from pdu_queue")
         self.close()
 

@@ -13,7 +13,15 @@ Debian packages are on the way, hopefully.
 To be added.
 ## Making a power control request
 - **HTTP**
-To be added
+The daemon can accept requests over plain HTTP. The port is configurable, but defaults to 16421
+There is no encryption or authentication, consider yourself warned.
+To enable, change the 'listener' setting in the 'daemon' section of the config file to 'http'. This will break 'pduclient' requests.
+An example request would be
+``` curl http://pdudaemonhostname:16421/power/control/on?hostname=pdu01&port=1```
+  ***Return Codes***
+    HTTP 200 - Request Accepted
+    HTTP 503 - Invalid Request, Request not accepted
+
 - **pduclient**
 The bundled client is used when PDUDaemon is configured to listen to 'tcp' requests.
 ```
