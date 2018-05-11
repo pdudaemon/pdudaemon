@@ -50,7 +50,7 @@ class ACME(ACMEBase):
         log.debug("Finished entering outlet (nop)")
 
     def _port_interaction(self, command, port_number):
-        if not self.cmd.has_key(command):
+        if command not in self.cmd:
             acme_command = 'echo "unknown command {}"'.format(command)
         else:
             acme_command = '{} {}'.format(self.cmd[command], port_number)

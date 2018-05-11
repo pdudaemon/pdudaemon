@@ -24,6 +24,7 @@ from pdudaemon.drivers.localbase import LocalBase
 
 log = logging.getLogger(__name__)
 
+
 class LocalCmdline(LocalBase):
 
     def __init__(self, hostname, settings):
@@ -54,4 +55,4 @@ class LocalCmdline(LocalBase):
 
         if cmd:
             log.debug("running %s" % cmd)
-            call(cmd, shell = True)
+            call(cmd, shell=True)

@@ -31,6 +31,7 @@ log = logging.getLogger(__name__)
 # i.e. root, was added to the authorized_keys on the ACME device.
 # This may be changed to a simple telnet connection in the future.
 
+
 class ACMEBase(PDUDriver):
     connection = None
 
@@ -58,7 +59,7 @@ class ACMEBase(PDUDriver):
     def get_connection(self):
         log.debug("Connecting to Baylibre ACME with: %s", self.exec_string)
         # only uncomment this line for FULL debug when developing
-        #self.connection = pexpect.spawn(self.exec_string, logfile=sys.stdout)
+        # self.connection = pexpect.spawn(self.exec_string, logfile=sys.stdout)
         self.connection = pexpect.spawn(self.exec_string)
         self._pdu_login(self.username, "")
 
@@ -78,4 +79,3 @@ class ACMEBase(PDUDriver):
             self.connection.send("%s\r" % password)
         elif index == 2:
             self.connection.send("yes\r")
-

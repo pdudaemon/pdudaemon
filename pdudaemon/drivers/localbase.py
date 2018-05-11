@@ -47,4 +47,3 @@ class LocalBase(PDUDriver):
 
     def _cleanup(self):
         logging.debug("Cleaning up driver: %s" % self.connection)
-

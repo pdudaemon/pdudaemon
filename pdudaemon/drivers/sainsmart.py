@@ -29,6 +29,7 @@ import requests
 
 log = logging.getLogger(__name__)
 
+
 class Sainsmart(LocalBase):
 
     def __init__(self, hostname, settings):
@@ -36,9 +37,9 @@ class Sainsmart(LocalBase):
         log.debug(settings)
         self.settings = settings
         self.ip = settings.get("ip", self.hostname)
-        self.url_base = "http://%s/30000/" %self.ip
+        self.url_base = "http://%s/30000/" % self.ip
         log.debug(self.url_base)
-        
+
     @classmethod
     def accepts(cls, drivername):
         if drivername == "sainsmart":

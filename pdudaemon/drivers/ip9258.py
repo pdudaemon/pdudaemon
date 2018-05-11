@@ -6,7 +6,7 @@
 #  TODO:
 #  - use pysnmp instead of snmpset command-line tool
 #
-#  Based on localcmdline.py 
+#  Based on localcmdline.py
 #  Copyright 2013 Linaro Limited
 #  Author Matt Hart <matthew.hart@linaro.org>
 #
@@ -31,6 +31,7 @@ from pdudaemon.drivers.localbase import LocalBase
 
 log = logging.getLogger(__name__)
 
+
 class IP9258(LocalBase):
 
     def __init__(self, hostname, settings):
@@ -44,21 +45,21 @@ class IP9258(LocalBase):
         return False
 
     def _port_interaction(self, command, port_number):
-        power_oid = '1.3.6.1.4.1.92.58.2.%d.0' %(port_number)
+        power_oid = '1.3.6.1.4.1.92.58.2.%d.0' % (port_number)
         cmd_base = '/usr/bin/snmpset -v 1 -c public %s %s integer' \
-                   %(self.hostname, power_oid)
+                   % (self.hostname, power_oid)
         cmd = None
 
         log.debug("Attempting control: %s port: %i" % (command, port_number))
         if command == "on":
-            cmd = cmd_base + ' %d > /dev/null' %( 1 )
+            cmd = cmd_base + ' %d > /dev/null' % (1)
 
         elif command == "off":
-            cmd = cmd_base + ' %d > /dev/null' %( 0 )
+            cmd = cmd_base + ' %d > /dev/null' % (0)
 
         else:
             logging.debug("Unknown command!")
 
         if cmd:
             log.debug("running %s" % cmd)
-            subprocess.call(cmd, shell = True)
+            subprocess.call(cmd, shell=True)
