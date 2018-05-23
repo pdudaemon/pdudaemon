@@ -3,3 +3,4 @@ requests
 systemd
 paramiko
 pyserial
+setuptools
