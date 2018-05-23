@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/python3
 
 #  Copyright 2017 Sjoerd Simons Schulz <sjoerd.simons@collabora.co.uk>
 #
@@ -27,7 +27,8 @@ import socket
 import sys
 from array import array
 
-log = logging.getLogger(__name__)
+import os
+log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 
 
 class EgPMS(PDUDriver):
@@ -35,7 +36,6 @@ class EgPMS(PDUDriver):
 
     def __init__(self, hostname, settings):
         self.hostname = hostname
-        log.debug(settings)
         self.settings = settings
         self.ip = settings["ip"]
         self.password = array('B', bytes(settings["password"]) + 8 * ' ')[:8]
@@ -134,7 +134,6 @@ class EgPMS(PDUDriver):
 
     @classmethod
     def accepts(cls, drivername):
-        log.debug(drivername)
         if drivername == 'egpms':
             return True
         return False

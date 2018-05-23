@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/python3
 
 #  Copyright 2016 BayLibre, Inc.
 #  Author Kevin Hilman
@@ -29,7 +29,8 @@ import logging
 import subprocess
 from pdudaemon.drivers.localbase import LocalBase
 
-log = logging.getLogger(__name__)
+import os
+log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 
 
 class IP9258(LocalBase):

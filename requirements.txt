@@ -1,0 +1,5 @@
+pexpect
+requests
+systemd
+paramiko
+pyserial

@@ -1,7 +1,7 @@
-#! /usr/bin/python
+#!/usr/bin/python3
 
 #  Copyright 2016 Broadcom
-#  Author Christian Daudt <csd@broadcom.com
+#  Author Christian Daudt <csd@broadcom.com>
 #  Based on apcbase+apc8959 by:
 #  Author Matt Hart <matthew.hart@linaro.org>
 #
@@ -24,7 +24,8 @@ import sys
 import logging
 import pexpect
 from pdudaemon.drivers.driver import PDUDriver
-log = logging.getLogger(__name__)
+import os
+log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 
 
 class SynBase(PDUDriver):
@@ -47,16 +48,15 @@ class SynBase(PDUDriver):
 
         self.exec_string = "/usr/bin/telnet %s %d" % (hostname, telnetport)
         log.debug("Telnet command: [%s]" % self.exec_string)
-        self.get_connection()
         super(SynBase, self).__init__()
 
     @classmethod
     def accepts(cls, drivername):
-        log.debug(drivername)
         return False
 
     def port_interaction(self, command, port_number):
         log.debug("Running port_interaction from SynBase")
+        self.get_connection()
         self._port_interaction(command,  # pylint: disable=no-member
                                port_number)
 

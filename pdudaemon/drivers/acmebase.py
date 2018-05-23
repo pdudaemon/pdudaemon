@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/python3
 
 #  Copyright 2015 BayLibre SAS
 #  Author Marc Titinger <mtitinger@baylibre.com>
@@ -25,7 +25,8 @@
 import logging
 import pexpect
 from pdudaemon.drivers.driver import PDUDriver
-log = logging.getLogger(__name__)
+import os
+log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 
 # SSH connection, assuming the id_rsa.pub key for the owner of pdudaemon-runner
 # i.e. root, was added to the authorized_keys on the ACME device.
@@ -37,22 +38,18 @@ class ACMEBase(PDUDriver):
 
     def __init__(self, hostname, settings):
         self.hostname = hostname
-        log.debug(settings)
         self.settings = settings
-        self.username = "root"
-        if "username" in settings:
-            username = settings["username"]
+        self.username = settings.get("username", "root")
         self.exec_string = "/usr/bin/ssh %s@%s" % (self.username, hostname)
-        self.get_connection()
         super(ACMEBase, self).__init__()
 
     @classmethod
-    def accepts(cls, drivername):
-        log.debug(drivername)
+    def accepts(cls, drivername):  # pylint: disable=unused-argument
         return False
 
     def port_interaction(self, command, port_number):
         log.debug("Running port_interaction from ACMEBase")
+        self.get_connection()
         self._port_interaction(command,  # pylint: disable=no-member
                                port_number)
 
