@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/python3
 
 #  Copyright 2013 Linaro Limited
 #  Author Matt Hart <matthew.hart@linaro.org>
@@ -22,6 +22,8 @@ import logging
 import pexpect
 from pdudaemon.drivers.driver import PDUDriver
 import sys
+import os
+log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 
 
 class LocalBase(PDUDriver):
@@ -29,7 +31,6 @@ class LocalBase(PDUDriver):
 
     def __init__(self, hostname, settings):
         self.hostname = hostname
-        logging.debug(settings)
         self.settings = settings
         super(LocalBase, self).__init__()
 
@@ -38,12 +39,12 @@ class LocalBase(PDUDriver):
         return False
 
     def port_interaction(self, command, port_number):
-        logging.debug("Running port_interaction from LocalBase")
+        log.debug("Running port_interaction from LocalBase")
         self._port_interaction(command, port_number)
 
     def _bombout(self):
-        logging.debug("Bombing out of driver: %s" % self.connection)
+        log.debug("Bombing out of driver: %s" % self.connection)
         del(self)
 
     def _cleanup(self):
-        logging.debug("Cleaning up driver: %s" % self.connection)
+        log.debug("Cleaning up driver: %s" % self.connection)

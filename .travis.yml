@@ -14,6 +14,8 @@ notifications:
 
 before_install:
     - sudo apt-get install -y pep8
-    
+
 script:
     - pep8 --ignore=E501 .
+    - ./setup.py install
+    - ./share/pdudaemon-test.sh

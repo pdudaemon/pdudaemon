@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/python3
 
 #  Copyright 2013 Linaro Limited
 #  Author Matt Hart <matthew.hart@linaro.org>
@@ -21,8 +21,8 @@
 import logging
 from subprocess import call
 from pdudaemon.drivers.localbase import LocalBase
-
-log = logging.getLogger(__name__)
+import os
+log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 
 
 class LocalCmdline(LocalBase):
@@ -40,16 +40,12 @@ class LocalCmdline(LocalBase):
         return False
 
     def _port_interaction(self, command, port_number):
-
         cmd = None
-
         log.debug("Attempting control: %s port: %i" % (command, port_number))
         if command == "on" and self.cmd_on:
             cmd = self.cmd_on % port_number
-
         elif command == "off" and self.cmd_off:
             cmd = self.cmd_off % port_number
-
         else:
             log.debug("Unknown command!")
 

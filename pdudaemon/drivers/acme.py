@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/python3
 
 #  Copyright 2015 BayLibre SAS
 #  Author Marc Titinger <mtitinger@baylibre.com>
@@ -24,7 +24,8 @@
 
 import logging
 from pdudaemon.drivers.acmebase import ACMEBase
-log = logging.getLogger(__name__)
+import os
+log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 
 
 class ACME(ACMEBase):

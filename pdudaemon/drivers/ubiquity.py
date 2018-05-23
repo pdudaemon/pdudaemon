@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/python3
 
 #  Copyright 2015 Alexander Couzens <lynxis@fe80.eu>
 #
@@ -22,7 +22,8 @@ from paramiko import SSHClient
 from paramiko.ssh_exception import SSHException
 from paramiko import RejectPolicy, WarningPolicy
 from pdudaemon.drivers.driver import PDUDriver
-log = logging.getLogger(__name__)
+import os
+log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 
 
 class UbiquityBase(PDUDriver):
@@ -32,7 +33,6 @@ class UbiquityBase(PDUDriver):
 
     def __init__(self, hostname, settings):
         self.hostname = hostname
-        log.debug(settings)
         self.settings = settings
 
         self.sshport = 22
@@ -50,7 +50,6 @@ class UbiquityBase(PDUDriver):
             self.password = settings["password"]
         if "verify_hostkey" in settings:
             self.verify_hostkey = settings["verify_hostkey"]
-        self.connect()
 
         super(UbiquityBase, self).__init__()
 
@@ -70,6 +69,7 @@ class UbiquityBase(PDUDriver):
 
     def port_interaction(self, command, port_number):
         log.debug("Running port_interaction from UbiquityBase")
+        self.connect()
         if port_number > self.port_count:
             raise RuntimeError("We only have ports 1 - %d. %d > maxPorts (%d)"
                                % self.port_count, port_number, self.port_count)
@@ -95,7 +95,6 @@ class UbiquityBase(PDUDriver):
 
     @classmethod
     def accepts(cls, drivername):
-        log.debug(drivername)
         return False
 
 
@@ -104,7 +103,6 @@ class Ubiquity3Port(UbiquityBase):
 
     @classmethod
     def accepts(cls, drivername):
-        log.debug(drivername)
         if drivername == "ubntmfi3port":
             return True
         return False
@@ -115,7 +113,6 @@ class Ubiquity6Port(UbiquityBase):
 
     @classmethod
     def accepts(cls, drivername):
-        log.debug(drivername)
         if drivername == "ubntmfi6port":
             return True
         return False

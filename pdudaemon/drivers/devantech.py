@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/python3
 
 #  Copyright 2016 Quentin Schulz <quentin.schulz@free-electrons.com>
 #
@@ -24,8 +24,8 @@
 import logging
 from pdudaemon.drivers.driver import PDUDriver
 import socket
-
-log = logging.getLogger(__name__)
+import os
+log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 
 
 class DevantechBase(PDUDriver):
@@ -34,21 +34,16 @@ class DevantechBase(PDUDriver):
 
     def __init__(self, hostname, settings):
         self.hostname = hostname
-        log.debug(settings)
         self.settings = settings
         self.ip = settings["ip"]
         self.port = settings.get("port", 17494)
-        log.debug("port: %d" % self.port)
         self.password = settings.get("password")
-
-        self.connect()
-
         super(DevantechBase, self).__init__()
 
     def connect(self):
         self.connection = socket.create_connection((self.ip, self.port))
         if self.password:
-            log.debug("Attempting connection to %s with provided password." % self.hostname)
+            log.debug("Attempting connection to %s:%s with provided password.", self.hostname, self.port)
             msg = '\x79' + self.password
             ret = self.connection.sendall(msg)
             if ret:
@@ -60,6 +55,7 @@ class DevantechBase(PDUDriver):
                 raise RuntimeError("Failed to authenticate. Verify your password.")
 
     def port_interaction(self, command, port_number):
+        self.connect()
         if port_number > self.port_count:
             log.error("There are only %d ports. Provide a port number lesser than %d." % (self.port_count, self.port_count))
             raise RuntimeError("There are only %d ports. Provide a port number lesser than %d." % (self.port_count, self.port_count))
@@ -106,7 +102,6 @@ class DevantechBase(PDUDriver):
 
     @classmethod
     def accepts(cls, drivername):
-        log.debug(drivername)
         return False
 
 
@@ -115,7 +110,6 @@ class DevantechETH002(DevantechBase):
 
     @classmethod
     def accepts(cls, drivername):
-        log.debug(drivername)
         if drivername == "devantech_eth002":
             return True
         return False
@@ -126,7 +120,6 @@ class DevantechETH0621(DevantechBase):
 
     @classmethod
     def accepts(cls, drivername):
-        log.debug(drivername)
         if drivername == "devantech_eth0621":
             return True
         return False
@@ -137,7 +130,6 @@ class DevantechETH484(DevantechBase):
 
     @classmethod
     def accepts(cls, drivername):
-        log.debug(drivername)
         if drivername == "devantech_eth484":
             return True
         return False
@@ -148,7 +140,6 @@ class DevantechETH008(DevantechBase):
 
     @classmethod
     def accepts(cls, drivername):
-        log.debug(drivername)
         if drivername == "devantech_eth008":
             return True
         return False
@@ -159,7 +150,6 @@ class DevantechETH8020(DevantechBase):
 
     @classmethod
     def accepts(cls, drivername):
-        log.debug(drivername)
         if drivername == "devantech_eth8020":
             return True
         return False

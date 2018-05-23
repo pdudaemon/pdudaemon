@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/python3
 
 #
 #  Copyright 2016 BayLibre, Inc.
@@ -27,14 +27,14 @@ import logging
 from pdudaemon.drivers.localbase import LocalBase
 import requests
 
-log = logging.getLogger(__name__)
+import os
+log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 
 
 class Sainsmart(LocalBase):
 
     def __init__(self, hostname, settings):
         self.hostname = hostname
-        log.debug(settings)
         self.settings = settings
         self.ip = settings.get("ip", self.hostname)
         self.url_base = "http://%s/30000/" % self.ip

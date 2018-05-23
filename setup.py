@@ -1,51 +1,66 @@
 #!/usr/bin/python3
 #
-# Copyright (C) 2013 Linaro Limited
+#  Copyright 2018 Remi Duraffort <remi.duraffort@linaro.org>
+#                 Matt Hart <matt@mattface.org>
 #
-# Author: Matthew Hart <matthew.hart@linaro.org>
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
 #
-# This file is part of PDUDAEMON.
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
 #
-# PDUDAEMON is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-#
-# PDUDAEMON is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, see <http://www.gnu.org/licenses>.
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+#  MA 02110-1301, USA.
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
+# grab metadata without importing the module
+metadata = {}
+with open("pdudaemon/__about__.py", encoding="utf-8") as fp:
+    exec(fp.read(), metadata)
+
+# Setup the package
 setup(
     name='pdudaemon',
-    version="0.0.6",
-    author="Matthew Hart",
-    author_email="matt@mattface.org",
-    license="GPL2+",
-    description="Queueing daemon for PDUs",
-    packages=find_packages(),
+    version=metadata['__version__'],
+    description=metadata['__description__'],
+    author=metadata['__author__'],
+    author_email='matt@mattface.org',
+    license=metadata['__license__'],
+    url=metadata['__url__'],
+    python_requires=">=3.4",
+    classifiers=[
+        "Development Status :: 5 - Production/Stable",
+        "Environment :: Console",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)",
+        "Operating System :: POSIX :: Linux",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3 :: Only",
+        "Topic :: Communications",
+        "Topic :: Software Development :: Testing",
+        "Topic :: System :: Networking",
+    ],
+    packages=['pdudaemon', 'pdudaemon.drivers'],
+    entry_points={
+        'console_scripts': [
+            'pdudaemon = pdudaemon:main'
+        ]
+    },
     install_requires=[
-        "python_daemon",
-        "lockfile",
-        "paramiko",
-        "pexpect",
         "requests",
-        "psycopg2",
-        "setproctitle"
+        "pexpect",
+        "systemd",
+        "paramiko",
+        "pyserial"
     ],
-    data_files=[
-        ("/lib/systemd/system/", ["etc/pdudaemon.service"]),
-        ("/etc/pdudaemon/", ["etc/pdudaemon/pdudaemon.conf"]),
-        ("/etc/logrotate.d/", ["etc/pdudaemonlogrotate"]),
-    ],
-    scripts=[
-        'pdudaemon-start',
-        'pduclient'
-    ],
-    zip_safe=False,
-    include_package_data=True)
+    zip_safe=True
+)

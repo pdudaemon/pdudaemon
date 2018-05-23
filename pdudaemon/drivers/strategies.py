@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/python3
 
 #  Copyright 2013 Linaro Limited
 #  Author Matt Hart <matthew.hart@linaro.org>
@@ -39,24 +39,3 @@ from pdudaemon.drivers.devantechusb import DevantechUSB2
 from pdudaemon.drivers.devantechusb import DevantechUSB8
 from pdudaemon.drivers.synaccess import SynNetBooter
 from pdudaemon.drivers.egpms import EgPMS
-
-assert ACME
-assert APC7932
-assert APC7952
-assert APC9218
-assert APC8959
-assert APC9210
-assert APC7921
-assert EgPMS
-assert Ubiquity3Port
-assert Ubiquity6Port
-assert IP9258
-assert Sainsmart
-assert DevantechETH002
-assert DevantechETH0621
-assert DevantechETH484
-assert DevantechETH008
-assert DevantechETH8020
-assert DevantechUSB2
-assert DevantechUSB8
-assert SynNetBooter

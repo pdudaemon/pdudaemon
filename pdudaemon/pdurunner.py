@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/python3
 
 #  Copyright 2013 Linaro Limited
 #  Author Matt Hart <matthew.hart@linaro.org>
@@ -21,65 +21,55 @@
 import logging
 import time
 import traceback
-from pdudaemon.dbhandler import DBHandler
+import threading
+import pexpect
 from pdudaemon.drivers.driver import PDUDriver
 import pdudaemon.drivers.strategies  # pylint: disable=W0611
-from pdudaemon.shared import drivername_from_hostname
-from pdudaemon.shared import pdus_from_config
-assert pdudaemon.drivers.strategies
-log = logging.getLogger(__name__)
 
 
-class PDURunner(object):
+class PDURunner(threading.Thread):
 
-    def __init__(self, config, single_pdu=False):
-        self.settings = config["daemon"]
-        self.pdus = config["pdus"]
-        if single_pdu:
-            if single_pdu not in pdus_from_config(config):
-                raise NotImplementedError
-        self.single_pdu = single_pdu
-        self.dbh = DBHandler(self.settings)
-
-    def get_one(self):
-        job = self.dbh.get_next_job(self.single_pdu)
-        if job:
-            job_id, hostname, port, request = job
-            log.debug(job)
-            log.info("Processing queue item: (%s %s) on hostname: %s",
-                     request, port, hostname)
-            self.do_job(hostname, port, request)
-            self.dbh.delete_row(job_id)
-        else:
-            time.sleep(1)
+    def __init__(self, config, hostname, task_queue, db_queue, retries):
+        super(PDURunner, self).__init__(name=hostname)
+        self.config = config
+        self.hostname = hostname
+        self.task_queue = task_queue
+        self.db_queue = db_queue
+        self.retries = retries
+        self.logger = logging.getLogger("pdud.pdu.%s" % hostname)
+        self.driver = self.driver_from_hostname(hostname)
 
     def driver_from_hostname(self, hostname):
-        drivername = drivername_from_hostname(hostname, self.pdus)
-        driver = PDUDriver.select(drivername)(hostname, self.pdus[hostname])
+        drivername = self.config['driver']
+        driver = PDUDriver.select(drivername)(hostname, self.config)
         return driver
 
-    def do_job(self, hostname, port, request, delay=0):
-        retries = self.settings["retries"]
-        driver = False
+    def do_job(self, port, request):
+        retries = self.retries
         while retries > 0:
             try:
-                driver = self.driver_from_hostname(hostname)
-                return driver.handle(request, port, delay)
-            except Exception as e:  # pylint: disable=broad-except
-                log.warn(traceback.format_exc())
-                log.warn("Failed to execute job: %s %s %s "
-                         "(attempts left %i) error was %s",
-                         hostname, port, request, retries, e.message)
-                if driver:
-                    driver._bombout()  # pylint: disable=W0212,E1101
+                return self.driver.handle(request, port)
+            except (OSError, pexpect.exceptions.EOF, Exception):  # pylint: disable=broad-except
+                self.logger.warn(traceback.format_exc())
+                self.logger.warn("Failed to execute job: %s %s (attempts left %i)", port, request, retries - 1)
+                if self.driver:
+                    self.driver._bombout()  # pylint: disable=W0212,E1101
                 time.sleep(5)
                 retries -= 1
+                continue
         return False
 
-    def run_me(self):
-        if self.single_pdu:
-            log.info("Starting a PDURunner for PDU: %s", self.single_pdu)
-        else:
-            log.info("Starting a PDURunner for all PDUS")
+    def run(self):
+        self.logger.info("Starting a PDURunner for PDU: %s", self.hostname)
         while 1:
-            self.get_one()
+            job = self.task_queue.get()
+            if job is None:
+                self.logger.info("leaving")
+                self.task_queue.task_done()
+                return 0
+            job_id, port, request = job
+            self.logger.info("Processing task (%s %s)", request, port)
+            self.do_job(port, request)
+            self.task_queue.task_done()
+            self.db_queue.put(("DELETE", job_id))
+        return 0

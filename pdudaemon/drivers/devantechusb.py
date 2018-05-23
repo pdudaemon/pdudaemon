@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/python3
 
 #  Copyright 2017 Sjoerd Simons <sjoerd.simons@collabora.co.uk>
 #
@@ -25,7 +25,8 @@ import logging
 from pdudaemon.drivers.driver import PDUDriver
 import serial
 
-log = logging.getLogger(__name__)
+import os
+log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 
 
 class DevantechusbBase(PDUDriver):
@@ -35,7 +36,6 @@ class DevantechusbBase(PDUDriver):
 
     def __init__(self, hostname, settings):
         self.hostname = hostname
-        log.debug(settings)
         self.settings = settings
         self.device = settings.get("device", "/dev/ttyACM0")
         log.debug("device: %s" % self.device)
