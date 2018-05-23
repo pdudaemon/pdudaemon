@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/python3
 
 #  Copyright 2016 EfficiOS
 #  Author Jonathan Rajotte-Julien <jonathan.rajotte-julien@efficios.com>
@@ -20,7 +20,8 @@
 
 import logging
 from pdudaemon.drivers.apc7952 import APC7952
-log = logging.getLogger(__name__)
+import os
+log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 
 
 class APC7932(APC7952):

@@ -56,9 +56,7 @@ if __name__ == '__main__':
         string = ("%s %s %s" % (options.pduhostname, options.pduportnum,
                                 options.pducommand))
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # sock.setblocking(0)  # optional non-blocking
     reply = ""
-    # noinspection PyBroadException
     try:
         sock.connect((options.pdudaemonhostname, 16421))
         sock.send(string.encode('utf-8'))

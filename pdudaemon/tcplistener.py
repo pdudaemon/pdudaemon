@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/python3
 
 #  Copyright 2013 Linaro Limited
 #  Author Matt Hart <matthew.hart@linaro.org>
@@ -19,47 +19,43 @@
 #  MA 02110-1301, USA.
 
 import socketserver
+import threading
 import logging
 import socket
 import time
-import sys
-import os
-from pdudaemon.dbhandler import DBHandler
-from pdudaemon.shared import drivername_from_hostname
-log = logging.getLogger(__name__)
+logger = logging.getLogger('pdud.tcp')
 
 
-class ListenerServer(object):
+class TCPListener(threading.Thread):
 
-    def __init__(self, config):
-        self.config = config
+    def __init__(self, config, db_queue):
+        super(TCPListener, self).__init__(name="TCP Listener")
         settings = config["daemon"]
         listen_host = settings["hostname"]
-        listen_port = settings["port"]
-        log.debug("ListenerServer __init__")
-        log.info("listening on %s:%s", listen_host, listen_port)
-
+        listen_port = settings.get("port", 16421)
+        logger.info("listening on %s:%s", listen_host, listen_port)
         self.server = TCPServer((listen_host, listen_port), TCPRequestHandler)
         self.server.settings = settings
         self.server.config = config
-        self.server.dbh = DBHandler(settings)
-        self.server.dbh.create_db()
+        self.server.db_queue = db_queue
 
-    def start(self):
-        log.info("Starting the ListenerServer")
+    def run(self):
+        logger.info("Starting the TCPServer")
         self.server.serve_forever()
+
+    def shutdown(self):
+        self.server.shutdown()
+        self.server.server_close()
 
 
 class TCPRequestHandler(socketserver.BaseRequestHandler):
-    # "One instance per connection.  Override handle(self) to customize
-    # action."
     def insert_request(self, data):
         array = data.split(" ")
         delay = 10
         custom_delay = False
         now = int(time.time())
         if (len(array) < 3) or (len(array) > 4):
-            log.info("Wrong data size")
+            logger.info("Wrong data size")
             raise Exception("Unexpected data")
         if len(array) == 4:
             delay = int(array[3])
@@ -67,22 +63,20 @@ class TCPRequestHandler(socketserver.BaseRequestHandler):
         hostname = array[0]
         port = int(array[1])
         request = array[2]
-        # this will throw if the pdu is not found
-        drivername_from_hostname(hostname, self.server.config["pdus"])
-        dbh = self.server.dbh
+        db_queue = self.server.db_queue
         if not (request in ["reboot", "on", "off"]):
-            log.info("Unknown request: %s", request)
+            logger.info("Unknown request: %s", request)
             raise Exception("Unknown request: %s", request)
         if request == "reboot":
-            log.debug("reboot requested, submitting off/on")
-            dbh.insert_request(hostname, port, "off", now)
-            dbh.insert_request(hostname, port, "on", now + delay)
+            logger.debug("reboot requested, submitting off/on")
+            db_queue.put(("CREATE", hostname, port, "off", now))
+            db_queue.put(("CREATE", hostname, port, "on", now + int(delay)))
         else:
             if custom_delay:
-                log.debug("using delay as requested")
-                dbh.insert_request(hostname, port, request, now + delay)
+                logger.debug("using delay as requested")
+                db_queue.put(("CREATE", hostname, port, request, now))
             else:
-                dbh.insert_request(hostname, port, request, now)
+                db_queue.put(("CREATE", hostname, port, request, now))
 
     def handle(self):
         request_ip = self.client_address[0]
@@ -95,15 +89,13 @@ class TCPRequestHandler(socketserver.BaseRequestHandler):
                 request_host = socket.gethostbyaddr(request_ip)[0]
             except socket.herror:
                 request_host = request_ip
-            log.info("Received a request from %s: '%s'",
-                     request_host,
-                     data)
+            logger.info("Received a request from %s: '%s'", request_host, data)
             self.insert_request(data)
             self.request.sendall("ack\n".encode('utf-8'))
         except Exception as global_error:  # pylint: disable=broad-except
-            log.debug(global_error.__class__)
-            log.debug(global_error.message)
-            self.request.sendall(global_error.message)
+            logger.debug(global_error.__class__)
+            logger.debug(global_error)
+            self.request.sendall(global_error)
         self.request.close()
 
 

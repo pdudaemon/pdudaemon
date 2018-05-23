@@ -6,9 +6,10 @@ Most PDUs have a very low power microprocessor, or low quality software, which c
 #### Standardising
 Every PDU manufacturer has a different way of controlling their PDUs. Though many support SNMP, there's still no single simple way to communicate with all PDUs if you have a mix of brands.
 ## Supported devices list
- APC, Devantech and ACME are well supported, however there is no official list yet. The [strategies.py](https://github.com/pdudaemon/pdudaemon/blob/master/pdudaemon/drivers/strategies.py) file is a good place to see all the current drivers.
+APC, Devantech and ACME are well supported, however there is no official list yet. The [strategies.py](https://github.com/pdudaemon/pdudaemon/blob/master/pdudaemon/drivers/strategies.py) file is a good place to see all the current drivers.
 ## Installing
 Debian packages are on the way, hopefully.
+python3 setup.py install
 ## Config file
 To be added.
 ## Making a power control request

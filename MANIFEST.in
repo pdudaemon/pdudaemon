@@ -1,4 +1,1 @@
-include etc/pdudaemon/pdudaemon.conf
-include etc/pdudaemon.service
-include etc/pdudaemonlogrotate
-include pdudaemon-start
+include share/*

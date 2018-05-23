@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/python3
 
 #  Copyright 2013 Linaro Limited
 #  Author Matt Hart <matthew.hart@linaro.org>
@@ -20,7 +20,8 @@
 
 import logging
 from pdudaemon.drivers.apcbase import APCBase
-log = logging.getLogger(__name__)
+import os
+log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 
 
 class APC8959(APCBase):
@@ -46,8 +47,7 @@ class APC8959(APCBase):
     def _port_interaction(self, command, port_number):
         log.debug("Attempting %s on port %i", command, port_number)
         self._pdu_get_to_prompt()
-        self.connection.sendline(self.pdu_commands[command] +
-                                 (" %i" % port_number))
+        self.connection.sendline(self.pdu_commands[command] + (" %i" % port_number))
         self.connection.expect("E000: Success")
         self._pdu_get_to_prompt()
         log.debug("done")
