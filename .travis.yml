@@ -13,7 +13,7 @@ notifications:
     skip_join: false
 
 before_install:
-    - sudo apt-get install -y pep8
+    - sudo apt-get install -y pep8 libsystemd-dev curl psmisc
 
 script:
     - pep8 --ignore=E501 .
