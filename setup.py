@@ -60,7 +60,8 @@ setup(
         "pexpect",
         "systemd_python",
         "paramiko",
-        "pyserial"
+        "pyserial",
+        "hidapi"
     ],
     zip_safe=True
 )

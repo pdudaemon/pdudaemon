@@ -5,7 +5,13 @@ RUN apt-get update && apt-get install -y pep8 \
                                          python3-pip \
                                          libsystemd-dev \
                                          curl \
-                                         psmisc
+                                         psmisc \
+                                         pkg-config \
+                                         libffi-dev \
+                                         libhidapi-dev \
+                                         libudev-dev \
+                                         libusb-1.0-0-dev \
+                                         cython3
 
 ADD requirements.txt /
 RUN pip3 install --user -r /requirements.txt

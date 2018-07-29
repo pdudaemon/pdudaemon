@@ -4,3 +4,4 @@ systemd_python
 paramiko
 pyserial
 setuptools
+hidapi
