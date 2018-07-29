@@ -74,7 +74,7 @@ class TCPRequestHandler(socketserver.BaseRequestHandler):
         else:
             if custom_delay:
                 logger.debug("using delay as requested")
-                db_queue.put(("CREATE", hostname, port, request, now))
+                db_queue.put(("CREATE", hostname, port, request, now + int(delay)))
             else:
                 db_queue.put(("CREATE", hostname, port, request, now))
 
