@@ -116,3 +116,14 @@ class Ubiquity6Port(UbiquityBase):
         if drivername == "ubntmfi6port":
             return True
         return False
+
+""" Ubiquity mPower Pro """
+class Ubiquity8Port(UbiquityBase):
+    port_count = 8
+
+    @classmethod
+    def accepts(cls, drivername):
+        if drivername == "ubntmfi8port":
+            return True
+        return False
+
