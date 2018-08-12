@@ -1,6 +1,6 @@
 pexpect
 requests
-systemd
+systemd_python
 paramiko
 pyserial
 setuptools
