@@ -18,37 +18,10 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 
-import socket
 import optparse
 
-if __name__ == '__main__':
-    usage = "Usage: %prog --daemon deamonhostname --hostname pduhostname " \
-            "--port pduportnum --command pducommand"
-    description = "PDUDaemon client"
-    commands = ["reboot", "on", "off"]
-    parser = optparse.OptionParser(usage=usage, description=description)
-    parser.add_option("--daemon", dest="pdudaemonhostname", action="store",
-                      type="string",
-                      help="PDUDaemon listener hostname (ex: localhost)")
-    parser.add_option("--hostname", dest="pduhostname", action="store",
-                      type="string", help="PDU Hostname (ex: pdu05)")
-    parser.add_option("--port", dest="pduportnum", action="store",
-                      type="string", help="PDU Portnumber (ex: 04)")
-    parser.add_option("--command", dest="pducommand", action="store",
-                      type="string", help="PDU command (ex: reboot|on|off)")
-    parser.add_option("--delay", dest="pdudelay", action="store", type="int",
-                      help="Delay before command runs, or between off/on "
-                           "when rebooting (ex: 5)")
-    (options, args) = parser.parse_args()
-    if not options.pdudaemonhostname \
-            or not options.pduhostname \
-            or not options.pduportnum \
-            or not options.pducommand:
-        print("Missing option, try -h for help")
-        exit(1)
-    if not (options.pducommand in commands):
-        print("Unknown pdu command: %s" % options.pducommand)
-        exit(1)
+def do_tcp_request(options):
+    import socket
     if options.pdudelay:
         string = ("%s %s %s %s" % (options.pduhostname, options.pduportnum,
                                    options.pducommand, options.pdudelay))
@@ -73,3 +46,61 @@ if __name__ == '__main__':
         print("Error sending command! %s replied: %s" %
               (options.pdudaemonhostname, reply))
         exit(127)
+
+def do_http_request(options):
+    import requests
+    request = "http://%s:16421/power/control/%s?hostname=%s&port=%s" % (
+                options.pdudaemonhostname, options.pducommand,
+                options.pduhostname, options.pduportnum)
+
+    if options.pdudelay:
+        request += "&delay=%s" % options.pdudelay
+    try:
+        reply = requests.get(request)
+    except Exception:
+        print ("Error sending command, wrong daemon hostname?")
+        exit(1)
+    if reply.ok:
+        print("Command sent successfully.")
+        exit(0)
+    else:
+        print("Error sending command! %s replied: %s" %
+              (options.pdudaemonhostname, reply))
+        exit(127)
+
+
+if __name__ == '__main__':
+    usage = "Usage: %prog --daemon deamonhostname --hostname pduhostname " \
+            "--port pduportnum --command pducommand"
+    description = "PDUDaemon client"
+    commands = ["reboot", "on", "off"]
+    parser = optparse.OptionParser(usage=usage, description=description)
+    parser.add_option("-H", "--http", dest="use_http", action="store_true",
+                      help="Use HTTP protocol")
+    parser.add_option("--daemon", dest="pdudaemonhostname", action="store",
+                      type="string",
+                      help="PDUDaemon listener hostname (ex: localhost)")
+    parser.add_option("--hostname", dest="pduhostname", action="store",
+                      type="string", help="PDU Hostname (ex: pdu05)")
+    parser.add_option("--port", dest="pduportnum", action="store",
+                      type="string", help="PDU Portnumber (ex: 04)")
+    parser.add_option("--command", dest="pducommand", action="store",
+                      type="string", help="PDU command (ex: reboot|on|off)")
+    parser.add_option("--delay", dest="pdudelay", action="store", type="int",
+                      help="Delay before command runs, or between off/on "
+                           "when rebooting (ex: 5)")
+    (options, args) = parser.parse_args()
+    if not options.pdudaemonhostname \
+            or not options.pduhostname \
+            or not options.pduportnum \
+            or not options.pducommand:
+        print("Missing option, try -h for help")
+        exit(1)
+    if not (options.pducommand in commands):
+        print("Unknown pdu command: %s" % options.pducommand)
+        exit(1)
+
+    if options.use_http:
+        do_http_request (options)
+    else:
+        do_tcp_request (options)
