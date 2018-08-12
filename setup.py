@@ -58,7 +58,7 @@ setup(
     install_requires=[
         "requests",
         "pexpect",
-        "systemd",
+        "systemd_python",
         "paramiko",
         "pyserial"
     ],
