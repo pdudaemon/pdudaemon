@@ -1,7 +1,3 @@
-addons:
-    apt:
-        update: true
-
 notifications:
     irc: "chat.freenode.net#pdudaemon"
     on_success: always
@@ -9,17 +5,12 @@ notifications:
     use_notice: false
     skip_join: false
 
-before_install:
-    - sudo bash -c 'echo "deb http://01.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse" >> /etc/apt/sources.list'
-    - sudo apt-get update
-    - sudo apt-get install -y pep8 python3-setuptools python3-pip libsystemd-dev curl psmisc
+services:
+    - docker
 
-install:
-    - pip3 install --upgrade pip
-    - pip3 install --user -r requirements.txt
-    - pip3 install --user pycodestyle
+before_install:
+    - tar -c requirements.txt share/Dockerfile.travis | docker build -t pdudaemon -f share/Dockerfile.travis -
 
 script:
-    - pycodestyle --ignore=E501 .
-    - sudo python3 ./setup.py install
-    - ./share/pdudaemon-test.sh
+    - docker run -v $(pwd):/p -w /p pdudaemon pycodestyle --ignore=E501 .
+    - docker run -v $(pwd):/p -w /p pdudaemon sh -c "python3 ./setup.py install && ./share/pdudaemon-test.sh"

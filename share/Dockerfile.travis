@@ -1,0 +1,12 @@
+FROM debian:stretch
+
+RUN apt-get update && apt-get install -y pep8 \
+                                         python3-setuptools \
+                                         python3-pip \
+                                         libsystemd-dev \
+                                         curl \
+                                         psmisc
+
+ADD requirements.txt /
+RUN pip3 install --user -r /requirements.txt
+RUN pip3 install --user pycodestyle
