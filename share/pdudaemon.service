@@ -2,7 +2,7 @@
 Description=Control and Queueing daemon for PDUs
 
 [Service]
-ExecStart=/usr/sbin/pdudaemon --journal --dbfile=/var/lib/pdudaemon/pdudaemon.db --conf=/etc/pdudaemon/pdudaemon.conf
+ExecStart=/usr/bin/pdudaemon --journal --dbfile=/var/lib/pdudaemon/pdudaemon.db --conf=/etc/pdudaemon/pdudaemon.conf
 Type=simple
 Restart=on-abnormal
 
