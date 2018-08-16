@@ -117,7 +117,7 @@ class Ubiquity6Port(UbiquityBase):
             return True
         return False
 
-""" Ubiquity mPower Pro """
+
 class Ubiquity8Port(UbiquityBase):
     port_count = 8
 
@@ -126,4 +126,3 @@ class Ubiquity8Port(UbiquityBase):
         if drivername == "ubntmfi8port":
             return True
         return False
-
