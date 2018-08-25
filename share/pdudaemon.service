@@ -7,4 +7,4 @@ Type=simple
 Restart=on-abnormal
 
 [Install]
-WantedBy=network.target
+WantedBy=multi-user.target
