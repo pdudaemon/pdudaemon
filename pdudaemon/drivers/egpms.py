@@ -38,7 +38,7 @@ class EgPMS(PDUDriver):
         self.hostname = hostname
         self.settings = settings
         self.ip = settings["ip"]
-        self.password = array('B', bytes(settings["password"]) + 8 * ' ')[:8]
+        self.password = array('B', settings["password"].encode("utf-8") + 8 * b' ')[:8]
         self.challenge = None
 
     def authresponse(self, part):
@@ -74,7 +74,7 @@ class EgPMS(PDUDriver):
 
     def connect(self):
         self.socket = socket.create_connection((self.ip, 5000))
-        self.socket.send("\x11")
+        self.socket.send(b'\x11')
         self.challenge = array('B', self.socket.recv(4))
 
         self.socket.send(self.authresponse(0) + self.authresponse(1))
@@ -91,7 +91,7 @@ class EgPMS(PDUDriver):
         # Other protocol documents explain that after the current settings the
         # device waits for a schedule update for a while (if any) but will go
         # back to the start state if it doesn't make sense.
-        self.socket.send('\x11')
+        self.socket.send(b'\x11')
         self.socket.close()
 
     def port_interaction(self, command, port_number):
