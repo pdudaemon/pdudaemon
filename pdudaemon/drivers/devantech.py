@@ -44,13 +44,13 @@ class DevantechBase(PDUDriver):
         self.connection = socket.create_connection((self.ip, self.port))
         if self.password:
             log.debug("Attempting connection to %s:%s with provided password.", self.hostname, self.port)
-            msg = '\x79' + self.password
+            msg = b'\x79' + self.password.encode("utf-8")
             ret = self.connection.sendall(msg)
             if ret:
                 log.error("Failed to send message.")
                 raise RuntimeError("Failed to send message.")
             ret = self.connection.recv(1)
-            if ret != '\x01':
+            if ret != b'\x01':
                 log.error("Authentication failed.")
                 raise RuntimeError("Failed to authenticate. Verify your password.")
 
@@ -61,21 +61,21 @@ class DevantechBase(PDUDriver):
             raise RuntimeError("There are only %d ports. Provide a port number lesser than %d." % (self.port_count, self.port_count))
 
         if command == "on":
-            msg = '\x20'
+            msg = b'\x20'
         elif command == "off":
-            msg = '\x21'
+            msg = b'\x21'
         else:
             log.error("Unknown command %s." % (command))
             return
-        msg += chr(port_number)
-        msg += '\x00'
+        msg += port_number.to_bytes(1, 'big')
+        msg += b'\x00'
         log.debug("Attempting control: %s port: %d hostname: %s." % (command, port_number, self.hostname))
         ret = self.connection.sendall(msg)
         if ret:
             log.error("Failed to send message.")
             raise RuntimeError("Failed to send message.")
         ret = self.connection.recv(1)
-        if ret != '\x00':
+        if ret != b'\x00':
             log.error("Failed to send %s command on port %d of %s." % (command, port_number, self.hostname))
             raise RuntimeError("Failed to send %s command on port %d of %s." % (command, port_number, self.hostname))
 
@@ -84,12 +84,12 @@ class DevantechBase(PDUDriver):
         log.debug("Closing connection.")
         if self.password:
             log.debug("Attempting to logout.")
-            ret = self.connection.sendall('\x7B')
+            ret = self.connection.sendall(b'\x7B')
             if ret:
                 log.error("Failed to send message.")
                 raise RuntimeError("Failed to send message.")
             ret = self.connection.recv(1)
-            if ret != '\x00':
+            if ret != b'\x00':
                 log.error("Failed to logout of %s." % self.hostname)
                 raise RuntimeError("Failed to logout of %s." % self.hostname)
         self.connection.close()
