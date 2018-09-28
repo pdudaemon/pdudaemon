@@ -57,7 +57,7 @@ class DevantechusbBase(PDUDriver):
             return
 
         s = serial.Serial(self.device, 9600)
-        s.write(chr(byte))
+        s.write([byte])
         s.close()
 
     @classmethod
