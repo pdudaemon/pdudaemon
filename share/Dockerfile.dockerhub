@@ -1,0 +1,22 @@
+FROM debian:stretch
+
+RUN apt-get update && apt-get install -y pep8 \
+python3-setuptools \
+python3-pip \
+libsystemd-dev \
+curl \
+psmisc \
+pkg-config \
+libffi-dev \
+libhidapi-dev \
+libudev-dev \
+libusb-1.0-0-dev \
+cython3 \
+supervisor
+
+ADD share/pdudaemon.conf /config/
+WORKDIR /pdudaemon
+COPY . .
+RUN pip3 install --user -r ./requirements.txt
+RUN python3 ./setup.py install
+CMD ["/usr/bin/supervisord", "-c", "/pdudaemon/share/supervisord.conf"]
