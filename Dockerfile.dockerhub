@@ -1,19 +1,20 @@
 FROM debian:stretch
 
-RUN apt-get update && apt-get install -y pep8 \
-python3-setuptools \
-python3-pip \
-libsystemd-dev \
+RUN apt-get update && apt-get install -y \
 curl \
-psmisc \
-pkg-config \
+cython3 \
 libffi-dev \
 libhidapi-dev \
+libsystemd-dev \
 libudev-dev \
 libusb-1.0-0-dev \
-cython3 \
-telnet \
-supervisor
+pkg-config \
+psmisc \
+python3-pip \
+python3-setuptools \
+python3-wheel \
+supervisor \
+telnet
 
 ADD share/pdudaemon.conf /config/
 WORKDIR /pdudaemon

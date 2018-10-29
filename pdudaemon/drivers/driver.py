@@ -54,7 +54,7 @@ class PDUDriver(object):
             self.port_off(port_number)
         else:
             log.debug("Unknown request to handle - oops")
-            raise NotImplementedError(
+            raise UnknownCommandException(
                 "Driver doesn't know how to %s " % request
             )
         self._cleanup()
@@ -73,3 +73,11 @@ class PDUDriver(object):
 
     def _cleanup(self):
         pass
+
+
+class UnknownCommandException(Exception):
+    pass
+
+
+class FailedRequestException(Exception):
+    pass
