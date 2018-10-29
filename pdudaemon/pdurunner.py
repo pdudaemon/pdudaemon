@@ -29,12 +29,11 @@ import pdudaemon.drivers.strategies  # pylint: disable=W0611
 
 class PDURunner(threading.Thread):
 
-    def __init__(self, config, hostname, task_queue, db_queue, retries):
+    def __init__(self, config, hostname, task_queue, retries):
         super(PDURunner, self).__init__(name=hostname)
         self.config = config
         self.hostname = hostname
         self.task_queue = task_queue
-        self.db_queue = db_queue
         self.retries = retries
         self.logger = logging.getLogger("pdud.pdu.%s" % hostname)
         self.driver = self.driver_from_hostname(hostname)
@@ -71,5 +70,4 @@ class PDURunner(threading.Thread):
             self.logger.info("Processing task (%s %s)", request, port)
             self.do_job(port, request)
             self.task_queue.task_done()
-            self.db_queue.put(("DELETE", job_id))
         return 0
