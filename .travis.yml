@@ -12,5 +12,5 @@ before_install:
     - tar -c requirements.txt share/Dockerfile.travis | docker build -t pdudaemon -f share/Dockerfile.travis -
 
 script:
-    - docker run -v $(pwd):/p -w /p pdudaemon pycodestyle --ignore=E501 .
+    - docker run -v $(pwd):/p -w /p pdudaemon /root/.local/bin/pycodestyle --ignore=E501 .
     - docker run -v $(pwd):/p -w /p pdudaemon sh -c "python3 ./setup.py install && ./share/pdudaemon-test.sh"
