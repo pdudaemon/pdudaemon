@@ -149,7 +149,7 @@ def main():
         config = settings["pdus"][hostname]
         retries = config.get("retries", 5)
         task_queue = Queue()
-        workers[hostname] = {"thread": PDURunner(config, hostname, task_queue, db_queue, retries), "queue": task_queue}
+        workers[hostname] = {"thread": PDURunner(config, hostname, task_queue, retries), "queue": task_queue}
         workers[hostname]["thread"].start()
 
     # Start the listener
@@ -188,7 +188,7 @@ def main():
 
             for worker in workers:
                 # Is the last task done
-                if not workers[worker]["queue"].unfinished_tasks:
+                if workers[worker]["queue"].empty():
                     task = dbhandler.next(worker)
                     if task is not None:
                         task_id = task["id"]
@@ -196,6 +196,7 @@ def main():
                         request = task["request"]
                         logger.debug("put for %s: '%s' to port %s [id:%s]", worker, request, port, task_id)
                         workers[worker]["queue"].put((task["id"], task["port"], task["request"]))
+                        dbhandler.delete(task["id"])
             # TODO: compute the timeout correctly
             time.sleep(1)
     except KeyboardInterrupt:
