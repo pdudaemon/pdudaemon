@@ -1,6 +1,0 @@
-ACTION=="remove", GOTO="ykushxs_end"
-SUBSYSTEM!="usb", GOTO="ykushxs_end"
-
-ENV{ID_MODEL}=="YKUSH_XS", OWNER="pdudaemon"
-
-LABEL="ykushxs_end"
