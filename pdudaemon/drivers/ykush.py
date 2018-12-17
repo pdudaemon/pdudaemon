@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 #  Copyright 2018 Sjoerd Simons <sjoerd.simons@collabora.co.uk>
+#                 Stefan Kempe <stefan.kempe@de.bosch.com>
 #
 #  Based on PDUDriver:
 #     Copyright 2013 Linaro Limited
@@ -24,18 +25,19 @@
 import logging
 from pdudaemon.drivers.driver import PDUDriver
 import hid
-
 import os
+
 log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 
 YKUSH_VID = 0x04d8
+YKUSH_PID = 0xf2f7
 YKUSH_XS_PID = 0xf0cd
 
 
-class YkushXS(PDUDriver):
+class YkushBase(PDUDriver):
     connection = None
-    port_count = 2
-    supported = ["YKUSHXS"]
+    ykush_pid = None
+    port_count = 0
 
     def __init__(self, hostname, settings):
         self.hostname = hostname
@@ -43,7 +45,7 @@ class YkushXS(PDUDriver):
         self.serial = settings.get("serial", u"")
         log.debug("serial: %s" % self.serial)
 
-        super(YkushXS, self).__init__()
+        super(YkushBase, self).__init__()
 
     def port_interaction(self, command, port_number):
         if port_number > self.port_count or port_number < 1:
@@ -52,19 +54,37 @@ class YkushXS(PDUDriver):
             raise RuntimeError(err)
 
         if command == "on":
-            byte = 0x11
+            byte = 0x10 + port_number
         elif command == "off":
-            byte = 0x01
+            byte = 0x00 + port_number
         else:
             log.error("Unknown command %s." % (command))
             return
 
         d = hid.device()
-        d.open(YKUSH_VID, YKUSH_XS_PID, serial_number=self.serial)
+        d.open(YKUSH_VID, self.ykush_pid, serial_number=self.serial)
         d.write([byte, byte])
         d.read(64)
         d.close()
 
     @classmethod
     def accepts(cls, drivername):
-        return drivername in cls.supported
+        return False
+
+
+class YkushXS(YkushBase):
+    ykush_pid = YKUSH_XS_PID
+    port_count = 1
+
+    @classmethod
+    def accepts(cls, drivername):
+        return drivername == "YKUSHXS"
+
+
+class Ykush(YkushBase):
+    ykush_pid = YKUSH_PID
+    port_count = 3
+
+    @classmethod
+    def accepts(cls, drivername):
+        return drivername == "YKUSH"
