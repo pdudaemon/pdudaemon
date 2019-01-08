@@ -12,6 +12,7 @@ libhidapi-dev \
 libudev-dev \
 libusb-1.0-0-dev \
 cython3 \
+telnet \
 supervisor
 
 ADD share/pdudaemon.conf /config/
