@@ -30,6 +30,7 @@ log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 
 YKUSH_VID = 0x04d8
 YKUSH_XS_PID = 0xf0cd
+YKUSH_PID = 0xf2f7
 
 
 class YkushXS(PDUDriver):
@@ -68,3 +69,42 @@ class YkushXS(PDUDriver):
     @classmethod
     def accepts(cls, drivername):
         return drivername in cls.supported
+
+
+class Ykush(PDUDriver):
+    connection = None
+    port_count = 3
+
+    def __init__(self, hostname, settings):
+        self.hostname = hostname
+        self.settings = settings
+        self.serial = settings.get("serial", u"")
+        log.debug("serial: %s" % self.serial)
+
+        super().__init__()
+
+    def port_interaction(self, command, port_number):
+        if port_number > self.port_count or port_number < 1:
+            err = "Port should be in the range 1 - %d" % (self.port_count)
+            log.error(err)
+            raise RuntimeError(err)
+
+        out_buff = [0] * 64
+        if command == "on":
+            out_buff[0] = 0x10 | port_number
+        elif command == "off":
+            out_buff[0] = 0x0 | port_number
+        else:
+            log.error("Unknown command %s." % (command))
+            return
+
+        d = hid.device()
+        d.open(YKUSH_VID, YKUSH_PID, serial_number=self.serial)
+
+        d.write(out_buff)
+        d.read(64)
+        d.close()
+
+    @classmethod
+    def accepts(cls, drivername):
+        return drivername == "YKUSH"
