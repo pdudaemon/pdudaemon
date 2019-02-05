@@ -45,7 +45,7 @@ class YkushBase(PDUDriver):
         self.serial = settings.get("serial", u"")
         log.debug("serial: %s" % self.serial)
 
-        super(YkushBase, self).__init__()
+        super().__init__()
 
     def port_interaction(self, command, port_number):
         if port_number > self.port_count or port_number < 1:
@@ -69,22 +69,14 @@ class YkushBase(PDUDriver):
 
     @classmethod
     def accepts(cls, drivername):
-        return False
+        return drivername == cls.__name__.upper()
 
 
 class YkushXS(YkushBase):
     ykush_pid = YKUSH_XS_PID
     port_count = 1
 
-    @classmethod
-    def accepts(cls, drivername):
-        return drivername == "YKUSHXS"
-
 
 class Ykush(YkushBase):
     ykush_pid = YKUSH_PID
     port_count = 3
-
-    @classmethod
-    def accepts(cls, drivername):
-        return drivername == "YKUSH"

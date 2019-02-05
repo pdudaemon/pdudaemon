@@ -41,8 +41,5 @@ from pdudaemon.drivers.devantechusb import DevantechUSB8
 from pdudaemon.drivers.synaccess import SynNetBooter
 from pdudaemon.drivers.egpms import EgPMS
 from pdudaemon.drivers.ykush import YkushXS
-<<<<<<< db4790993b5ce441cbdcbc1e1ee9beab56601575
-from pdudaemon.drivers.snmp import SNMP
-=======
 from pdudaemon.drivers.ykush import Ykush
->>>>>>> added ykush 3port device
+from pdudaemon.drivers.snmp import SNMP
