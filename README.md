@@ -17,11 +17,32 @@ To be added.
 - **HTTP**
 The daemon can accept requests over plain HTTP. The port is configurable, but defaults to 16421
 There is no encryption or authentication, consider yourself warned.
-To enable, change the 'listener' setting in the 'daemon' section of the config file to 'http'. This will break 'pduclient' requests.  
-An example request would be  
-``` curl http://pdudaemonhostname:16421/power/control/on?hostname=pdu01&port=1```
+To enable, change the 'listener' setting in the 'daemon' section of the config file to 'http'. This will break 'pduclient' requests.
+An HTTP request URL has the following syntax:
+
+  ```http://<pdudaemon-hostname>:<pdudaemon-port>/power/control/<command>?<query-string>```
+
+  Where:
+    - pdudaemon-hostname is the hostname or IP address where pdudaemon is running (e.g.: localhost)
+    - pdudaemon-port is the port used by pdudaemon (e.g.: 16421)
+    - command is an action for the PDU to execute:
+      - **on**: power on
+      - **off**: power off
+      - **reboot**: reboot
+    - query-string can have 3 parameters (same as pduclient, see below)
+      - **hostname**: the PDU hostname or IP address used in the [configuration file](https://github.com/pdudaemon/pdudaemon/blob/master/share/pdudaemon.conf) (e.g.: "192.168.10.2")
+      - **port**: the PDU port number
+      - **delay**: delay before a command runs (optional, by default 5 seconds)
+
+  Some example requests would be:
+  ```
+  $ curl "http://localhost:16421/power/control/on?hostname=192.168.10.2&port=1"
+  $ curl "http://localhost:16421/power/control/off?hostname=192.168.10.2&port=1"
+  $ curl "http://localhost:16421/power/control/reboot?hostname=192.168.10.2&port=1&delay=10"
+  ```
 
   ***Return Codes***
+
     - HTTP 200 - Request Accepted
     - HTTP 503 - Invalid Request, Request not accepted
 
