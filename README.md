@@ -10,7 +10,19 @@ APC, Devantech and ACME are well supported, however there is no official list ye
 ## Installing
 Debian packages are on the way, hopefully.
 For now, make sure the requirements are met and then:
+
 ```python3 setup.py install```
+
+Alternatively, you can install it on Docker:
+```
+$ git clone https://github.com/pdudaemon/pdudaemon
+$ cd pdudaemon
+$ vi share/pdudaemon.conf
+	- configure your PDUs
+$ sudo docker build -t pdudaemon --build-arg HTTP_PROXY=$http_proxy -f Dockerfile.dockerhub .
+$ docker run --rm -it -e http_proxy=$http_proxy -e https_proxy=$https_proxy -e NO_PROXY="$no_proxy" --net="host" pdudaemon:latest
+```
+
 ## Config file
 To be added.
 ## Making a power control request
