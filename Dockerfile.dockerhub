@@ -1,5 +1,9 @@
 FROM debian:stretch
 
+ARG HTTP_PROXY
+ENV http_proxy ${HTTP_PROXY}
+ENV https_proxy ${HTTP_PROXY}
+
 RUN apt-get update && apt-get install -y \
 curl \
 cython3 \
