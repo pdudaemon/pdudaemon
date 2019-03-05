@@ -1,4 +1,4 @@
-FROM debian:stretch
+FROM debian:buster
 
 ARG HTTP_PROXY
 ENV http_proxy ${HTTP_PROXY}
