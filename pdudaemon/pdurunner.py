@@ -66,8 +66,8 @@ class PDURunner(threading.Thread):
                 self.logger.info("leaving")
                 self.task_queue.task_done()
                 return 0
-            job_id, port, request = job
+            port, request = job
             self.logger.info("Processing task (%s %s)", request, port)
-            self.do_job(port, request)
+            result = self.do_job(port, request)
             self.task_queue.task_done()
         return 0
