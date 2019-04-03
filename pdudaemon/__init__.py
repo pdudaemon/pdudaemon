@@ -121,14 +121,17 @@ def main():
                         help="configuration file [%s]" % CONFIGURATION_FILE)
     parser.add_argument("--dbfile", "-d", type=str,
                         help="SQLite3 db file")
+    parser.add_argument("--drive", action="store_true", default=False)
+    parser.add_argument("--hostname", dest="drivehostname", action="store", type=str)
+    parser.add_argument("--port", dest="driveport", action="store", type=int)
+    parser.add_argument("--request", dest="driverequest", action="store", type=str)
+    parser.add_argument("--retries", dest="driveretries", action="store", type=int, default=5)
 
     # Parse the command line
     options = parser.parse_args()
 
     # Setup logging
     setup_logging(options)
-
-    logger.info('PDUDaemon starting up')
 
     # Read the configuration file
     try:
@@ -137,6 +140,20 @@ def main():
         logging.error("Unable to read configuration file '%s': %s", options.conf.name, exc)
         return 1
     dbfile = options.dbfile if options.dbfile else settings['daemon']['dbname']
+
+    if options.drive:
+        # Driving a PDU directly, dont start any Listeners
+        config = settings["pdus"].get(options.drivehostname, False)
+        if not config:
+            logging.error("No config section for hostname: {}".format(options.drivehostname))
+            sys.exit(1)
+        task_queue = Queue()
+        runner = PDURunner(config, options.drivehostname, task_queue, options.driveretries)
+        result = runner.do_job(options.driveport, options.driverequest)
+        # currently the drivers dont all reply with a result, so just exit(0) for now
+        sys.exit(0)
+
+    logger.info('PDUDaemon starting up')
 
     # Context
     workers = {}
@@ -195,7 +212,7 @@ def main():
                         port = task["port"]
                         request = task["request"]
                         logger.debug("put for %s: '%s' to port %s [id:%s]", worker, request, port, task_id)
-                        workers[worker]["queue"].put((task["id"], task["port"], task["request"]))
+                        workers[worker]["queue"].put((task["port"], task["request"]))
                         dbhandler.delete(task["id"])
             # TODO: compute the timeout correctly
             time.sleep(1)
