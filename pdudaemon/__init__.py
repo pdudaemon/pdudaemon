@@ -149,7 +149,11 @@ def main():
             sys.exit(1)
         task_queue = Queue()
         runner = PDURunner(config, options.drivehostname, task_queue, options.driveretries)
-        result = runner.do_job(options.driveport, options.driverequest)
+        if options.driverequest == "reboot":
+            result = runner.do_job(options.driveport, "off")
+            result = runner.do_job(options.driveport, "on")
+        else:
+            result = runner.do_job(options.driveport, options.driverequest)
         # currently the drivers dont all reply with a result, so just exit(0) for now
         sys.exit(0)
 
