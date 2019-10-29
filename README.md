@@ -13,7 +13,17 @@ For now, make sure the requirements are met and then:
 
 ```python3 setup.py install```
 
-Alternatively, you can install it on Docker:
+There is an official Docker container updated from tip:
+```
+$ docker pull pdudaemon/pdudaemon:latest
+$ vi pdudaemon.conf
+```
+To create a config file, use [share/pdudaemon.conf](https://github.com/pdudaemon/pdudaemon/blob/master/pdudaemon/share/pdudaemon.conf) as a base, then mount your config file on top of the default:
+```
+$ docker run -v `pwd`/pdudaemon.conf:/config/pdudaemon.conf pdudaemon/pdudaemon:latest
+```
+
+Or you can build your own:
 ```
 $ git clone https://github.com/pdudaemon/pdudaemon
 $ cd pdudaemon
