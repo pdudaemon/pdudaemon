@@ -68,8 +68,8 @@ An HTTP request URL has the following syntax:
     - HTTP 200 - Request Accepted
     - HTTP 503 - Invalid Request, Request not accepted
 
-- **pduclient**
-The bundled client is used when PDUDaemon is configured to listen to 'tcp' requests.
+- **TCP (legacy pduclient)**
+The bundled client is used when PDUDaemon is configured to listen to 'tcp' requests. TCP support is considered legacy but will remain functional.
 ```
 Usage: pduclient --daemon deamonhostname --hostname pduhostname --port pduportnum --command pducommand
 
@@ -86,6 +86,14 @@ Options:
   --delay=PDUDELAY      Delay before command runs, or between off/on when
                         rebooting (ex: 5)
 ```
+
+- **non-daemon (also called drive)**
+If you would just like to use pdudaemon as an executable to drive a PDU without needing to run a daemon, you can use the --drive option.
+Configure the PDU in the config file as usual, then launch pdudaemon with the following options
+```
+$ pdudaemon --conf=share/pdudaemon.conf --drive --hostname pdu01 --port 1 --request reboot
+```
+
 ## Adding drivers
 PDUDaemon was written to accept "plugin" style driver files. There's no official example yet, so take a look in the [drivers](https://github.com/pdudaemon/pdudaemon/tree/master/pdudaemon/drivers) directory and see if you can adapt one.
 ## Why can't PDUDaemon do $REQUIREMENT?
