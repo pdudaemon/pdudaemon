@@ -67,6 +67,9 @@ class PDUHTTPHandler(BaseHTTPRequestHandler):
             logger.info("One of hostname,port,request was not set")
             return False
         db_queue = self.server.db_queue
+        if hostname not in self.server.pdus:
+            logger.info("PDU was not found in config")
+            return False
         if not (request in ["reboot", "on", "off"]):
             logger.info("Unknown request: %s", request)
             return False
@@ -96,6 +99,7 @@ class HTTPListener(threading.Thread):
 
         self.server = HTTPServer((listen_host, listen_port), PDUHTTPHandler)
         self.server.settings = settings
+        self.server.pdus = config['pdus']
         self.server.config = config
         self.server.db_queue = db_queue
 
