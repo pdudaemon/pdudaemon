@@ -22,6 +22,7 @@ import urllib.parse as urlparse
 import logging
 import time
 import threading
+import pdudaemon.listener as listener
 logger = logging.getLogger('pdud.http')
 
 
@@ -47,45 +48,8 @@ class PDUHTTPHandler(BaseHTTPRequestHandler):
             self.wfile.write("Invalid request\n".encode('utf-8'))
 
     def insert_request(self, data, path):
-        delay = 5
-        entry = path.lstrip('/').split('/')
-        if len(entry) != 3:
-            logger.info("Request path was invalid: %s", entry)
-            return False
-        if not (entry[0] == 'power' and entry[1] == 'control'):
-            logger.info("Unknown request, path was %s", path)
-            return False
-        request = entry[2]
-        custom_delay = False
-        now = int(time.time())
-        if data.get('delay', None):
-            delay = data.get('delay')[0]
-            custom_delay = True
-        hostname = data.get('hostname', [None])[0]
-        port = data.get('port', [None])[0]
-        if not hostname or not port or not request:
-            logger.info("One of hostname,port,request was not set")
-            return False
-        db_queue = self.server.db_queue
-        if hostname not in self.server.pdus:
-            logger.info("PDU was not found in config")
-            return False
-        if not (request in ["reboot", "on", "off"]):
-            logger.info("Unknown request: %s", request)
-            return False
-        if request == "reboot":
-            logger.debug("reboot requested, submitting off/on")
-            db_queue.put(("CREATE", hostname, port, "off", now))
-            db_queue.put(("CREATE", hostname, port, "on", now + int(delay)))
-            return True
-        else:
-            if custom_delay:
-                logger.debug("using delay as requested")
-                db_queue.put(("CREATE", hostname, port, request, now + int(delay)))
-                return True
-            else:
-                db_queue.put(("CREATE", hostname, port, request, now))
-                return True
+        args = listener.parse_http(data, path)
+        listener.process_request(args, self.server.config, self.server.db_queue)
 
 
 class HTTPListener(threading.Thread):

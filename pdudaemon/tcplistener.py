@@ -23,6 +23,7 @@ import threading
 import logging
 import socket
 import time
+import pdudaemon.listener as listener
 logger = logging.getLogger('pdud.tcp')
 
 
@@ -50,33 +51,8 @@ class TCPListener(threading.Thread):
 
 class TCPRequestHandler(socketserver.BaseRequestHandler):
     def insert_request(self, data):
-        array = data.split(" ")
-        delay = 10
-        custom_delay = False
-        now = int(time.time())
-        if (len(array) < 3) or (len(array) > 4):
-            logger.info("Wrong data size")
-            raise Exception("Unexpected data")
-        if len(array) == 4:
-            delay = int(array[3])
-            custom_delay = True
-        hostname = array[0]
-        port = int(array[1])
-        request = array[2]
-        db_queue = self.server.db_queue
-        if not (request in ["reboot", "on", "off"]):
-            logger.info("Unknown request: %s", request)
-            raise Exception("Unknown request: %s", request)
-        if request == "reboot":
-            logger.debug("reboot requested, submitting off/on")
-            db_queue.put(("CREATE", hostname, port, "off", now))
-            db_queue.put(("CREATE", hostname, port, "on", now + int(delay)))
-        else:
-            if custom_delay:
-                logger.debug("using delay as requested")
-                db_queue.put(("CREATE", hostname, port, request, now + int(delay)))
-            else:
-                db_queue.put(("CREATE", hostname, port, request, now))
+        args = listener.parse_tcp(data)
+        listener.process_request(args, self.server.config, self.server.db_queue)
 
     def handle(self):
         request_ip = self.client_address[0]

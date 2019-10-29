@@ -121,11 +121,15 @@ def main():
                         help="configuration file [%s]" % CONFIGURATION_FILE)
     parser.add_argument("--dbfile", "-d", type=str,
                         help="SQLite3 db file")
-    parser.add_argument("--drive", action="store_true", default=False)
-    parser.add_argument("--hostname", dest="drivehostname", action="store", type=str)
-    parser.add_argument("--port", dest="driveport", action="store", type=int)
-    parser.add_argument("--request", dest="driverequest", action="store", type=str)
-    parser.add_argument("--retries", dest="driveretries", action="store", type=int, default=5)
+    parser.add_argument("--listener", type=str, help="PDUDaemon listener setting")
+    conflict = parser.add_mutually_exclusive_group()
+    conflict.add_argument("--alias", dest="alias", action="store", type=str)
+    conflict.add_argument("--hostname", dest="drivehostname", action="store", type=str)
+    drive = parser.add_argument_group("drive")
+    drive.add_argument("--drive", action="store_true", default=False)
+    drive.add_argument("--request", dest="driverequest", action="store", type=str)
+    drive.add_argument("--retries", dest="driveretries", action="store", type=int, default=5)
+    drive.add_argument("--port", dest="driveport", action="store", type=int)
 
     # Parse the command line
     options = parser.parse_args()
@@ -143,10 +147,22 @@ def main():
 
     if options.drive:
         # Driving a PDU directly, dont start any Listeners
+
+        if options.alias:
+            # Using alias support, get all pdu info from alias
+            alias_settings = settings["aliases"].get(options.alias, False)
+            if not alias_settings:
+                logging.error("Alias requested but not found")
+                sys.exit(1)
+            options.drivehostname = settings["aliases"][options.alias]["hostname"]
+            options.driveport = settings["aliases"][options.alias]["port"]
+
+        # Check that the requested PDU has config
         config = settings["pdus"].get(options.drivehostname, False)
         if not config:
             logging.error("No config section for hostname: {}".format(options.drivehostname))
             sys.exit(1)
+
         task_queue = Queue()
         runner = PDURunner(config, options.drivehostname, task_queue, options.driveretries)
         if options.driverequest == "reboot":
@@ -175,7 +191,10 @@ def main():
 
     # Start the listener
     logger.info("Starting the listener")
-    listener = settings['daemon'].get('listener', 'tcp')
+    if options.listener:
+        listener = options.listener
+    else:
+        listener = settings['daemon'].get('listener', 'tcp')
     if listener == 'tcp':
         listener = TCPListener(settings, db_queue)
     elif listener == 'http':
