@@ -19,6 +19,10 @@
 #  MA 02110-1301, USA.
 
 from pdudaemon.drivers.acme import ACME  # pylint: disable=W0611
+from pdudaemon.drivers.anelnetpwrctrl import AnelNETPwrCtrlHOME  # pylint: disable=W0611
+from pdudaemon.drivers.anelnetpwrctrl import AnelNETPwrCtrlADV  # pylint: disable=W0611
+from pdudaemon.drivers.anelnetpwrctrl import AnelNETPwrCtrlIO  # pylint: disable=W0611
+from pdudaemon.drivers.anelnetpwrctrl import AnelNETPwrCtrlPRO  # pylint: disable=W0611
 from pdudaemon.drivers.apc7932 import APC7932  # pylint: disable=W0611
 from pdudaemon.drivers.apc7952 import APC7952  # pylint: disable=W0611
 from pdudaemon.drivers.apc9218 import APC9218  # pylint: disable=W0611
