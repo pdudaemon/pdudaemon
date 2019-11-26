@@ -52,7 +52,7 @@ class TCPListener(threading.Thread):
 class TCPRequestHandler(socketserver.BaseRequestHandler):
     def insert_request(self, data):
         args = listener.parse_tcp(data)
-        listener.process_request(args, self.server.config, self.server.db_queue)
+        return listener.process_request(args, self.server.config, self.server.db_queue)
 
     def handle(self):
         request_ip = self.client_address[0]
@@ -66,8 +66,11 @@ class TCPRequestHandler(socketserver.BaseRequestHandler):
             except socket.herror:
                 request_host = request_ip
             logger.info("Received a request from %s: '%s'", request_host, data)
-            self.insert_request(data)
-            self.request.sendall("ack\n".encode('utf-8'))
+            res = self.insert_request(data)
+            if res:
+                self.request.sendall("ack\n".encode('utf-8'))
+            else:
+                self.request.sendall("nack\n".encode('utf-8'))
         except Exception as global_error:  # pylint: disable=broad-except
             logger.debug(global_error.__class__)
             logger.debug(global_error)

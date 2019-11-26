@@ -49,7 +49,7 @@ class PDUHTTPHandler(BaseHTTPRequestHandler):
 
     def insert_request(self, data, path):
         args = listener.parse_http(data, path)
-        listener.process_request(args, self.server.config, self.server.db_queue)
+        return listener.process_request(args, self.server.config, self.server.db_queue)
 
 
 class HTTPListener(threading.Thread):
