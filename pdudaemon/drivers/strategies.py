@@ -43,6 +43,7 @@ from pdudaemon.drivers.devantech import DevantechETH8020
 from pdudaemon.drivers.devantechusb import DevantechUSB2
 from pdudaemon.drivers.devantechusb import DevantechUSB8
 from pdudaemon.drivers.synaccess import SynNetBooter
+from pdudaemon.drivers.tasmota import SonoffS20Tasmota  # pylint: disable=W0611
 from pdudaemon.drivers.egpms import EgPMS
 from pdudaemon.drivers.ykush import YkushXS
 from pdudaemon.drivers.ykush import Ykush
