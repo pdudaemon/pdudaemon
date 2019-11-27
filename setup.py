@@ -61,7 +61,10 @@ setup(
         "systemd_python",
         "paramiko",
         "pyserial",
-        "hidapi"
+        "hidapi",
+        "pysnmp",
+        "pyasn1",
+        "pyusb"
     ],
     zip_safe=True
 )
