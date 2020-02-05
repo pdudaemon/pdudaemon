@@ -54,7 +54,7 @@ An HTTP request URL has the following syntax:
     - query-string can have 3 parameters (same as pduclient, see below)
       - **hostname**: the PDU hostname or IP address used in the [configuration file](https://github.com/pdudaemon/pdudaemon/blob/master/share/pdudaemon.conf) (e.g.: "192.168.10.2")
       - **port**: the PDU port number
-      - **delay**: delay before a command runs (optional, by default 5 seconds)
+      - **delay**: delay between power off and on during reboot (optional, by default 5 seconds)
 
   Some example requests would be:
   ```
