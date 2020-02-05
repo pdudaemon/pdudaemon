@@ -100,5 +100,5 @@ def process_request(args, config, db_queue):
         db_queue.put(("CREATE", args.hostname, args.port, "on", now + int(args.delay)))
         return True
     else:
-        db_queue.put(("CREATE", args.hostname, args.port, args.request, now + int(args.delay)))
+        db_queue.put(("CREATE", args.hostname, args.port, args.request, now))
         return True
