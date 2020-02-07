@@ -57,9 +57,6 @@ class BCU(PDUDriver):
         #: bootmode to initialize (see `bcu lsbootmode -board=$board`)
         self.bootmode = settings.get('bootmode', None)
 
-        # Initialize "remote control mode" at startup and never release
-        self._init()
-
     def _run(self, subcmd):
         cmd = [self.bcu_exe]
         cmd += subcmd
@@ -77,11 +74,13 @@ class BCU(PDUDriver):
         return self._run(['set_gpio', gpio, value])
 
     def port_on(self, port_number):
+        self._init()
         self._set_gpio(
             self.reset_gpio,
             '1' if self.reset_gpio_active_low else '0')
 
     def port_off(self, port_number):
+        self._init()
         self._set_gpio(
             self.reset_gpio,
             '0' if self.reset_gpio_active_low else '1')
