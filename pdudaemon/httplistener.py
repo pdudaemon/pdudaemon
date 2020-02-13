@@ -17,60 +17,57 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 
-from http.server import BaseHTTPRequestHandler, HTTPServer
 import urllib.parse as urlparse
 import logging
-import time
-import threading
 import pdudaemon.listener as listener
+
+from aiohttp import web
+
 logger = logging.getLogger('pdud.http')
 
 
-class PDUHTTPHandler(BaseHTTPRequestHandler):
-    def _set_headers(self, code):
-        self.send_response(code)
-        self.send_header('Content-type', 'text/plain')
-        self.end_headers()
+class HTTPListener:
 
-    def log_message(self, format, *args):
-        pass
+    def __init__(self, config, daemon):
+        self.config = config
+        self.daemon = daemon
+        self.settings = config["daemon"]
 
-    def do_GET(self):
-        logger.info("Handling HTTP request from %s: %s", self.client_address, self.path)
-        data = urlparse.parse_qs(urlparse.urlparse(self.path).query)
-        path = urlparse.urlparse(self.path).path
-        res = self.insert_request(data, path)
-        if res:
-            self._set_headers(200)
-            self.wfile.write("OK - accepted request\n".encode('utf-8'))
-        else:
-            self._set_headers(500)
-            self.wfile.write("Invalid request\n".encode('utf-8'))
+        self.app = web.Application()
+        self.app.add_routes([
+            web.get('/power/control/on', self.handle),
+            web.get('/power/control/off', self.handle),
+            web.get('/power/control/reboot', self.handle),
+        ])
+        self.apprunner = None
 
-    def insert_request(self, data, path):
-        args = listener.parse_http(data, path)
-        return listener.process_request(args, self.server.config, self.server.db_queue)
-
-
-class HTTPListener(threading.Thread):
-
-    def __init__(self, config, db_queue):
-        super(HTTPListener, self).__init__(name="HTTP Listener")
-        settings = config["daemon"]
-        listen_host = settings["hostname"]
-        listen_port = settings.get("port", 16421)
-        logger.info("listening on %s:%s", listen_host, listen_port)
-
-        self.server = HTTPServer((listen_host, listen_port), PDUHTTPHandler)
-        self.server.settings = settings
-        self.server.pdus = config['pdus']
-        self.server.config = config
-        self.server.db_queue = db_queue
-
-    def run(self):
+    async def start(self):
         logger.info("Starting the HTTP server")
-        self.server.serve_forever()
+        self.apprunner = web.AppRunner(self.app)
+        await self.apprunner.setup()
+        listen_host = self.settings["hostname"]
+        listen_port = self.settings.get("port", 16421)
+        site = web.TCPSite(self.apprunner, host=listen_host, port=listen_port)
+        await site.start()
+        logger.info("Listening on %s:%s", listen_host, listen_port)
 
-    def shutdown(self):
-        self.server.shutdown()
-        self.server.server_close()
+    async def shutdown(self):
+        if self.apprunner:
+            await self.apprunner.cleanup()
+        self.apprunner = None
+
+    async def handle(self, request):
+        logger.info("Handling HTTP request from %s: %s", request.remote, request.path_qs)
+        data = urlparse.parse_qs(urlparse.urlparse(request.path_qs).query)
+        path = urlparse.urlparse(request.path_qs).path
+        res = await self.insert_request(data, path)
+        if res:
+            return web.Response(status=200, text="OK - accepted request\n")
+        else:
+            return web.Response(status=500, text="Invalid request\n")
+
+    async def insert_request(self, data, path):
+        args = listener.parse_http(data, path)
+        if args:
+            return await listener.process_request(args, self.config, self.daemon)
+

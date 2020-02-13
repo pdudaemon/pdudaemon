@@ -1,3 +1,4 @@
+aiohttp
 pexpect
 requests
 systemd_python

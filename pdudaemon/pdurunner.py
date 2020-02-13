@@ -18,25 +18,29 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 
+import asyncio
 import logging
 import time
 import traceback
-import threading
 import pexpect
+import concurrent.futures
 from pdudaemon.drivers.driver import PDUDriver
 import pdudaemon.drivers.strategies  # pylint: disable=W0611
 
 
-class PDURunner(threading.Thread):
+class PDURunner:
 
-    def __init__(self, config, hostname, task_queue, retries):
-        super(PDURunner, self).__init__(name=hostname)
+    def __init__(self, config, hostname, retries):
         self.config = config
         self.hostname = hostname
-        self.task_queue = task_queue
         self.retries = retries
         self.logger = logging.getLogger("pdud.pdu.%s" % hostname)
         self.driver = self.driver_from_hostname(hostname)
+        # use single-worker ThreadPoolExecutor to serialize execution
+        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=1, thread_name_prefix=hostname)
+
+    async def shutdown(self):
+        self.executor.shutdown(wait=True, cancel_futures=True)
 
     def driver_from_hostname(self, hostname):
         drivername = self.config['driver']
@@ -44,6 +48,7 @@ class PDURunner(threading.Thread):
         return driver
 
     def do_job(self, port, request):
+        self.logger.info("Processing job for PDU %s: (%s %s)", self.hostname, request, port)
         retries = self.retries
         while retries > 0:
             try:
@@ -58,16 +63,6 @@ class PDURunner(threading.Thread):
                 continue
         return False
 
-    def run(self):
-        self.logger.info("Starting a PDURunner for PDU: {}".format(self.hostname))
-        while 1:
-            job = self.task_queue.get()
-            if job is None:
-                self.logger.info("leaving")
-                self.task_queue.task_done()
-                return 0
-            port, request = job
-            self.logger.info("Processing task (%s %s)", request, port)
-            result = self.do_job(port, request)
-            self.task_queue.task_done()
-        return 0
+    async def do_job_async(self, port, request):
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(self.executor, self.do_job, port, request)
