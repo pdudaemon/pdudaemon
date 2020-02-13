@@ -19,13 +19,12 @@
 #  MA 02110-1301, USA.
 
 import argparse
+import asyncio
 import contextlib
 import json
 import logging
 from logging.handlers import WatchedFileHandler
-from queue import Empty, Queue
 import signal
-import sqlite3
 import sys
 import time
 
@@ -81,34 +80,46 @@ def setup_logging(options, settings):
         logger.setLevel(logging.ERROR)
 
 
-class TasksDB(object):
-    def __init__(self, dbname):
-        self.conn = sqlite3.connect(dbname)
-        self.conn.row_factory = sqlite3.Row
-        self.conn.execute("CREATE TABLE IF NOT EXISTS tasks(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                          "hostname TEXT, port TEXT, request TEXT, exectime INTEGER)")
-        self.conn.commit()
+class PDUDaemon:
+    def __init__(self, options, settings):
+        # Context
+        self.runners = {}
 
-    def create(self, hostname, port, request, exectime):
-        try:
-            self.conn.execute("INSERT INTO tasks (hostname, port, request, exectime) VALUES(?, ?, ?, ?)",
-                              (hostname, port, request, int(exectime)))
-            self.conn.commit()
-            return 0
-        except sqlite3.Error:
-            return 1
+        # Create the runners
+        logger.info("Creating the runners")
+        for hostname in settings["pdus"]:
+            config = settings["pdus"][hostname]
+            retries = config.get("retries", 5)
+            self.runners[hostname] = PDURunner(config, hostname, retries)
 
-    def delete(self, task_id):
-        with contextlib.suppress(sqlite3.Error):
-            self.conn.execute("DELETE FROM tasks WHERE id=?", (task_id, ))
-            self.conn.commit()
+        # Start the listener
+        logger.info("Starting the listener")
+        if options.listener:
+            listener = options.listener
+        else:
+            listener = settings['daemon'].get('listener', 'tcp')
+        if listener == 'tcp':
+            self.listener = TCPListener(settings, self)
+        elif listener == 'http':
+            self.listener = HTTPListener(settings, self)
+        else:
+            logging.error("Unknown listener configured")
 
-    def next(self, hostname):
-        row = self.conn.execute("SELECT * FROM tasks WHERE hostname=? AND exectime < ? ORDER BY id ASC LIMIT 1", (hostname, int(time.time()))).fetchone()
-        return row
+    async def start(self):
+        await self.listener.start()
+
+    async def shutdown(self):
+        logger.info("Shutting down listener...")
+        await self.listener.shutdown()
+        logger.info("Shutting down runners...")
+        for runner in self.runners.values():
+            await runner.shutdown()
+        logger.info("Stopping loop...")
+        loop = asyncio.get_running_loop()
+        loop.stop()
 
 
-def main():
+async def main_async():
     # Setup the parser
     parser = argparse.ArgumentParser()
 
@@ -123,8 +134,6 @@ def main():
     parser.add_argument("--conf", "-c", type=argparse.FileType("r"),
                         default=CONFIGURATION_FILE,
                         help="configuration file [%s]" % CONFIGURATION_FILE)
-    parser.add_argument("--dbfile", "-d", type=str,
-                        help="SQLite3 db file")
     parser.add_argument("--listener", type=str, help="PDUDaemon listener setting")
     conflict = parser.add_mutually_exclusive_group()
     conflict.add_argument("--alias", dest="alias", action="store", type=str)
@@ -144,10 +153,12 @@ def main():
     except Exception as exc:
         logging.error("Unable to read configuration file '%s': %s", options.conf.name, exc)
         return 1
-    dbfile = options.dbfile if options.dbfile else settings['daemon']['dbname']
 
     # Setup logging
     setup_logging(options, settings)
+
+    # Get handle to the currently running loop
+    loop = asyncio.get_running_loop()
 
     if options.drive:
         # Driving a PDU directly, dont start any Listeners
@@ -167,93 +178,39 @@ def main():
             logging.error("No config section for hostname: {}".format(options.drivehostname))
             sys.exit(1)
 
-        task_queue = Queue()
-        runner = PDURunner(config, options.drivehostname, task_queue, options.driveretries)
+        runner = PDURunner(config, options.drivehostname, options.driveretries)
         if options.driverequest == "reboot":
-            result = runner.do_job(options.driveport, "off")
-            result = runner.do_job(options.driveport, "on")
+            result = await runner.do_job_async(options.driveport, "off")
+            result = await runner.do_job_async(options.driveport, "on")
         else:
-            result = runner.do_job(options.driveport, options.driverequest)
-        # currently the drivers dont all reply with a result, so just exit(0) for now
-        sys.exit(0)
+            result = await runner.do_job_async(options.driveport, options.driverequest)
+        await runner.shutdown()
+        loop.stop()
+        return result
 
+    # Create daemon
     logger.info('PDUDaemon starting up')
-
-    # Context
-    workers = {}
-    db_queue = Queue()
-    dbhandler = TasksDB(dbfile)
-
-    # Starting the workers
-    logger.info("Starting the Workers")
-    for hostname in settings["pdus"]:
-        config = settings["pdus"][hostname]
-        retries = config.get("retries", 5)
-        task_queue = Queue()
-        workers[hostname] = {"thread": PDURunner(config, hostname, task_queue, retries), "queue": task_queue}
-        workers[hostname]["thread"].start()
-
-    # Start the listener
-    logger.info("Starting the listener")
-    if options.listener:
-        listener = options.listener
-    else:
-        listener = settings['daemon'].get('listener', 'tcp')
-    if listener == 'tcp':
-        listener = TCPListener(settings, db_queue)
-    elif listener == 'http':
-        listener = HTTPListener(settings, db_queue)
-    else:
-        logging.error("Unknown listener configured")
-    listener.start()
+    daemon = PDUDaemon(options, settings)
 
     # Setup signal handling
-    def signal_handler(signum, frame):
-        logger.info("Signal received, shutting down listener")
-        listener.shutdown()
-        raise KeyboardInterrupt
+    def cleanup_handler():
+        logger.info("Signal received, shutting down...")
+        asyncio.create_task(daemon.shutdown())
 
-    signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
+    loop.add_signal_handler(signal.SIGINT, cleanup_handler)
+    loop.add_signal_handler(signal.SIGTERM, cleanup_handler)
 
-    # Main loop
+    await daemon.start()
+
+def main():
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main_async())
     try:
-        while True:
-            with contextlib.suppress(Empty):
-                while True:
-                    task = db_queue.get_nowait()
-                    action = task[0]
-                    logger.debug("db actions %s", action)
-                    if action == "CREATE":
-                        ret = dbhandler.create(task[1], task[2], task[3], task[4])
-                        logger.debug("ret=%d", ret)
-                    elif action == "DELETE":
-                        dbhandler.delete(task[1])
-
-            for worker in workers:
-                # Is the last task done
-                if workers[worker]["queue"].empty():
-                    task = dbhandler.next(worker)
-                    if task is not None:
-                        task_id = task["id"]
-                        port = task["port"]
-                        request = task["request"]
-                        logger.debug("put for %s: '%s' to port %s [id:%s]", worker, request, port, task_id)
-                        workers[worker]["queue"].put((task["port"], task["request"]))
-                        dbhandler.delete(task["id"])
-            # TODO: compute the timeout correctly
-            time.sleep(1)
+        loop.run_forever()
     except KeyboardInterrupt:
         pass
-    finally:
-        logger.info("Waiting for workers to finish...")
-        for worker in workers:
-            workers[worker]["queue"].put(None)
-            workers[worker]["thread"].join()
-        sys.exit()
-    return 0
-
 
 if __name__ == "__main__":
     # execute only if run as a script
-    main()
+    result = main()
+    sys.exit(result)

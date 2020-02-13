@@ -18,8 +18,7 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 
-import socketserver
-import threading
+import asyncio
 import logging
 import socket
 import time
@@ -27,37 +26,41 @@ import pdudaemon.listener as listener
 logger = logging.getLogger('pdud.tcp')
 
 
-class TCPListener(threading.Thread):
+class TCPListener:
 
-    def __init__(self, config, db_queue):
-        super(TCPListener, self).__init__(name="TCP Listener")
-        settings = config["daemon"]
-        listen_host = settings["hostname"]
-        listen_port = settings.get("port", 16421)
+    def __init__(self, config, daemon):
+        self.config = config
+        self.daemon = daemon
+        self.settings = config["daemon"]
+
+        self.server = None
+
+    async def start(self):
+        listen_host = self.settings["hostname"]
+        listen_port = self.settings.get("port", 16421)
         logger.info("listening on %s:%s", listen_host, listen_port)
-        self.server = TCPServer((listen_host, listen_port), TCPRequestHandler)
-        self.server.settings = settings
-        self.server.config = config
-        self.server.db_queue = db_queue
+        self.server = await asyncio.start_server(
+            client_connected_cb=self.handle,
+            host=listen_host,
+            port=listen_port,
+            reuse_address=True,
+        )
 
-    def run(self):
-        logger.info("Starting the TCPServer")
-        self.server.serve_forever()
+    async def shutdown(self):
+        if self.server:
+            self.server.close()
+            await self.server.wait_closed()
+        self.server = None
 
-    def shutdown(self):
-        self.server.shutdown()
-        self.server.server_close()
-
-
-class TCPRequestHandler(socketserver.BaseRequestHandler):
-    def insert_request(self, data):
+    async def insert_request(self, data):
         args = listener.parse_tcp(data)
-        return listener.process_request(args, self.server.config, self.server.db_queue)
+        if args:
+            return await listener.process_request(args, self.config, self.daemon)
 
-    def handle(self):
-        request_ip = self.client_address[0]
+    async def handle(self, reader, writer):
+        request_ip = writer.get_extra_info('peername')[0]
         try:
-            data = self.request.recv(16384)
+            data = await reader.read(16384)
             data = data.decode('utf-8')
             data = data.strip()
             socket.setdefaulttimeout(2)
@@ -66,18 +69,14 @@ class TCPRequestHandler(socketserver.BaseRequestHandler):
             except socket.herror:
                 request_host = request_ip
             logger.info("Received a request from %s: '%s'", request_host, data)
-            res = self.insert_request(data)
+            res = await self.insert_request(data)
             if res:
-                self.request.sendall("ack\n".encode('utf-8'))
+                writer.write("ack\n".encode('utf-8'))
             else:
-                self.request.sendall("nack\n".encode('utf-8'))
+                writer.write("nack\n".encode('utf-8'))
         except Exception as global_error:  # pylint: disable=broad-except
             logger.debug(global_error.__class__)
             logger.debug(global_error)
-            self.request.sendall(global_error)
-        self.request.close()
-
-
-class TCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
-    allow_reuse_address = True
-    daemon_threads = True
+            writer.write(str(global_error).encode('utf-8'))
+        writer.close()
+        await writer.wait_closed()
