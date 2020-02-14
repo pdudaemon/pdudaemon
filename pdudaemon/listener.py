@@ -67,12 +67,17 @@ def parse_http(data, path):
 
 
 def process_request(args, config, db_queue):
-    if args.delay:
+    if args.request in ["on", "off"] and args.delay is not None:
+        logger.warn("delay parameter is deprecated for on/off commands")
+    if args.delay is not None:
         logger.debug("using custom delay as requested")
     else:
         # this has been a default since the start, it should be smaller but I
         # can't really change expected behaviour now
-        args.delay = 5
+        if args.request == "reboot":
+            args.delay = 5
+        else:
+            args.delay = 0
     if args.alias:
         if args.hostname or args.port:
             logging.error("Trying to use and alias and also a hostname/port")
@@ -100,5 +105,5 @@ def process_request(args, config, db_queue):
         db_queue.put(("CREATE", args.hostname, args.port, "on", now + int(args.delay)))
         return True
     else:
-        db_queue.put(("CREATE", args.hostname, args.port, args.request, now))
+        db_queue.put(("CREATE", args.hostname, args.port, args.request, now + int(args.delay)))
         return True
