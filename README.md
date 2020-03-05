@@ -95,7 +95,19 @@ $ pdudaemon --conf=share/pdudaemon.conf --drive --hostname pdu01 --port 1 --requ
 ```
 
 ## Adding drivers
-PDUDaemon was written to accept "plugin" style driver files. There's no official example yet, so take a look in the [drivers](https://github.com/pdudaemon/pdudaemon/tree/master/pdudaemon/drivers) directory and see if you can adapt one.
+Drivers are implemented children of the "PDUDriver" class and many example
+implementations can be found inside the
+[drivers](https://github.com/pdudaemon/pdudaemon/tree/master/pdudaemon/drivers)
+directory.
+
+External implementation of PDUDriver can also be registered using the python
+entry_points mechanism. For example add the following to your setup.cfg:
+```
+[options.entry_points]
+pdudaemon.driver =
+    mypdu = mypdumod:MyPDUClass
+```
+
 ## Why can't PDUDaemon do $REQUIREMENT?
 Patches welcome, as long as it keeps the system simple and lightweight.
 ## Contact

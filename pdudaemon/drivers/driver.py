@@ -23,6 +23,16 @@ import os
 log = logging.getLogger("pdud.drivers")
 
 
+def get_named_entry_point(group, name):
+    import pkg_resources
+    eps = list(pkg_resources.iter_entry_points(group, name))
+    if len(eps) > 1:
+        raise Exception('Multiple entry points for {} under {}'.format(group, name))
+    if len(eps) == 0:
+        return None
+    return eps[0]
+
+
 class PDUDriver(object):
     connection = None
     hostname = ""
@@ -32,6 +42,14 @@ class PDUDriver(object):
 
     @classmethod
     def select(cls, drivername):
+        ep = get_named_entry_point('pdudaemon.driver', drivername)
+        if ep:
+            # Not clear why a driver would reject the driver
+            # it is registered for but check anyway:
+            c = ep.load()
+            if not c.accepts(drivername):
+                raise Exception('pdudaemon.driver entry_point {} did not accept configuration'.format(c))
+            return c
         candidates = cls.__subclasses__()  # pylint: disable=no-member
         for subc in cls.__subclasses__():  # pylint: disable=no-member
             candidates = candidates + (subc.__subclasses__())
