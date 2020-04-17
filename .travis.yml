@@ -13,4 +13,5 @@ before_install:
 
 script:
     - docker run -v $(pwd):/p -w /p pdudaemon /root/.local/bin/pycodestyle --ignore=E501 .
+    - docker run -v $(pwd):/p -w /p pdudaemon sh -c "pytest-3 ."
     - docker run -v $(pwd):/p -w /p pdudaemon sh -c "python3 ./setup.py install && ./share/pdudaemon-test.sh"
