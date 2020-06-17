@@ -50,6 +50,7 @@ from pdudaemon.drivers.numatousb import NumatoUSB8
 from pdudaemon.drivers.numatousb import NumatoUSB16
 from pdudaemon.drivers.numatousb import NumatoUSB32
 from pdudaemon.drivers.numatousb import NumatoUSB64
+from pdudaemon.drivers.servertechpro2 import ServerTechPro2  # pylint: disable=W0611
 from pdudaemon.drivers.synaccess import SynNetBooter
 from pdudaemon.drivers.tasmota import SonoffS20Tasmota  # pylint: disable=W0611
 from pdudaemon.drivers.egpms import EgPMS
