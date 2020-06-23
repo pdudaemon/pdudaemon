@@ -42,6 +42,7 @@ from pdudaemon.drivers.devantech import DevantechETH0621
 from pdudaemon.drivers.devantech import DevantechETH484
 from pdudaemon.drivers.devantech import DevantechETH008
 from pdudaemon.drivers.devantech import DevantechETH8020
+from pdudaemon.drivers.devantech import DevantechDS2824
 from pdudaemon.drivers.devantechusb import DevantechUSB2
 from pdudaemon.drivers.devantechusb import DevantechUSB8
 from pdudaemon.drivers.numatousb import NumatoUSB1
