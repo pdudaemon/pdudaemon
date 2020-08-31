@@ -203,6 +203,7 @@ class DevantechDSBase(PDUDriver):
     def accepts(cls, drivername):
         return False
 
+
 class DevantechDS2824(DevantechDSBase):
     port_count = 8
 
