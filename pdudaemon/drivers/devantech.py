@@ -162,7 +162,8 @@ class DevantechDSBase(PDUDriver):
     def __init__(self, hostname, settings):
         self.hostname = hostname
         self.settings = settings
-        self.ip = settings.get("ip", "192.168.0.123")
+        # the default hostname may vary. I.e. could be "ds378" for other modules.
+        self.ip = settings.get("ip", "dS2824")
         self.port = settings.get("port", 17123)
         super().__init__()
 
