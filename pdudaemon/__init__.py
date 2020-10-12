@@ -86,7 +86,7 @@ class TasksDB(object):
         self.conn = sqlite3.connect(dbname)
         self.conn.row_factory = sqlite3.Row
         self.conn.execute("CREATE TABLE IF NOT EXISTS tasks(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                          "hostname TEXT, port INTEGER, request TEXT, exectime INTEGER)")
+                          "hostname TEXT, port TEXT, request TEXT, exectime INTEGER)")
         self.conn.commit()
 
     def create(self, hostname, port, request, exectime):
@@ -133,7 +133,7 @@ def main():
     drive.add_argument("--drive", action="store_true", default=False)
     drive.add_argument("--request", dest="driverequest", action="store", type=str)
     drive.add_argument("--retries", dest="driveretries", action="store", type=int, default=5)
-    drive.add_argument("--port", dest="driveport", action="store", type=int)
+    drive.add_argument("--port", dest="driveport", action="store", type=str)
 
     # Parse the command line
     options = parser.parse_args()
