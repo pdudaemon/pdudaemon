@@ -41,7 +41,6 @@ class LocalCmdline(LocalBase):
 
     def _port_interaction(self, command, port_number):
         cmd = None
-        log.debug("Attempting control: %s port: %i" % (command, port_number))
         if command == "on" and self.cmd_on:
             cmd = self.cmd_on % port_number
         elif command == "off" and self.cmd_off:

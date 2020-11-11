@@ -98,7 +98,7 @@ class EgPMS(PDUDriver):
         SWITCH_ON = 0x1
         SWITCH_OFF = 0x2
         DONT_SWITCH = 0x4
-
+        port_number = int(port_number)
         if port_number > self.port_count or port_number < 1:
             err = "Port should be in the range 1 - %d" % (self.port_count)
             log.error(err)
@@ -113,7 +113,7 @@ class EgPMS(PDUDriver):
             return
 
         self.connect()
-        log.debug("Attempting control: %s port: %d hostname: %s." % (command, port_number, self.hostname))
+        log.debug("Attempting control: {} port: {} hostname: {}.".format(command, port_number, self.hostname))
         update = array('B')
         for s in range(1, self.port_count + 1):
             if s != port_number:

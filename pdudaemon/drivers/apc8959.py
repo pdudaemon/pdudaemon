@@ -45,9 +45,8 @@ class APC8959(APCBase):
         self.connection.expect('apc>')
 
     def _port_interaction(self, command, port_number):
-        log.debug("Attempting %s on port %i", command, port_number)
         self._pdu_get_to_prompt()
-        self.connection.sendline(self.pdu_commands[command] + (" %i" % port_number))
+        self.connection.sendline(self.pdu_commands[command] + (" {}".format(port_number)))
         self.connection.expect("E000: Success")
         self._pdu_get_to_prompt()
         log.debug("done")

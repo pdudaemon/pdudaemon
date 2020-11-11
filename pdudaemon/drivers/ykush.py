@@ -48,6 +48,7 @@ class YkushBase(PDUDriver):
         super().__init__()
 
     def port_interaction(self, command, port_number):
+        port_number = int(port_number)
         if port_number > self.port_count or port_number < 1:
             err = "Port should be in the range 1 - %d" % (self.port_count)
             log.error(err)

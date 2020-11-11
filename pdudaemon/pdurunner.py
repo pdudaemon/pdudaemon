@@ -50,7 +50,7 @@ class PDURunner(threading.Thread):
                 return self.driver.handle(request, port)
             except (OSError, pexpect.exceptions.EOF, Exception):  # pylint: disable=broad-except
                 self.logger.warn(traceback.format_exc())
-                self.logger.warn("Failed to execute job: %s %s (attempts left %i)", port, request, retries - 1)
+                self.logger.warn("Failed to execute job: {} {} (attempts left {})".format(port, request, retries - 1))
                 if self.driver:
                     self.driver._bombout()  # pylint: disable=W0212,E1101
                 time.sleep(5)
@@ -59,7 +59,7 @@ class PDURunner(threading.Thread):
         return False
 
     def run(self):
-        self.logger.info("Starting a PDURunner for PDU: %s", self.hostname)
+        self.logger.info("Starting a PDURunner for PDU: {}".format(self.hostname))
         while 1:
             job = self.task_queue.get()
             if job is None:

@@ -57,6 +57,7 @@ class SynBase(PDUDriver):
     def port_interaction(self, command, port_number):
         log.debug("Running port_interaction from SynBase")
         self.get_connection()
+        log.debug("Attempting {} on port {}".format(command, port_number))
         self._port_interaction(command,  # pylint: disable=no-member
                                port_number)
 
@@ -119,7 +120,6 @@ class SynNetBooter(SynBase):
         self.connection.expect('>')
 
     def _port_interaction(self, command, port_number):
-        log.debug("Attempting %s on port %i", command, port_number)
         self._pdu_get_to_prompt()
         self.connection.sendline(self.pdu_commands[command] %
                                  (port_number))
