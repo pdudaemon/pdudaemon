@@ -46,12 +46,12 @@ class IP9258(LocalBase):
         return False
 
     def _port_interaction(self, command, port_number):
+        port_number = int(port_number)
         power_oid = '1.3.6.1.4.1.92.58.2.%d.0' % (port_number)
         cmd_base = '/usr/bin/snmpset -v 1 -c public %s %s integer' \
                    % (self.hostname, power_oid)
         cmd = None
 
-        log.debug("Attempting control: %s port: %i" % (command, port_number))
         if command == "on":
             cmd = cmd_base + ' %d > /dev/null' % (1)
 

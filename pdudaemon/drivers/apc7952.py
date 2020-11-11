@@ -63,8 +63,6 @@ class APC7952(APCBase):
         log.debug("Finished entering outlet")
 
     def _port_interaction(self, command, port_number):
-        log.debug("Attempting command: %s port: %i",
-                  command, port_number)
         # make sure in main menu here
         self._back_to_main()
         self.connection.send("\r")

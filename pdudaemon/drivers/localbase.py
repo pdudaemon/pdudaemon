@@ -40,6 +40,7 @@ class LocalBase(PDUDriver):
 
     def port_interaction(self, command, port_number):
         log.debug("Running port_interaction from LocalBase")
+        log.debug("Attempting control: {} port: {}".format(command, port_number))
         self._port_interaction(command, port_number)
 
     def _bombout(self):

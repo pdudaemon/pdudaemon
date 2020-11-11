@@ -56,6 +56,7 @@ class DevantechBase(PDUDriver):
 
     def port_interaction(self, command, port_number):
         self.connect()
+        port_number = int(port_number)
         if port_number > self.port_count:
             log.error("There are only %d ports. Provide a port number lesser than %d." % (self.port_count, self.port_count))
             raise RuntimeError("There are only %d ports. Provide a port number lesser than %d." % (self.port_count, self.port_count))

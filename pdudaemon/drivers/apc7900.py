@@ -33,8 +33,6 @@ class APC7900(APC7952):
         return False
 
     def _port_interaction(self, command, port_number):
-        log.debug("Attempting command: %s port: %i",
-                  command, port_number)
         # make sure in main menu here
         self._back_to_main()
         self.connection.send("\r")

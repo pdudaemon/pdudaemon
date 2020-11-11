@@ -68,6 +68,7 @@ class UbiquityBase(PDUDriver):
                             username=self.username, password=self.password)
 
     def port_interaction(self, command, port_number):
+        port_number = int(port_number)
         log.debug("Running port_interaction from UbiquityBase")
         self.connect()
         if port_number > self.port_count:

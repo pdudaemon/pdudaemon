@@ -45,6 +45,7 @@ class APCBase(PDUDriver):
     def port_interaction(self, command, port_number):
         log.debug("Running port_interaction from APCBase")
         self.get_connection()
+        log.debug("Attempting command: {} port: {}".format(command, port_number))
         self._port_interaction(command,  # pylint: disable=no-member
                                port_number)
 

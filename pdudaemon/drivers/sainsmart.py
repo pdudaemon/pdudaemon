@@ -50,11 +50,11 @@ class Sainsmart(LocalBase):
 
         val = -1
         if command == "on":
-            log.debug("Attempting control: %s port: %i" % (command, port_number))
+            log.debug("Attempting control: {} port: {}".format(command, port_number))
             val = (port_number - 1) * 2 + 1
 
         elif command == "off":
-            log.debug("Attempting control: %s port: %i" % (command, port_number))
+            log.debug("Attempting control: {} port: {}".format(command, port_number))
             val = (port_number - 1) * 2
 
         else:

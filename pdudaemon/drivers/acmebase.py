@@ -54,7 +54,7 @@ class ACMEBase(PDUDriver):
                                port_number)
 
     def get_connection(self):
-        log.debug("Connecting to Baylibre ACME with: %s", self.exec_string)
+        log.debug("Connecting to Baylibre ACME with: {}".format(self.exec_string))
         # only uncomment this line for FULL debug when developing
         # self.connection = pexpect.spawn(self.exec_string, logfile=sys.stdout)
         self.connection = pexpect.spawn(self.exec_string)
@@ -64,7 +64,7 @@ class ACMEBase(PDUDriver):
         self._pdu_logout()  # pylint: disable=no-member
 
     def _bombout(self):
-        log.debug("Bombing out of driver: %s", self.connection)
+        log.debug("Bombing out of driver: {}".format(self.connection))
         self.connection.close(force=True)
         del self
 
