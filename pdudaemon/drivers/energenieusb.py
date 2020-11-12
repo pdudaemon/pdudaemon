@@ -58,6 +58,7 @@ class EnerGenieUSB(PDUDriver):
             log.error(err)
             raise RuntimeError(err)
 
+        port_number = int(port_number)
         if port_number > 4 or port_number < 1:
             err = "Port should be in the range 1 - 4"
             log.error(err)
