@@ -61,3 +61,4 @@ from pdudaemon.drivers.ykush import Ykush
 from pdudaemon.drivers.snmp import SNMP
 from pdudaemon.drivers.energenieusb import EnerGenieUSB
 from pdudaemon.drivers.bcu import BCU
+from pdudaemon.drivers.vusbhid import VUSBHID
