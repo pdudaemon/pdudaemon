@@ -55,7 +55,8 @@ class TasmotaBase(PDUDriver):
 
         r.raise_for_status()
         res = r.json()
-        if res != {'POWER': command.upper()}:
+        if (res != {'POWER': command.upper()}
+                and res != {'POWER' + str(port_number): command.upper()}):
             log.error(res)
             raise FailedRequestException(res)
         log.debug('HTTP response: {}'.format(res))
