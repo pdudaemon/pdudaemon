@@ -8,7 +8,9 @@ RUN apt-get update && apt-get install -y libsystemd-dev \
                                          libhidapi-dev \
                                          libudev-dev \
                                          libusb-1.0-0-dev \
-                                         cython3
+                                         libssl-dev \
+                                         cython3 \
+                                         rustc
 
 RUN apt-get install --no-install-recommends -y python3-pip python3-setuptools python3-wheel python3-pytest
 ADD requirements.txt /

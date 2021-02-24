@@ -9,6 +9,7 @@ curl \
 cython3 \
 libffi-dev \
 libhidapi-dev \
+libssl-dev \
 libsystemd-dev \
 libudev-dev \
 libusb-1.0-0-dev \
@@ -18,6 +19,7 @@ python3-pip \
 python3-setuptools \
 python3-usb \
 python3-wheel \
+rustc \
 supervisor \
 telnet \
 snmp
