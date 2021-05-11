@@ -17,6 +17,11 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
+#
+#  Confirmed devices
+#    - KP303: https://www.tp-link.com/uk/home-networking/smart-plug/kp303/
+#    - KP105: https://www.tp-link.com/uk/home-networking/smart-plug/kp105/
+#    - HS105: https://www.tp-link.com/us/home-networking/smart-plug/hs105/
 
 import logging
 import json
