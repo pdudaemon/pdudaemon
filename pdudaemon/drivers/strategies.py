@@ -72,3 +72,4 @@ from pdudaemon.drivers.servo import Servo
 from pdudaemon.drivers.ipower import LindyIPowerClassic8
 from pdudaemon.drivers.modbustcp import ModBusTCP
 from pdudaemon.drivers.gude1202 import Gude1202
+from pdudaemon.drivers.netio4 import Netio4
