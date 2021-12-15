@@ -66,5 +66,11 @@ setup(
         "pyasn1",
         "pyusb"
     ],
+    extras_require={
+        'test': [
+            'pytest',
+            'pytest-mock',
+        ],
+    },
     zip_safe=True
 )
