@@ -89,7 +89,6 @@ class Intellinet(PDUDriver):
         params["submit"] = "Anwenden"
         self._api(endpoint, params)
 
-
     @classmethod
     def accepts(cls, drivername):
         if drivername == "intellinet":
