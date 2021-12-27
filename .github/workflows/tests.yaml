@@ -11,6 +11,6 @@ jobs:
       - name: Run pycodestyle
         run: docker run --rm -v $(pwd):/p -w /p pdudaemon-ci /root/.local/bin/pycodestyle --config=pycodestyle_config .
       - name: Run pytest
-        run: docker run -v $(pwd):/p -w /p pdudaemon-ci sh -c "pytest-3 ."
+        run: docker run -v $(pwd):/p -w /p pdudaemon-ci /root/.local/bin/pytest
       - name: Run functional tests
         run: docker run -v $(pwd):/p -w /p pdudaemon-ci sh -c "./share/pdudaemon-test.sh"
