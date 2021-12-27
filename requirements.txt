@@ -8,3 +8,5 @@ hidapi
 pysnmp
 pyasn1
 pyusb
+pytest
+pytest-mock
