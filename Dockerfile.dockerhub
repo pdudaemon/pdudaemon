@@ -20,7 +20,6 @@ python3-pip \
 python3-setuptools \
 python3-usb \
 python3-wheel \
-python3-pytest \
 rustc \
 supervisor \
 telnet \
