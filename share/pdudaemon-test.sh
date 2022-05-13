@@ -2,10 +2,8 @@
 
 PDUD_BINARY=pdudaemon
 TMPFILE=/tmp/pdu
-DBFILE=/tmp/dbfile
 
 rm $TMPFILE
-rm $DBFILE
 
 # support the -l option for running the tests locally
 while getopts l option
@@ -25,7 +23,7 @@ then
   PDUD_BINARY=./pdudaemon-test-bin
 fi
 
-$PDUD_BINARY --loglevel=DEBUG --conf=share/pdudaemon.conf --dbfile=$DBFILE &
+$PDUD_BINARY --loglevel=DEBUG --conf=share/pdudaemon.conf &
 PDU_PID=$!
 
 sleep 3
@@ -41,7 +39,7 @@ kill $PDU_PID
 sleep 10
 
 # Test TCP listener
-$PDUD_BINARY --loglevel=DEBUG --listener tcp --conf=share/pdudaemon.conf --dbfile=$DBFILE &
+$PDUD_BINARY --loglevel=DEBUG --listener tcp --conf=share/pdudaemon.conf &
 PDU_PID=$!
 
 sleep 3
