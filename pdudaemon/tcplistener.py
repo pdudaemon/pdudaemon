@@ -59,14 +59,15 @@ class TCPListener:
 
     async def handle(self, reader, writer):
         request_ip = writer.get_extra_info('peername')[0]
+        loop = asyncio.get_running_loop()
         try:
             data = await reader.read(16384)
             data = data.decode('utf-8')
             data = data.strip()
-            socket.setdefaulttimeout(2)
             try:
-                request_host = socket.gethostbyaddr(request_ip)[0]
-            except socket.herror:
+                fut = loop.run_in_executor(None, socket.gethostbyaddr, request_ip)
+                request_host = (await asyncio.wait_for(fut, timeout=2))[0]
+            except (socket.herror, asyncio.TimeoutError):
                 request_host = request_ip
             logger.info("Received a request from %s: '%s'", request_host, data)
             res = await self.insert_request(data)
