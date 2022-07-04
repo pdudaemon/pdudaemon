@@ -1,0 +1,2 @@
+SUBSYSTEM=="usb", ATTR{idVendor}=="0d50", ATTR{idProduct}=="0008", GROUP="pdudaemon", MODE="660"
+SUBSYSTEM=="usb", ATTR{idVendor}=="0d50", ATTR{idProduct}=="0030", GROUP="pdudaemon", MODE="660"
