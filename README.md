@@ -34,7 +34,38 @@ $ docker run --rm -it -e http_proxy=$http_proxy -e https_proxy=$https_proxy -e N
 ```
 
 ## Config file
-To be added.
+An example configuration file can be found [here](https://github.com/pdudaemon/pdudaemon/blob/master/share/pdudaemon.conf).
+The section `daemon` is pretty self explanatory. The interesting part is the `pdus` section, where
+all managed PDUs are listed and configured. For example:
+
+```json
+  "pdus": {
+      "hostname_or_ip": {
+          "driver": "driver_name",
+          "additional_parameter": "42"
+      },
+      "test": {
+          "driver": "localcmdline",
+          "cmd_on": "echo '%s on' >> /tmp/pdu",
+          "cmd_off": "echo '%s off' >> /tmp/pdu"
+      },
+      "energenie": {
+          "driver": "EG-PMS",
+          "device": "01:01:51:a4:c3"
+      },
+      "192.168.0.42": {
+          "driver": "brennenstuhl_wspl01_tasmota"
+      }
+  }
+```
+It is important to mention, that `hostname` can be an arbitrary name for a locally connected device (like `energenie` in this example).
+For some (or most) network connected devices, it needs to be the actual hostname or IP address the PDU responds to (see `query-string` in [next section](#making-a-power-control-request)).
+The correct value for `driver` is highly dependent on the used child class and the specific implementation.
+Check the imported [Python module](https://github.com/pdudaemon/pdudaemon/tree/main/pdudaemon/drivers) for that class and look for `drivername` to be sure.
+Some drivers require additional parameters (like a device ID).
+Which parameters are required can also be extracted from the associated python module and child class definition.
+It is also worth checking out the [share](https://github.com/pdudaemon/pdudaemon/tree/main/share) folder for some driver specific example configuration files and helpful scripts that can help prevent major headaches!
+
 ## Making a power control request
 - **HTTP**
 The daemon can accept requests over plain HTTP. The port is configurable, but defaults to 16421
@@ -99,6 +130,7 @@ Drivers are implemented children of the "PDUDriver" class and many example
 implementations can be found inside the
 [drivers](https://github.com/pdudaemon/pdudaemon/tree/master/pdudaemon/drivers)
 directory.
+Any new driver classes should be added to [strategies.py](https://github.com/pdudaemon/pdudaemon/blob/master/pdudaemon/drivers/strategies.py).
 
 External implementation of PDUDriver can also be registered using the python
 entry_points mechanism. For example add the following to your setup.cfg:
