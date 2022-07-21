@@ -25,13 +25,15 @@
 #  MA 02110-1301, USA.
 
 import logging
+import os
 from pdudaemon.drivers.driver import PDUDriver, FailedRequestException
 import requests
-import os
 log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 
 
 class TasmotaBase(PDUDriver):
+    port_count = None
+
     def __init__(self, hostname, settings):
         self.hostname = hostname
         self.username = settings.get("username")
@@ -39,7 +41,7 @@ class TasmotaBase(PDUDriver):
         super().__init__()
 
     def port_interaction(self, command, port_number):
-        if port_number > self.port_count or port_number < 1:
+        if int(port_number) > self.port_count or int(port_number) < 1:
             err = "Port number must be in range 1 - {}".format(self.port_count)
             log.error(err)
             raise FailedRequestException(err)
@@ -53,13 +55,18 @@ class TasmotaBase(PDUDriver):
         log.debug("HTTP GET: {}".format(url))
         r = requests.get(url, params)
 
+        # check response
+        response = r.json()
         r.raise_for_status()
-        res = r.json()
-        if (res != {'POWER': command.upper()}
-                and res != {'POWER' + str(port_number): command.upper()}):
-            log.error(res)
-            raise FailedRequestException(res)
-        log.debug('HTTP response: {}'.format(res))
+        expected_response_key = "POWER{}".format(port_number)
+        try:
+            if response[expected_response_key] != command.upper():
+                log.error(response)
+                raise FailedRequestException(response)
+        except:
+            log.error(response)
+            raise FailedRequestException(response)
+        log.debug('HTTP response: {}'.format(response))
 
     @classmethod
     def accepts(cls, drivername):
