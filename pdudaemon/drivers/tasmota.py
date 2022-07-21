@@ -74,3 +74,13 @@ class SonoffS20Tasmota(TasmotaBase):
         if drivername == "sonoff_s20_tasmota":
             return True
         return False
+
+
+class BrennenstuhlWSPL01Tasmota(TasmotaBase):
+    port_count = 2
+
+    @classmethod
+    def accepts(cls, drivername):
+        if drivername == "brennenstuhl_wspl01_tasmota":
+            return True
+        return False
