@@ -45,7 +45,7 @@ class LocalBase(PDUDriver):
 
     def _bombout(self):
         log.debug("Bombing out of driver: %s" % self.connection)
-        del(self)
+        del (self)
 
     def _cleanup(self):
         log.debug("Cleaning up driver: %s" % self.connection)
