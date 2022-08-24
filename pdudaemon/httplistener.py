@@ -70,4 +70,3 @@ class HTTPListener:
         args = listener.parse_http(data, path)
         if args:
             return await listener.process_request(args, self.config, self.daemon)
-

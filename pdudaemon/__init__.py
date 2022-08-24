@@ -202,6 +202,7 @@ async def main_async():
 
     await daemon.start()
 
+
 def main():
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main_async())
@@ -209,6 +210,7 @@ def main():
         loop.run_forever()
     except KeyboardInterrupt:
         pass
+
 
 if __name__ == "__main__":
     # execute only if run as a script
