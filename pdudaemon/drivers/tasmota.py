@@ -63,7 +63,7 @@ class TasmotaBase(PDUDriver):
             if response[expected_response_key] != command.upper():
                 log.error(response)
                 raise FailedRequestException(response)
-        except:
+        except BaseException:
             log.error(response)
             raise FailedRequestException(response)
         log.debug('HTTP response: {}'.format(response))
