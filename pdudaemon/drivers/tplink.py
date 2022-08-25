@@ -39,6 +39,7 @@ class TPLink(PDUDriver):
         self.hostname = hostname
         self.settings = settings
         self.childinfo = {}
+        self.device_id = None
         self.getinfo()
         super(TPLink, self).__init__()
 
@@ -76,7 +77,15 @@ class TPLink(PDUDriver):
         res = self.send_command(json.dumps(datadict))
         if res:
             resdict = json.loads(res)
+
+            # self.childinfo is empty for single plug outlets (self.childinfo == {})
             self.childinfo = resdict.get("system", {}).get("get_sysinfo", {}).get("children", {})
+            self.device_id = resdict.get("system", {}).get("get_sysinfo", {})['deviceId']
+
+            log.debug("TP-Link outlet device info:")
+            log.debug(resdict)
+        else:
+            log.error("Failed to get TP-Link outlet device info!")
 
     def send_command(self, json_string):
         try:
@@ -93,21 +102,62 @@ class TPLink(PDUDriver):
             log.error(f"Could not connect to host {self.hostname}:9999")
 
     def get_context(self, port_number):
-        for child in self.childinfo:
-            child_port = (int(child['alias'].split("_")[-1]) + 1)
-            if int(port_number) == int(child_port):
-                return ({"child_ids": [child["id"]]})
+        for i, child in enumerate(self.childinfo, start=1):
+            try:
+                port_id = str(child['id'])
+                log.debug(f"child ID is {port_id}")
+
+                # If the port_id contains the device id,
+                if port_id.find(self.device_id) == 0:
+                    # Get the substring that comes after the device_id
+                    # in the port_id. This corresponds to the outlet number
+                    child_port = int(port_id[len(self.device_id)-1:])
+
+                    # Add 1 because outlet numbers are 0 based
+                    child_port = child_port + 1
+
+                if port_number == int(child_port):
+                    return ({"child_ids": [port_id]})
+            except:
+                # log.warning("Oulet device/outlet id issue")
+                logging.exception("Oulet device/outlet id issue")
+                # If the device id method above doesn't work for some reason,
+                # fall back to just counting outlets in the list.
+                if i == int(port_number):
+                    return ({"child_ids": [port_id]})
+
+        # Outlet is a single plug, there are no childinfo's
         return ({})
+
+    def is_integer(self, n):
+        try:
+            float(n)
+        except ValueError:
+            return False
+        else:
+            return float(n).is_integer()
 
     def port_interaction(self, command, port_number):
         state = 0
         context = None
+
+        # Ensure that port_number is an integer
+        if not self.is_integer(port_number):
+            log.error("Expected port value to be an integer!")
+            return (False)
+
         if command == "on":
+            log.debug("Commanding outlet to turn on")
             state = 1
+        else:
+            log.debug("Commanding outlet to turn off")
+
         if self.childinfo:
             if int(port_number) > len(self.childinfo):
+                log.error(f"Outlet number '{port_number}' is larger the the maximum number of outlets on device which is '{len(self.childinfo)}'")
                 return (False)
             context = self.get_context(port_number)
+
         datadict = {
             'context': context,
             'system': {
@@ -116,5 +166,12 @@ class TPLink(PDUDriver):
                 }
             }
         }
+
+        log.debug("Sending the following json command:")
         log.debug(datadict)
+
         res = self.send_command(json.dumps(datadict))
+        if not res:
+            return (False)
+
+        return (True)
