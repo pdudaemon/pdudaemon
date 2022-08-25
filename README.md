@@ -9,10 +9,16 @@ Every PDU manufacturer has a different way of controlling their PDUs. Though man
 APC, Devantech and ACME are well supported, however there is no official list yet. The [strategies.py](https://github.com/pdudaemon/pdudaemon/blob/master/pdudaemon/drivers/strategies.py) file is a good place to see all the current drivers.
 ## Installing
 Debian packages are on the way, hopefully.
-For now, make sure the requirements are met and then:
+For now, make sure the requirements are met.
+### Method 1 - Install to System
+You will be able to run the `pdudaemon` command from your terminal.
+Refer to "non-daemon" usage in a section below.
 
-```python3 setup.py install```
+```bash
+$ python3 setup.py install
+```
 
+### Method 2 - Use Offical Docker
 There is an official Docker container updated from tip:
 ```
 $ docker pull pdudaemon/pdudaemon:latest
@@ -22,7 +28,7 @@ To create a config file, use [share/pdudaemon.conf](https://github.com/pdudaemon
 ```
 $ docker run -v `pwd`/pdudaemon.conf:/config/pdudaemon.conf pdudaemon/pdudaemon:latest
 ```
-
+### Method 3 - Build a Custom Docker from Source
 Or you can build your own:
 ```
 $ git clone https://github.com/pdudaemon/pdudaemon
@@ -67,7 +73,7 @@ Which parameters are required can also be extracted from the associated python m
 It is also worth checking out the [share](https://github.com/pdudaemon/pdudaemon/tree/main/share) folder for some driver specific example configuration files and helpful scripts that can help prevent major headaches!
 
 ## Making a power control request
-- **HTTP**
+### HTTP Method
 The daemon can accept requests over plain HTTP. The port is configurable, but defaults to 16421
 There is no encryption or authentication, consider yourself warned.
 To enable, change the 'listener' setting in the 'daemon' section of the config file to 'http'. This will break 'pduclient' requests.
@@ -99,7 +105,14 @@ An HTTP request URL has the following syntax:
     - HTTP 200 - Request Accepted
     - HTTP 503 - Invalid Request, Request not accepted
 
-- **TCP (legacy pduclient)**
+### Command Line (non-daemon or drive) Method
+If you would just like to use pdudaemon as an executable to drive a PDU without needing to run a daemon, you can use the --drive option.
+Configure the PDU in the config file as usual, then launch pdudaemon with the following options
+```bash
+$ pdudaemon --conf=share/pdudaemon.conf --drive --hostname pdu01 --port 1 --request reboot
+```
+
+### TCP Method (legacy pduclient)
 The bundled client is used when PDUDaemon is configured to listen to 'tcp' requests. TCP support is considered legacy but will remain functional.
 ```
 Usage: pduclient --daemon deamonhostname --hostname pduhostname --port pduportnum --command pducommand
@@ -116,13 +129,6 @@ Options:
   --command=PDUCOMMAND  PDU command (ex: reboot|on|off)
   --delay=PDUDELAY      Delay before command runs, or between off/on when
                         rebooting (ex: 5)
-```
-
-- **non-daemon (also called drive)**
-If you would just like to use pdudaemon as an executable to drive a PDU without needing to run a daemon, you can use the --drive option.
-Configure the PDU in the config file as usual, then launch pdudaemon with the following options
-```
-$ pdudaemon --conf=share/pdudaemon.conf --drive --hostname pdu01 --port 1 --request reboot
 ```
 
 ## Adding drivers
