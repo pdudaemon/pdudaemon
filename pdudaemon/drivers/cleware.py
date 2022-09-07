@@ -104,7 +104,7 @@ class ClewareContact00Base(PDUDriver):
             return
 
         d = hid.device()
-        d.open(CLEWARE_VID, CLEWARE_CONTACT0_PID, serial_number=self.serial)
+        d.open(CLEWARE_VID, CLEWARE_CONTACT00_PID, serial_number=self.serial)
         d.write([0, 3, on >> 8, on & 0xff, port >> 8, port & 0xff])
         d.close()
 
