@@ -17,12 +17,13 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 
+from distutils.command.config import config
 import logging
 from pysnmp.hlapi import setCmd, SnmpEngine, UsmUserData, UdpTransportTarget, ContextData, CommunityData, ObjectType, ObjectIdentity
+import pysnmp.hlapi as pysnmp_api
 from pdudaemon.drivers.driver import PDUDriver, FailedRequestException, UnknownCommandException
 import os
 log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
-
 
 class SNMP(PDUDriver):
 
@@ -37,6 +38,10 @@ class SNMP(PDUDriver):
         self.username = settings.get('username', None)
         self.onsetting = settings['onsetting']
         self.offsetting = settings['offsetting']
+        self.inside_number = settings.get('inside_number', None)
+        self.static_ending = settings.get('static_ending', None)
+        self.auth_protocol = settings.get('auth_protocol', None)
+        self.priv_protocol = settings.get('priv_protocol', None)
         super(SNMP, self).__init__()
 
     @classmethod
@@ -57,17 +62,35 @@ class SNMP(PDUDriver):
             raise UnknownCommandException("Unknown command %s." % (command))
 
         transport = UdpTransportTarget((self.hostname, 161))
+
+        if self.inside_number:
+            # It is possible to pass 2 or 3 snmp argument values
+            filled_controlpoint = self.controlpoint.replace('*', str(port_number))
+            indexed_object_list = [self.mib, filled_controlpoint]
+            # If there is a key static_ending available, add a static ending value
+            if self.static_ending is not None:
+                indexed_object_list.append(int(self.static_ending))
+        else:
+            indexed_object_list = [self.mib, self.controlpoint, port_number]
+
         objecttype = ObjectType(
-            ObjectIdentity(self.mib,
-                           self.controlpoint,
-                           port_number
-                           ).addAsn1MibSource(
+            ObjectIdentity(*indexed_object_list).addAsn1MibSource(
                 'http://mibs.snmplabs.com/asn1/@mib@'), int(set_bit))
 
         if self.version == 'snmpv3':
             if not self.username:
                 raise FailedRequestException("No username set for snmpv3")
-            userdata = UsmUserData(self.username, self.authpass, self.privpass)
+
+            protocols = {}
+            if self.auth_protocol is not None:
+                a_protocol = getattr(pysnmp_api, self.auth_protocol)
+                protocols['authProtocol'] = a_protocol
+
+            if self.priv_protocol is not None:
+                p_protocol = getattr(pysnmp_api, self.priv_protocol)
+                protocols['privProtocol'] = p_protocol
+
+            userdata = UsmUserData(self.username, self.authpass, self.privpass, **protocols)
             errorIndication, errorStatus, errorIndex, varBinds = next(
                 setCmd(SnmpEngine(),
                        userdata,
