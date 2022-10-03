@@ -24,6 +24,7 @@ from pdudaemon.drivers.driver import PDUDriver, FailedRequestException, UnknownC
 import os
 log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 
+
 class SNMP(PDUDriver):
 
     def __init__(self, hostname, settings):
