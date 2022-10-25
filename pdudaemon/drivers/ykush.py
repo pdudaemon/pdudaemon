@@ -32,6 +32,7 @@ log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 YKUSH_VID = 0x04d8
 YKUSH_PID = 0xf2f7
 YKUSH_XS_PID = 0xf0cd
+YKUSH3_PID = 0xf11b
 
 
 class YkushBase(PDUDriver):
@@ -80,4 +81,9 @@ class YkushXS(YkushBase):
 
 class Ykush(YkushBase):
     ykush_pid = YKUSH_PID
+    port_count = 3
+
+
+class Ykush3(YkushBase):
+    ykush_pid = YKUSH3_PID
     port_count = 3
