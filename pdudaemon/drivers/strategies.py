@@ -67,3 +67,4 @@ from pdudaemon.drivers.vusbhid import VUSBHID
 from pdudaemon.drivers.tplink import TPLink
 from pdudaemon.drivers.ip9850 import ip9850
 from pdudaemon.drivers.intellinet import Intellinet
+from pdudaemon.drivers.esphome import ESPHomeHTTP
