@@ -119,7 +119,6 @@ class TPLink(PDUDriver):
                 if port_number == int(child_port):
                     return ({"child_ids": [port_id]})
             except:
-                # log.warning("Oulet device/outlet id issue")
                 logging.exception("Oulet device/outlet id issue")
                 # If the device id method above doesn't work for some reason,
                 # fall back to just counting outlets in the list.
