@@ -142,6 +142,7 @@ async def main_async():
     drive.add_argument("--drive", action="store_true", default=False)
     drive.add_argument("--request", dest="driverequest", action="store", type=str)
     drive.add_argument("--retries", dest="driveretries", action="store", type=int, default=5)
+    drive.add_argument("--delay", dest="drivedelay", action="store", type=int, default=5)
     drive.add_argument("--port", dest="driveport", action="store", type=str)
 
     # Parse the command line
@@ -181,6 +182,7 @@ async def main_async():
         runner = PDURunner(config, options.drivehostname, options.driveretries)
         if options.driverequest == "reboot":
             result = await runner.do_job_async(options.driveport, "off")
+            await asyncio.sleep(int(options.drivedelay))
             result = await runner.do_job_async(options.driveport, "on")
         else:
             result = await runner.do_job_async(options.driveport, options.driverequest)
