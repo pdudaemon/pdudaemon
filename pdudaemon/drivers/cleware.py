@@ -25,12 +25,14 @@ import logging
 from pdudaemon.drivers.driver import PDUDriver
 from pdudaemon.drivers.hiddevice import HIDDevice
 import os
+import time
 
 log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 
 CLEWARE_VID = 0x0d50
 CLEWARE_SWITCH1_PID = 0x0008
 CLEWARE_CONTACT00_PID = 0x0030
+CLEWARE_SWITCH4_SERIAL = 0x63813
 
 
 class ClewareSwitch1Base(PDUDriver):
@@ -42,8 +44,28 @@ class ClewareSwitch1Base(PDUDriver):
         self.settings = settings
         self.serial = settings.get("serial", u"")
         log.debug("serial: %s" % self.serial)
-
         super().__init__()
+
+    def switch4_serial(self, dev_dict):
+        dev = hid.device()
+        dev.open_path(dev_dict["path"])
+        serial = 0
+        for i in range(8, 15):
+            b = int(chr(self.read_byte(dev, i)), 16)
+            serial *= 16
+            serial += b
+        dev.close()
+        return serial
+
+    def device_path(self):
+        for dev_dict in hid.enumerate(CLEWARE_VID, CLEWARE_SWITCH1_PID):
+            if int(dev_dict["serial_number"], 16) != CLEWARE_SWITCH4_SERIAL:
+                continue
+            if self.serial == self.switch4_serial(dev_dict):
+                return dev_dict['path']
+        err = f"Cleware device with serial number {self.serial} not found!"
+        log.error(err)
+        raise RuntimeError(err)
 
     def port_interaction(self, command, port_number):
         port_number = int(port_number)
@@ -61,8 +83,17 @@ class ClewareSwitch1Base(PDUDriver):
             log.error("Unknown command %s." % (command))
             return
 
-        with HIDDevice(CLEWARE_VID, CLEWARE_SWITCH1_PID, serial=self.serial) as d:
+        with HIDDevice(path=self.device_path()) as d:
             d.write([0, 0, port, on])
+
+    @staticmethod
+    def read_byte(dev, addr):
+        dev.write([0, 2, addr])
+        while True:
+            data = dev.read(16)
+            if data[4] == addr:
+                return data[5]
+            time.sleep(0.01)
 
     @classmethod
     def accepts(cls, drivername):
@@ -80,10 +111,18 @@ class ClewareContact00Base(PDUDriver):
     def __init__(self, hostname, settings):
         self.hostname = hostname
         self.settings = settings
-        self.serial = settings.get("serial", u"")
+        self.serial = int(settings.get("serial", u""))
         log.debug("serial: %s" % self.serial)
-
         super().__init__()
+
+    def find_hid_serial(self):
+        for dev_dict in hid.enumerate(CLEWARE_VID, CLEWARE_CONTACT00_PID):
+            serial_number = dev_dict['serial_number']
+            if self.serial == int(serial_number, 16):
+                return serial_number
+        err = f"Cleware device with serial number {self.serial} not found"
+        log.error(err)
+        raise RuntimeError(err)
 
     def port_interaction(self, command, port_number):
         port_number = int(port_number)
@@ -101,7 +140,7 @@ class ClewareContact00Base(PDUDriver):
             log.error("Unknown command %s." % (command))
             return
 
-        with HIDDevice(CLEWARE_VID, CLEWARE_CONTACT00_PID, serial=self.serial) as d:
+        with HIDDevice(CLEWARE_VID, CLEWARE_CONTACT00_PID, serial=self.find_hid_serial()) as d:
             d.write([0, 3, on >> 8, on & 0xff, port >> 8, port & 0xff])
 
     @classmethod
