@@ -23,7 +23,7 @@
 
 import logging
 from pdudaemon.drivers.driver import PDUDriver
-import hid
+from pdudaemon.drivers.hiddevice import HIDDevice
 import os
 
 log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
@@ -61,10 +61,8 @@ class ClewareSwitch1Base(PDUDriver):
             log.error("Unknown command %s." % (command))
             return
 
-        d = hid.device()
-        d.open(CLEWARE_VID, CLEWARE_SWITCH1_PID, serial_number=self.serial)
-        d.write([0, 0, port, on])
-        d.close()
+        with HIDDevice(CLEWARE_VID, CLEWARE_SWITCH1_PID, serial=self.serial) as d:
+            d.write([0, 0, port, on])
 
     @classmethod
     def accepts(cls, drivername):
@@ -103,10 +101,8 @@ class ClewareContact00Base(PDUDriver):
             log.error("Unknown command %s." % (command))
             return
 
-        d = hid.device()
-        d.open(CLEWARE_VID, CLEWARE_CONTACT00_PID, serial_number=self.serial)
-        d.write([0, 3, on >> 8, on & 0xff, port >> 8, port & 0xff])
-        d.close()
+        with HIDDevice(CLEWARE_VID, CLEWARE_CONTACT00_PID, serial=self.serial) as d:
+            d.write([0, 3, on >> 8, on & 0xff, port >> 8, port & 0xff])
 
     @classmethod
     def accepts(cls, drivername):
