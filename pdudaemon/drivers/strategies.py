@@ -70,3 +70,4 @@ from pdudaemon.drivers.intellinet import Intellinet
 from pdudaemon.drivers.esphome import ESPHomeHTTP
 from pdudaemon.drivers.servo import Servo
 from pdudaemon.drivers.ipower import LindyIPowerClassic8
+from pdudaemon.drivers.modbustcp import ModBusTCP
