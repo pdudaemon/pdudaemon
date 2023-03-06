@@ -103,6 +103,8 @@ class TPLink(PDUDriver):
 
     def get_context(self, port_number):
         for i, child in enumerate(self.childinfo, start=1):
+            # This try-except is here to catch a failed conversion to int using int()
+            # and fallback to a different method if it does fail.
             try:
                 port_id = str(child['id'])
                 log.debug(f"child ID is {port_id}")
@@ -111,14 +113,14 @@ class TPLink(PDUDriver):
                 if port_id.find(self.device_id) == 0:
                     # Get the substring that comes after the device_id
                     # in the port_id. This corresponds to the outlet number
-                    child_port = int(port_id[len(self.device_id)-1:])
+                    child_port = int(port_id[len(self.device_id) - 1:])
 
                     # Add 1 because outlet numbers are 0 based
                     child_port = child_port + 1
 
-                if port_number == int(child_port):
+                if port_number == child_port:
                     return ({"child_ids": [port_id]})
-            except:
+            except ValueError:
                 logging.exception("Oulet device/outlet id issue")
                 # If the device id method above doesn't work for some reason,
                 # fall back to just counting outlets in the list.
