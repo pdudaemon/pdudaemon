@@ -61,6 +61,7 @@ class ClewareSwitch1Base(PDUDriver):
         for dev_dict in hid.enumerate(CLEWARE_VID, CLEWARE_SWITCH1_PID):
             if int(dev_dict["serial_number"], 16) != CLEWARE_SWITCH4_SERIAL:
                 continue
+            log.debug(f"Considering serial number match: {self.serial}")
             if self.serial == self.switch4_serial(dev_dict):
                 return dev_dict['path']
         err = f"Cleware device with serial number {self.serial} not found!"
