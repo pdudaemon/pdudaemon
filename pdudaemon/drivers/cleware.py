@@ -42,7 +42,7 @@ class ClewareSwitch1Base(PDUDriver):
     def __init__(self, hostname, settings):
         self.hostname = hostname
         self.settings = settings
-        self.serial = settings.get("serial", u"")
+        self.serial = int(settings.get("serial", u""))
         log.debug("serial: %s" % self.serial)
         super().__init__()
 
