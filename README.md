@@ -125,6 +125,9 @@ Configure the PDU in the config file as usual, then launch pdudaemon with the fo
 $ pdudaemon --conf=share/pdudaemon.conf --drive --hostname pdu01 --port 1 --request reboot
 ```
 
+If requesting reboot, the delay between turning the port off and on can be modified with `--delay`
+and is by default 5 seconds.
+
 ## Adding drivers
 Drivers are implemented children of the "PDUDriver" class and many example
 implementations can be found inside the

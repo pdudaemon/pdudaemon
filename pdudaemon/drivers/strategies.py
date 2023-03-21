@@ -69,3 +69,4 @@ from pdudaemon.drivers.ip9850 import ip9850
 from pdudaemon.drivers.intellinet import Intellinet
 from pdudaemon.drivers.esphome import ESPHomeHTTP
 from pdudaemon.drivers.servo import Servo
+from pdudaemon.drivers.ipower import LindyIPowerClassic8
