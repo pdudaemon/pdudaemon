@@ -64,3 +64,36 @@ requires = [
     "setuptools>=61.0"
 ]
 build-backend = "setuptools.build_meta"
+
+[tool.ruff]
+select = [
+  "E", # pycodestyle
+  "W", # pycodestyle
+  "D", # pydocstyle
+  "F", # pyflakes
+  "I", # isort
+  # "UP", # pyupgrade
+]
+ignore = [
+  "D100", # Missing docstring in public module
+  "D101", # Missing docstring in public class
+  "D102", # Missing docstring in public method
+  "D103", # Missing docstring in public function
+  "D104", # Missing docstring in public package
+  "D107", # Missing docstring in `__init__`
+  "D205", # 1 blank line required between summary line and description
+  "E501", # Line too long
+]
+
+src = ["pdudaemon", "tests"]
+
+line-length = 88 # Match black
+
+# Minimum Python 3.8.
+target-version = "py38"
+
+[tool.ruff.isort]
+known-first-party = ["pdudaemon", "tests"]
+
+[tool.ruff.pydocstyle]
+convention = "google"
