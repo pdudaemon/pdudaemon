@@ -1,4 +1,3 @@
-import pytest
 from unittest import mock
 from .numatousb import NumatoUSB4
 from .numatousb import NumatoUSB32

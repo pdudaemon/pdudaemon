@@ -19,9 +19,7 @@
 #  MA 02110-1301, USA.
 
 import logging
-import pexpect
 from pdudaemon.drivers.driver import PDUDriver
-import sys
 import os
 log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 
