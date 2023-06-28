@@ -25,8 +25,9 @@ import traceback
 import pexpect
 import concurrent.futures
 from pdudaemon.drivers.driver import PDUDriver
-import pdudaemon.drivers.strategies  # pylint: disable=W0611
+import pdudaemon.drivers.strategies
 
+assert pdudaemon.drivers.strategies, "Subclasses are iterated to find all drivers"
 
 class PDURunner:
 

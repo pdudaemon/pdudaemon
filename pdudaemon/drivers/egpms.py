@@ -24,7 +24,6 @@
 import logging
 from pdudaemon.drivers.driver import PDUDriver
 import socket
-import sys
 from array import array
 
 import os

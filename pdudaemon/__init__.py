@@ -20,19 +20,18 @@
 
 import argparse
 import asyncio
-import contextlib
 import json
 import logging
 from logging.handlers import WatchedFileHandler
 import signal
 import sys
-import time
 
 from pdudaemon.tcplistener import TCPListener
 from pdudaemon.httplistener import HTTPListener
 from pdudaemon.pdurunner import PDURunner
 from pdudaemon.drivers.driver import PDUDriver
 
+assert PDUDriver, "Imported for user convenience."
 
 ###########
 # Constants

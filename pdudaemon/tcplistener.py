@@ -21,7 +21,6 @@
 import asyncio
 import logging
 import socket
-import time
 import pdudaemon.listener as listener
 logger = logging.getLogger('pdud.tcp')
 
