@@ -38,6 +38,7 @@ class DevantechBase(PDUDriver):
         self.ip = settings["ip"]
         self.port = settings.get("port", 17494)
         self.password = settings.get("password")
+        self.logic = settings.get("logic", "NO")
         super(DevantechBase, self).__init__()
 
     def connect(self):
@@ -60,11 +61,13 @@ class DevantechBase(PDUDriver):
         if port_number > self.port_count:
             log.error("There are only %d ports. Provide a port number lesser than %d." % (self.port_count, self.port_count))
             raise RuntimeError("There are only %d ports. Provide a port number lesser than %d." % (self.port_count, self.port_count))
-
+        if self.logic not in ["NO", "NC"]:
+            log.error("Invalid logic setting: %s." % (self.logic))
+            return
         if command == "on":
-            msg = b'\x20'
+            msg = b'\x21' if self.logic == "NC" else b'\x20'
         elif command == "off":
-            msg = b'\x21'
+            msg = b'\x20' if self.logic == "NC" else b'\x21'
         else:
             log.error("Unknown command %s." % (command))
             return
