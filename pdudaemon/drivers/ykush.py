@@ -24,7 +24,7 @@
 
 import logging
 from pdudaemon.drivers.driver import PDUDriver
-import hid
+from pdudaemon.drivers.hiddevice import HIDDevice
 import os
 
 log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
@@ -63,11 +63,9 @@ class YkushBase(PDUDriver):
             log.error("Unknown command %s." % (command))
             return
 
-        d = hid.device()
-        d.open(YKUSH_VID, self.ykush_pid, serial_number=self.serial)
-        d.write([byte, byte])
-        d.read(64)
-        d.close()
+        with HIDDevice(YKUSH_VID, self.ykush_pid, serial=self.serial) as d:
+            d.write([byte, byte])
+            d.read(64)
 
     @classmethod
     def accepts(cls, drivername):
