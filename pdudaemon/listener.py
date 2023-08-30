@@ -100,11 +100,11 @@ async def process_request(args, config, daemon):
     runner = daemon.runners[args.hostname]
     if args.request == "reboot":
         logger.debug("reboot requested, submitting off/on")
-        await runner.do_job_async(int(args.port), "off")
+        await runner.do_job_async(args.port, "off")
         await asyncio.sleep(int(args.delay))
-        await runner.do_job_async(int(args.port), "on")
+        await runner.do_job_async(args.port, "on")
         return True
     else:
         await asyncio.sleep(int(args.delay))
-        await runner.do_job_async(int(args.port), args.request)
+        await runner.do_job_async(args.port, args.request)
         return True
