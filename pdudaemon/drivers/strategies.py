@@ -32,6 +32,7 @@ from pdudaemon.drivers.apc9210 import APC9210  # pylint: disable=W0611
 from pdudaemon.drivers.apc7920 import APC7920  # pylint: disable=W0611
 from pdudaemon.drivers.apc7921 import APC7921  # pylint: disable=W0611
 from pdudaemon.drivers.cleware import ClewareUsbSwitch4
+from pdudaemon.drivers.conrad197720 import Conrad197720
 from pdudaemon.drivers.ubiquity import Ubiquity3Port  # pylint: disable=W0611
 from pdudaemon.drivers.ubiquity import Ubiquity6Port  # pylint: disable=W0611
 from pdudaemon.drivers.ubiquity import Ubiquity8Port  # pylint: disable=W0611
