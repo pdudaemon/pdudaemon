@@ -37,7 +37,7 @@ YKUSH3_PID = 0xf11b
 
 class YkushBase(PDUDriver):
     connection = None
-    ykush_pid = None
+    ykush_pid = None  # type: int
     port_count = 0
 
     def __init__(self, hostname, settings):

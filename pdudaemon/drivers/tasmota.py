@@ -32,7 +32,7 @@ log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 
 
 class TasmotaBase(PDUDriver):
-    port_count = None
+    port_count = None  # type: int
 
     def __init__(self, hostname, settings):
         self.hostname = hostname

@@ -31,7 +31,7 @@ from pdudaemon.httplistener import HTTPListener
 from pdudaemon.pdurunner import PDURunner
 from pdudaemon.drivers.driver import PDUDriver
 
-assert PDUDriver, "Imported for user convenience."
+assert PDUDriver, "Imported for user convenience." # type: ignore[truthy-function]
 
 ###########
 # Constants
