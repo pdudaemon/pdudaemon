@@ -69,7 +69,7 @@ class Conrad197720(PDUDriver):
     https://www.conrad.com/p/conrad-components-197730-relay-card-component-12-v-dc-197730
 
     Up to 255 relay cards can be used on one serial port
-    The difference between model 197720 and model 197730 is the switchting power of the relays
+    The difference between model 197720 and model 197730 is the switching power of the relays
     The protocol is the same for both card types
     """
     def __init__(self, hostname, settings):
@@ -162,7 +162,7 @@ class Conrad197720(PDUDriver):
         """Private function to check the XOR checksum of the received frame.
 
         :param self: The object itself
-        :param data: The array holding the received data bytes, lenght must be a multiple of FRAME_SIZE
+        :param data: The array holding the received data bytes, length must be a multiple of FRAME_SIZE
         :return: True, if checksum(s) match
         :rtype: boolean
         """

@@ -54,7 +54,7 @@ class Netio4(PDUDriver):
         elif command == "off":
             self.connection.send("port %s 0\r" % port_number)
         else:
-            log.error("Unkown command")
+            log.error("Unknown command")
 
         self.connection.expect("250 OK")
 
