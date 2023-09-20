@@ -42,17 +42,9 @@ class ESPHomeHTTP(PDUDriver):
         self.username = settings.get("username")
         self.password = settings.get("password")
 
-        self.switch_ids = settings.get("switch_ids")
-        if self.switch_ids is None:
-            raise RuntimeError(
-                "No switch entity ID defined for %s. Provide `switch_ids` configuration entry with a list of switch IDs."
-                % self.hostname
-            )
-        self.port_count = len(self.switch_ids)
-
         super().__init__()
 
-    def port_interaction(self, command, port_number):
+    def port_interaction(self, command, esphome_entity_id):
         esphome_cmd = ""
         if command == "on":
             esphome_cmd = "turn_on"
@@ -60,12 +52,6 @@ class ESPHomeHTTP(PDUDriver):
             esphome_cmd = "turn_off"
         else:
             raise FailedRequestException("Unknown command %s" % (command))
-
-        if int(port_number) > self.port_count or int(port_number) < 1:
-            err = "Port number must be in range 1 - {}".format(self.port_count)
-            log.error(err)
-            raise FailedRequestException(err)
-        esphome_entity_id = self.switch_ids[int(port_number) - 1]
 
         # Build the POST request
         # url should be in the format http://{hostname}/switch/{id}/{cmd}
