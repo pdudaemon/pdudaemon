@@ -52,7 +52,7 @@ class Gude1202(PDUDriver):
         elif command == "off":
             self.connection.send("port %s state set 0\r" % port_number)
         else:
-            log.error("Unkown command")
+            log.error("Unknown command")
 
         self.connection.expect("OK.")
 
