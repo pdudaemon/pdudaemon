@@ -39,9 +39,11 @@ class HIDDevice:
             raise RuntimeError(err)
 
     def __enter__(self):
+        """Open and Return HID Device."""
         return self
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
+        """Close HID Device."""
         self.__dev.close()
 
     def write(self, buff):
