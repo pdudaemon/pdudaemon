@@ -96,7 +96,7 @@ if __name__ == '__main__':
             or not options.pducommand:
         print("Missing option, try -h for help")
         exit(1)
-    if not (options.pducommand in commands):
+    if options.pducommand not in commands:
         print("Unknown pdu command: %s" % options.pducommand)
         exit(1)
 

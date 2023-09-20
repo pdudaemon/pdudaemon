@@ -94,7 +94,7 @@ async def process_request(args, config, daemon):
     if args.hostname not in config['pdus']:
         logger.info("PDU was not found in config")
         return False
-    if not (args.request in ["reboot", "on", "off"]):
+    if args.request not in ["reboot", "on", "off"]:
         logger.info("Unknown request: %s", args.request)
         return False
     runner = daemon.runners[args.hostname]
