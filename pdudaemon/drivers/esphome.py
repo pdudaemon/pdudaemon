@@ -65,7 +65,7 @@ class ESPHomeHTTP(PDUDriver):
             err = "Port number must be in range 1 - {}".format(self.port_count)
             log.error(err)
             raise FailedRequestException(err)
-        esphome_entity_id = self.switch_ids[port_number - 1]
+        esphome_entity_id = self.switch_ids[int(port_number) - 1]
 
         # Build the POST request
         # url should be in the format http://{hostname}/switch/{id}/{cmd}

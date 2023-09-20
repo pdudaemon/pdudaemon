@@ -36,6 +36,7 @@ class ModBusTCP(PDUDriver):
         super().__init__()
 
     def port_interaction(self, command, port_number):
+        port_number = int(port_number)
         self._client.write_coil(address=port_number, value=(command == "on"), slave=self.unit)
 
     def _cleanup(self):
