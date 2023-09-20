@@ -71,7 +71,7 @@ select = [
   "W", # pycodestyle
   "D", # pydocstyle
   "F", # pyflakes
-  "I", # isort
+  # "I", # isort
   # "UP", # pyupgrade
 ]
 ignore = [
