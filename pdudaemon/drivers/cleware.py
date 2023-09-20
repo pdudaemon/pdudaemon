@@ -40,7 +40,7 @@ CLEWARE_NEW_SWITCH_SERIAL = 0x63813
 
 class ClewareBase(PDUDriver):
     """Base class for Cleware USB-Switch drivers."""
-    switch_pid = None
+    switch_pid = None  # type: int
     connection = None
     port_count = 0
 

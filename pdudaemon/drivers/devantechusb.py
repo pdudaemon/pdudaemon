@@ -32,7 +32,7 @@ log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 class DevantechusbBase(PDUDriver):
     connection = None
     port_count = 0
-    supported = []
+    supported = []  # type: list[str]
 
     def __init__(self, hostname, settings):
         self.hostname = hostname
