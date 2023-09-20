@@ -22,10 +22,12 @@
 #  MA 02110-1301, USA.
 
 import logging
-from pdudaemon.drivers.driver import PDUDriver
-from pdudaemon.drivers.hiddevice import HIDDevice
 import os
 import time
+import hid
+from pdudaemon.drivers.driver import PDUDriver
+from pdudaemon.drivers.hiddevice import HIDDevice
+
 
 log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 
