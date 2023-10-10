@@ -1,3 +1,2 @@
 # V-USB HID Relays
 SUBSYSTEM=="usb", ATTRS{idVendor}=="16c0", ATTRS{idProduct}=="05df", MODE="666"
-

@@ -24,7 +24,7 @@ log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 
 
 class NumatoUSB(PDUDriver):
-    """Supports various numato USB relay modules
+    """Supports various numato USB relay modules.
 
     Comes in many variants with similar protocols
 

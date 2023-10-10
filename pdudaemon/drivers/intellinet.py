@@ -33,8 +33,7 @@ __manual__ = "https://s3.amazonaws.com/assets.mhint/downloads/61413/INT_163682_U
 
 
 class Intellinet(PDUDriver):
-    """
-    Intellinet 163682 support
+    """Intellinet 163682 support.
 
     See also https://github.com/01programs/Intellinet_163682_IP_smart_PDU_API
     """

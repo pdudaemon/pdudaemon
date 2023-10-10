@@ -103,8 +103,8 @@ class EnerGenieUSB(PDUDriver):
     # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     def connect(self):
-        """
-        Returns the list of compatible devices.
+        """Returns the list of compatible devices.
+
         @return: device list
         """
         ret = list()
@@ -116,8 +116,8 @@ class EnerGenieUSB(PDUDriver):
         return ret
 
     def getid(self, dev):
-        """
-        Gets the id of a device.
+        """Gets the id of a device.
+
         @return: id
         """
         buf = bytes([0x00, 0x00, 0x00, 0x00, 0x00])
@@ -133,8 +133,8 @@ class EnerGenieUSB(PDUDriver):
         return ret
 
     def switchoff(self, dev, i):
-        """
-        Switches outlet i of the device off.
+        """Switches outlet i of the device off.
+
         @param dev: device
         @param i: outlet
         """
@@ -142,8 +142,8 @@ class EnerGenieUSB(PDUDriver):
         buf = dev.ctrl_transfer(0x21, 0x09, 0x0300 + 3 * i, 0, buf, 500)
 
     def switchon(self, dev, i):
-        """
-        Switches outlet i of the device on.
+        """Switches outlet i of the device on.
+
         @param dev: device
         @param i: outlet
         """

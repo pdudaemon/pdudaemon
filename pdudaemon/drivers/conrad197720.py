@@ -1,7 +1,6 @@
 #!/usr/bin/python3
-"""
-#
-# Copyright 2023 Joachim Schiffer <joachim.schiffer@bosch.com>
+"""#
+# Copyright 2023 Joachim Schiffer <joachim.schiffer@bosch.com>.
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -64,7 +63,7 @@ OPTION_BROADCAST_SEND_AND_BLOCK = 3
 
 
 class Conrad197720(PDUDriver):
-    """Driver for Conrad Components 197720 and 197730 relay card
+    """Driver for Conrad Components 197720 and 197730 relay card.
 
     https://www.conrad.com/p/conrad-components-197720-relay-card-component-12-v-dc-24-v-dc-197720
     https://www.conrad.com/p/conrad-components-197730-relay-card-component-12-v-dc-197730
@@ -81,6 +80,7 @@ class Conrad197720(PDUDriver):
         self.__init()
 
     def __del__(self):
+        """Cleanup on delete."""
         if self.com.is_open:
             self.com.close()
 
@@ -89,8 +89,8 @@ class Conrad197720(PDUDriver):
         return drivername == "conrad197720"
 
     def port_interaction(self, command, port_number):
-        """
-        pdudaemon method for port interaction
+        """Pdudaemon method for port interaction.
+
         :param self: The object itself
         :param command: The command string
         :param port_number: The port number 0...n
@@ -99,8 +99,8 @@ class Conrad197720(PDUDriver):
         self.__updateSingle(command, port_number)
 
     def getNumPorts(self):
-        """
-        Return amount of ports available
+        """Return amount of ports available.
+
         :param self: The object itself
         :return: number of ports
         :rtype: int
@@ -108,8 +108,8 @@ class Conrad197720(PDUDriver):
         return self.num_cards * PORTS_PER_CARD
 
     def __txFrame(self, tx_data):
-        """
-        Private function to send an array of data bytes
+        """Private function to send an array of data bytes.
+
         :param self: The object itself
         :param tx_data: The array of data bytes to send
         :raises RuntimeError: tx_data array too big
@@ -124,8 +124,8 @@ class Conrad197720(PDUDriver):
         log.debug(f"sent: {tx_data}")
 
     def __txSingleByte(self):
-        """
-        Private function to send a single byte
+        """Private function to send a single byte.
+
         The card(s) always send and receive frames of FRAME_SIZE bytes,
         if this is not in sync, this function can be used to send single
         bytes, until a correct answer is received. In theory this
@@ -139,8 +139,8 @@ class Conrad197720(PDUDriver):
         log.debug("sent single byte")
 
     def __rxFrame(self, num_frames):
-        """
-        Private function to receive frame(s)
+        """Private function to receive frame(s).
+
         :param self: The object itself
         :param num_frames: The number of frames to wait for (until timeout SERIAL_TIMEOUT occurs)
         :return: The received data
@@ -159,8 +159,8 @@ class Conrad197720(PDUDriver):
         return rx_data
 
     def __checkFrameChecksum(self, data):
-        """
-        Private function to check the XOR checksum of the received frame
+        """Private function to check the XOR checksum of the received frame.
+
         :param self: The object itself
         :param data: The array holding the received data bytes, lenght must be a multiple of FRAME_SIZE
         :return: True, if checksum(s) match
@@ -178,8 +178,8 @@ class Conrad197720(PDUDriver):
         return True
 
     def __sendCommand(self, cmd_byte, addr_byte, data_byte):
-        """
-        Private function to send a command to the card(s) / retry / parse the response
+        """Private function to send a command to the card(s) / retry / parse the response.
+
         :param self: The object itself
         :param cmd_byte: The command to the card(s)
         :param addr_byte: The card address, used when more than one relay card is connected to the same serial port
@@ -222,8 +222,8 @@ class Conrad197720(PDUDriver):
         raise RuntimeError("All retries failed, communication error")
 
     def __checkNumCards(self, data):
-        """
-        Private function to parse the amount of concatenated card at this serial port
+        """Private function to parse the amount of concatenated card at this serial port.
+
         :param self: The object itself
         :return: number of cards
         :rtype: int
@@ -236,8 +236,8 @@ class Conrad197720(PDUDriver):
         return self.num_cards
 
     def __getNumCards(self):
-        """
-        Return amount of cards found after init()
+        """Return amount of cards found after init().
+
         :param self: The object itself
         :return: number of cards
         :rtype: int
@@ -245,8 +245,8 @@ class Conrad197720(PDUDriver):
         return self.num_cards
 
     def __openConnection(self, portname):
-        """
-        Open serial connection
+        """Open serial connection.
+
         :param self: The object itself
         :param portname: The string describing the serial device to open (e.g. "/dev/ttyUSB1" or "/dev/serial/by-id/...")
         """
@@ -260,8 +260,8 @@ class Conrad197720(PDUDriver):
         self.com.open()
 
     def __init(self):
-        """
-        Init all cards
+        """Init all cards.
+
         :param self: The object itself
         :raises RuntimeError: all retries failed, communication error
         """
@@ -275,8 +275,8 @@ class Conrad197720(PDUDriver):
                 self.__sendCommand(CMD_SETOPTION, card_addr, OPTION_BROADCAST_SEND_AND_NO_BLOCK)
 
     def __updateSingle(self, command, port):
-        """
-        Update a single port of a card
+        """Update a single port of a card.
+
         :param self: The object itself
         :param command: The command to execute, "on" "off" or "toggle"
         :param port: The port number 0..n, all ports of all cards are in one range, e.g. port 9 is the second port of the second card
