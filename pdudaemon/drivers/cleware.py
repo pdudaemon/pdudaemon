@@ -39,7 +39,7 @@ CLEWARE_NEW_SWITCH_SERIAL = 0x63813
 
 
 class ClewareBase(PDUDriver):
-    """ Base class for Cleware USB-Switch drivers """
+    """Base class for Cleware USB-Switch drivers."""
     switch_pid = None
     connection = None
     port_count = 0
@@ -52,7 +52,7 @@ class ClewareBase(PDUDriver):
         super().__init__()
 
     def new_switch_serial(self, device_path):
-        """ Find the correct serial for novel Cleware USB Switch devices """
+        """Find the correct serial for novel Cleware USB Switch devices."""
         with HIDDevice(path=device_path) as dev:
             serial = 0
             for i in range(8, 15):
@@ -62,7 +62,7 @@ class ClewareBase(PDUDriver):
         return serial
 
     def device_path(self):
-        """ Search and return the matching device path """
+        """Search and return the matching device path."""
         for dev_dict in hid.enumerate(CLEWARE_VID, self.switch_pid):
             device_path = dev_dict['path']
             serial_compare = int(dev_dict["serial_number"], 16)

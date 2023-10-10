@@ -26,7 +26,7 @@ log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 
 
 class BCU(PDUDriver):
-    """PDUDriver implementation using NXP BCU
+    """PDUDriver implementation using NXP BCU.
 
     The NXP BCU tool can be used for remote power control on some newer NXP
     development boards.
