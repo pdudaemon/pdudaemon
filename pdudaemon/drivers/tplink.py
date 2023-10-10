@@ -117,4 +117,4 @@ class TPLink(PDUDriver):
             }
         }
         log.debug(datadict)
-        res = self.send_command(json.dumps(datadict))
+        self.send_command(json.dumps(datadict))

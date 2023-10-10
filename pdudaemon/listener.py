@@ -48,7 +48,6 @@ def parse_tcp(data):
 
 def parse_http(data, path):
     args = Args()
-    delay = None
     entry = path.lstrip('/').split('/')
     if len(entry) != 3:
         logger.info("Request path was invalid: %s", entry)
