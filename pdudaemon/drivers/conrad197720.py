@@ -166,7 +166,6 @@ class Conrad197720(PDUDriver):
         :return: True, if checksum(s) match
         :rtype: boolean
         """
-        recv = ""
         if len(data) % FRAME_SIZE != 0 or len(data) == 0:
             return False
         for i in range(0, int(len(data) / FRAME_SIZE)):
