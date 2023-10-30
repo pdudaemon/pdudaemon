@@ -6,7 +6,7 @@ Most PDUs have a very low power microprocessor, or low quality software, which c
 #### Standardising
 Every PDU manufacturer has a different way of controlling their PDUs. Though many support SNMP, there's still no single simple way to communicate with all PDUs if you have a mix of brands.
 ## Supported devices list
-APC, Devantech and ACME are well supported, however there is no official list yet. The [strategies.py](https://github.com/pdudaemon/pdudaemon/blob/master/pdudaemon/drivers/strategies.py) file is a good place to see all the current drivers.
+APC, Devantech and ACME are well supported, however there is no official list yet. The [strategies.py](https://github.com/pdudaemon/pdudaemon/blob/main/pdudaemon/drivers/strategies.py) file is a good place to see all the current drivers.
 ## Installing
 Debian packages are on the way, hopefully.
 For now, make sure the requirements are met and then:
@@ -18,7 +18,7 @@ There is an official Docker container updated from tip:
 $ docker pull pdudaemon/pdudaemon:latest
 $ vi pdudaemon.conf
 ```
-To create a config file, use [share/pdudaemon.conf](https://github.com/pdudaemon/pdudaemon/blob/master/pdudaemon/share/pdudaemon.conf) as a base, then mount your config file on top of the default:
+To create a config file, use [share/pdudaemon.conf](https://github.com/pdudaemon/pdudaemon/blob/main/pdudaemon/share/pdudaemon.conf) as a base, then mount your config file on top of the default:
 ```
 $ docker run -v `pwd`/pdudaemon.conf:/config/pdudaemon.conf pdudaemon/pdudaemon:latest
 ```
@@ -34,7 +34,7 @@ $ docker run --rm -it -e http_proxy=$http_proxy -e https_proxy=$https_proxy -e N
 ```
 
 ## Config file
-An example configuration file can be found [here](https://github.com/pdudaemon/pdudaemon/blob/master/share/pdudaemon.conf).
+An example configuration file can be found [here](https://github.com/pdudaemon/pdudaemon/blob/main/share/pdudaemon.conf).
 The section `daemon` is pretty self explanatory. The interesting part is the `pdus` section, where
 all managed PDUs are listed and configured. For example:
 
@@ -83,7 +83,7 @@ An HTTP request URL has the following syntax:
       - **off**: power off
       - **reboot**: reboot
     - query-string can have 3 parameters (same as pduclient, see below)
-      - **hostname**: the PDU hostname or IP address used in the [configuration file](https://github.com/pdudaemon/pdudaemon/blob/master/share/pdudaemon.conf) (e.g.: "192.168.10.2")
+      - **hostname**: the PDU hostname or IP address used in the [configuration file](https://github.com/pdudaemon/pdudaemon/blob/main/share/pdudaemon.conf) (e.g.: "192.168.10.2")
       - **port**: the PDU port number
       - **delay**: delay between power off and on during reboot (optional, by default 5 seconds)
 
@@ -131,9 +131,9 @@ and is by default 5 seconds.
 ## Adding drivers
 Drivers are implemented children of the "PDUDriver" class and many example
 implementations can be found inside the
-[drivers](https://github.com/pdudaemon/pdudaemon/tree/master/pdudaemon/drivers)
+[drivers](https://github.com/pdudaemon/pdudaemon/tree/main/pdudaemon/drivers)
 directory.
-Any new driver classes should be added to [strategies.py](https://github.com/pdudaemon/pdudaemon/blob/master/pdudaemon/drivers/strategies.py).
+Any new driver classes should be added to [strategies.py](https://github.com/pdudaemon/pdudaemon/blob/main/pdudaemon/drivers/strategies.py).
 
 External implementation of PDUDriver can also be registered using the python
 entry_points mechanism. For example add the following to your setup.cfg:
