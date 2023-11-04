@@ -29,5 +29,5 @@ ADD share/pdudaemon.conf /config/
 WORKDIR /pdudaemon
 COPY . .
 RUN pip3 install --user pycodestyle==2.9.1
-RUN python3 ./setup.py install
+RUN pip3 install .
 CMD ["/usr/bin/supervisord", "-c", "/pdudaemon/share/supervisord.conf"]

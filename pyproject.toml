@@ -1,0 +1,60 @@
+[project]
+name = "pdudaemon"
+version = "0.1"
+description = "Control and Queueing daemon for PDUs"
+maintainers = [
+  { name = "Matt Hart", email = "matt@mattface.org" },
+]
+readme = "README.md"
+license = { text = "GPL-2+" }
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3.4",
+    "Programming Language :: Python :: 3.5",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Communications",
+    "Topic :: Software Development :: Testing",
+    "Topic :: System :: Networking",
+]
+requires-python = ">= 3.4"
+dependencies = [
+    "aiohttp",
+    "requests",
+    "pexpect",
+    "systemd_python",
+    "paramiko",
+    "pyserial",
+    "hidapi",
+    "pysnmp",
+    "pyasn1",
+    "pyusb",
+    "pymodbus",
+]
+
+[tool.setuptools]
+packages = [
+    "pdudaemon",
+    "pdudaemon.drivers",
+]
+
+[project.urls]
+Homepage = "https://github.com/pdudaemon/pdudaemon.git"
+
+[project.entry-points.console_scripts]
+pdudaemon = "pdudaemon:main"
+
+[build-system]
+requires = [
+    "setuptools>=61.0"
+]
+build-backend = "setuptools.build_meta"
