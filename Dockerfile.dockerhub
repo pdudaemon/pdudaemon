@@ -28,7 +28,6 @@ snmp
 ADD share/pdudaemon.conf /config/
 WORKDIR /pdudaemon
 COPY . .
-RUN pip3 install --user -r ./requirements.txt
 RUN pip3 install --user pycodestyle==2.9.1
 RUN python3 ./setup.py install
 CMD ["/usr/bin/supervisord", "-c", "/pdudaemon/share/supervisord.conf"]
