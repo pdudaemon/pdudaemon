@@ -56,6 +56,7 @@ setup(
         ]
     },
     install_requires=[
+        "aiohttp",
         "requests",
         "pexpect",
         "systemd_python",
@@ -64,7 +65,8 @@ setup(
         "hidapi",
         "pysnmp",
         "pyasn1",
-        "pyusb"
+        "pyusb",
+        "pymodbus",
     ],
     extras_require={
         'test': [
