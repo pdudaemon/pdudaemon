@@ -41,6 +41,12 @@ dependencies = [
     "pymodbus",
 ]
 
+[project.optional-dependencies]
+test = [
+    "pytest >= 4.6",
+    "pytest-mock",
+]
+
 [tool.setuptools]
 packages = [
     "pdudaemon",
