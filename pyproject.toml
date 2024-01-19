@@ -56,7 +56,7 @@ packages = [
 [project.urls]
 Homepage = "https://github.com/pdudaemon/pdudaemon.git"
 
-[project.entry-points.console_scripts]
+[project.scripts]
 pdudaemon = "pdudaemon:main"
 
 [build-system]
