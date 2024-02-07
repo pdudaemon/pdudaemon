@@ -74,6 +74,7 @@ from pdudaemon.drivers.ipower import LindyIPowerClassic8
 from pdudaemon.drivers.modbustcp import ModBusTCP
 from pdudaemon.drivers.gude1202 import Gude1202
 from pdudaemon.drivers.netio4 import Netio4
+from pdudaemon.drivers.cyberpower81001 import Cyberpower81001
 
 __all__ = [
     ACME.__name__,
@@ -132,4 +133,5 @@ __all__ = [
     ModBusTCP.__name__,
     Gude1202.__name__,
     Netio4.__name__,
+    Cyberpower81001.__name__,
 ]
