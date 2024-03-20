@@ -1,6 +1,5 @@
 [project]
 name = "pdudaemon"
-version = "0.1"
 description = "Control and Queueing daemon for PDUs"
 maintainers = [
   { name = "Matt Hart", email = "matt@mattface.org" },
@@ -40,6 +39,7 @@ dependencies = [
     "pyusb",
     "pymodbus",
 ]
+dynamic = ["version"] # via setuptools_scm
 
 [project.optional-dependencies]
 test = [
@@ -53,6 +53,9 @@ packages = [
     "pdudaemon.drivers",
 ]
 
+[tool.setuptools_scm]
+local_scheme = "no-local-version"
+
 [project.urls]
 Homepage = "https://github.com/pdudaemon/pdudaemon.git"
 
@@ -61,7 +64,8 @@ pdudaemon = "pdudaemon:main"
 
 [build-system]
 requires = [
-    "setuptools>=61.0"
+    "setuptools>=61.0",
+    "setuptools_scm[toml]",
 ]
 build-backend = "setuptools.build_meta"
 
