@@ -12,6 +12,7 @@ ENV PIPX_DEFAULT_PYTHON ${PYTHON}
 RUN apt-get update && apt-get install -y \
 curl \
 cython3 \
+git \
 ipmitool \
 libffi-dev \
 libhidapi-dev \
@@ -33,6 +34,8 @@ snmp
 
 RUN apt-get update && apt-get install -y \
   ${PYTHON}-venv ${PYTHON}-dev
+
+RUN git config --global --add safe.directory '*'
 
 ADD share/pdudaemon.conf /config/
 WORKDIR /pdudaemon
