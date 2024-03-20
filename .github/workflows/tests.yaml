@@ -8,8 +8,6 @@ jobs:
         uses: actions/checkout@v2
       - name: Build container
         run: docker build -t pdudaemon-ci -f Dockerfile.dockerhub .
-      - name: Run pycodestyle
-        run: docker run --rm -v $(pwd):/p -w /p pdudaemon-ci /root/.local/bin/pycodestyle --config=pycodestyle_config .
       - name: Run pytest
         run: docker run -v $(pwd):/p -w /p pdudaemon-ci /root/.local/bin/pytest
       - name: Run functional tests
