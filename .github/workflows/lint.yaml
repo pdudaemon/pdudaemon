@@ -1,5 +1,11 @@
 name: Run lint
-on: [push, workflow_dispatch, pull_request]
+on:
+  push:
+    branches-ignore:
+      - "gh-readonly-queue/**"
+  workflow_dispatch:
+  pull_request:
+  merge_group:
 jobs:
   pre-commit-lint:
     runs-on: ubuntu-latest
