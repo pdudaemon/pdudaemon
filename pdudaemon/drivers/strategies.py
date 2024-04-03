@@ -18,6 +18,8 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 
+import logging
+import os
 from pdudaemon.drivers.acme import ACME
 from pdudaemon.drivers.anelnetpwrctrl import AnelNETPwrCtrlHOME
 from pdudaemon.drivers.anelnetpwrctrl import AnelNETPwrCtrlADV
@@ -61,7 +63,6 @@ from pdudaemon.drivers.tasmota import BrennenstuhlWSPL01Tasmota
 from pdudaemon.drivers.egpms import EgPMS
 from pdudaemon.drivers.ykush import YkushXS
 from pdudaemon.drivers.ykush import Ykush
-from pdudaemon.drivers.snmp import SNMP
 from pdudaemon.drivers.energenieusb import EnerGenieUSB
 from pdudaemon.drivers.bcu import BCU
 from pdudaemon.drivers.vusbhid import VUSBHID
@@ -120,7 +121,6 @@ __all__ = [
     EgPMS.__name__,
     YkushXS.__name__,
     Ykush.__name__,
-    SNMP.__name__,
     EnerGenieUSB.__name__,
     BCU.__name__,
     VUSBHID.__name__,
@@ -135,3 +135,10 @@ __all__ = [
     Netio4.__name__,
     Cyberpower81001.__name__,
 ]
+
+log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
+try:
+    from pdudaemon.drivers.snmp import SNMP
+    __all__.append(SNMP.__name__)
+except ModuleNotFoundError:
+    log.warning("disabling snmp drivers due to missing modules")
