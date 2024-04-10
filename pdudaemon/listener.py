@@ -18,8 +18,57 @@
 #  MA 02110-1301, USA.
 
 import asyncio
+import collections
+import contextlib
+import enum
+import json
 import logging
+
+import aiohttp.web
+
+
+# for example nginx's "proxy_read_timeout" defaults to 60 seconds
+POLLING_KEEPALIVE_PERIOD_SECONDS = 50
+
+
 logger = logging.getLogger('pdud.listener')
+
+
+class PortEvent(collections.namedtuple("PortEvent", ("port", "state"))):
+
+    def serialize(self):
+        return {
+            "port": str(self.port),
+            "is_powered": self.state == PortState.ON,
+        }
+
+
+class PortState(enum.Enum):
+    ON = "on"
+    OFF = "off"
+
+
+class EventCollector:
+
+    def __init__(self):
+        self._listener_queues = []
+
+    @contextlib.contextmanager
+    def get_listener(self) -> asyncio.Queue:
+        listener_queue = asyncio.Queue()
+        self._listener_queues.append(listener_queue)
+        try:
+            yield listener_queue
+        finally:
+            self._listener_queues.remove(listener_queue)
+
+    async def notify(self, port_event: PortEvent) -> None:
+        for queue in list(self._listener_queues):
+            await queue.put(port_event)
+
+    async def cleanup(self):
+        # listeners are supposed to treat a None as a signal for stopping
+        await self.notify(None)
 
 
 class Args(object):
@@ -64,7 +113,7 @@ def parse_http(data, path):
     return args
 
 
-async def process_request(args, config, daemon):
+async def process_request(args, config, daemon, request, event_collector: EventCollector):
     if args.request in ["on", "off"] and args.delay is not None:
         logger.warn("delay parameter is deprecated for on/off commands")
     if args.delay is not None:
@@ -76,6 +125,26 @@ async def process_request(args, config, daemon):
             args.delay = 5
         else:
             args.delay = 0
+    if args.request == "subscribe":
+        response = aiohttp.web.StreamResponse()
+        await response.prepare(request)
+        with event_collector.get_listener() as listener:
+            while True:
+                try:
+                    event = await asyncio.wait_for(
+                        listener.get(), timeout=POLLING_KEEPALIVE_PERIOD_SECONDS
+                    )
+                except asyncio.TimeoutError:
+                    # We should send a bit of data from time to time in order to prevent
+                    # proxy servers from killing our connection.
+                    data = {}
+                else:
+                    if event is None:
+                        # the collector signals, that we should stop listening
+                        break
+                    data = event.serialize()
+                await response.write(json.dumps(data).encode() + b'\n')
+        await response.write_eof()
     if args.alias:
         if args.hostname or args.port:
             logging.error("Trying to use and alias and also a hostname/port")
@@ -99,11 +168,14 @@ async def process_request(args, config, daemon):
     runner = daemon.runners[args.hostname]
     if args.request == "reboot":
         logger.debug("reboot requested, submitting off/on")
-        await runner.do_job_async(args.port, "off")
+        await event_collector.notify(PortEvent(int(args.port), PortState.OFF))
+        await runner.do_job_async(int(args.port), "off")
         await asyncio.sleep(int(args.delay))
-        await runner.do_job_async(args.port, "on")
+        await event_collector.notify(PortEvent(int(args.port), PortState.ON))
+        await runner.do_job_async(int(args.port), "on")
         return True
     else:
         await asyncio.sleep(int(args.delay))
-        await runner.do_job_async(args.port, args.request)
+        await event_collector.notify(PortEvent(int(args.port), PortState.ON if args.request == "on" else PortState.OFF))
+        await runner.do_job_async(int(args.port), args.request)
         return True
