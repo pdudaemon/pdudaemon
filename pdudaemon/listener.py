@@ -97,13 +97,19 @@ async def process_request(args, config, daemon):
         logger.info("Unknown request: %s", args.request)
         return False
     runner = daemon.runners[args.hostname]
+
     if args.request == "reboot":
         logger.debug("reboot requested, submitting off/on")
-        await runner.do_job_async(args.port, "off")
+
+        # do_job_async returns False on error & None on success
+        # TODO: Properly rework do_job_async to bubble up errors
+        if await runner.do_job_async(args.port, "off") is False:
+            return False
+
         await asyncio.sleep(int(args.delay))
-        await runner.do_job_async(args.port, "on")
-        return True
+
+        return await runner.do_job_async(args.port, "on") is None
     else:
         await asyncio.sleep(int(args.delay))
-        await runner.do_job_async(args.port, args.request)
-        return True
+
+        return await runner.do_job_async(args.port, args.request) is None
