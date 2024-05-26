@@ -76,6 +76,7 @@ from pdudaemon.drivers.modbustcp import ModBusTCP
 from pdudaemon.drivers.gude1202 import Gude1202
 from pdudaemon.drivers.netio4 import Netio4
 from pdudaemon.drivers.cyberpower81001 import Cyberpower81001
+from pdudaemon.drivers.homeassistant import HomeAssistantHTTP
 
 __all__ = [
     ACME.__name__,
@@ -134,6 +135,7 @@ __all__ = [
     Gude1202.__name__,
     Netio4.__name__,
     Cyberpower81001.__name__,
+    HomeAssistantHTTP.__name__,
 ]
 
 log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
