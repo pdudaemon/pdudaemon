@@ -64,8 +64,9 @@ class TCPListener:
             data = data.decode('utf-8')
             data = data.strip()
             try:
-                fut = loop.run_in_executor(None, socket.gethostbyaddr, request_ip)
-                request_host = (await asyncio.wait_for(fut, timeout=2))[0]
+                request_host = await asyncio.wait_for(
+                        loop.run_in_executor(None, socket.gethostbyaddr, request_ip),
+                        timeout=2)[0]
             except (socket.herror, asyncio.TimeoutError):
                 request_host = request_ip
             logger.info("Received a request from %s: '%s'", request_host, data)
