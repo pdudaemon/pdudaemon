@@ -23,6 +23,9 @@ import pdudaemon.listener as listener
 
 from aiohttp import web
 
+from .listener import EventCollector
+
+
 logger = logging.getLogger('pdud.http')
 
 
@@ -38,8 +41,10 @@ class HTTPListener:
             web.get('/power/control/on', self.handle),
             web.get('/power/control/off', self.handle),
             web.get('/power/control/reboot', self.handle),
+            web.get('/power/control/subscribe', self.handle),
         ])
         self.apprunner = None
+        self.event_collector = EventCollector()
 
     async def start(self):
         logger.info("Starting the HTTP server")
@@ -52,6 +57,9 @@ class HTTPListener:
         logger.info("Listening on %s:%s", listen_host, listen_port)
 
     async def shutdown(self):
+        if self.event_collector:
+            await self.event_collector.cleanup()
+        self.event_collector = None
         if self.apprunner:
             await self.apprunner.cleanup()
         self.apprunner = None
@@ -60,13 +68,15 @@ class HTTPListener:
         logger.info("Handling HTTP request from %s: %s", request.remote, request.path_qs)
         data = urlparse.parse_qs(urlparse.urlparse(request.path_qs).query)
         path = urlparse.urlparse(request.path_qs).path
-        res = await self.insert_request(data, path)
+        res = await self.insert_request(data, path, request)
         if res:
             return web.Response(status=200, text="OK - accepted request\n")
         else:
             return web.Response(status=500, text="Invalid request\n")
 
-    async def insert_request(self, data, path):
+    async def insert_request(self, data, path, request):
         args = listener.parse_http(data, path)
         if args:
-            return await listener.process_request(args, self.config, self.daemon)
+            return await listener.process_request(
+                args, self.config, self.daemon, request, self.event_collector
+            )
