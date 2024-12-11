@@ -78,12 +78,12 @@ async def process_request(args, config, daemon):
             args.delay = 0
     if args.alias:
         if args.hostname or args.port:
-            logging.error("Trying to use and alias and also a hostname/port")
+            logger.error("Trying to use and alias and also a hostname/port")
             return False
         # Using alias support, get all pdu info from alias
         alias_settings = (config.get('aliases', {})).get(args.alias, False)
         if not alias_settings:
-            logging.error("Alias requested but not found")
+            logger.error("Alias requested but not found")
             return False
         args.hostname = config["aliases"][args.alias]["hostname"]
         args.port = config["aliases"][args.alias]["port"]
