@@ -2,6 +2,10 @@ http 2 off
 http 2 on
 httpalias 1 off
 httpalias 1 on
+httpalias 1 off
+httpalias 1 on
+drivealias 2 off
+drivealias 2 on
 tcp 3 off
 tcp 3 on
 drive 4 off

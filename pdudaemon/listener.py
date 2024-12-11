@@ -27,6 +27,8 @@ class Args(object):
     alias = None
     request = None
     port = None
+    delay = None
+    group = None
     pass
 
 
@@ -58,6 +60,7 @@ def parse_http(data, path):
     # everything comes back from the http library in a 1 sized list
     args.alias = data.get('alias', [None])[0]
     args.hostname = data.get('hostname', [None])[0]
+    args.group = data.get('group', [None])[0]
     args.port = data.get('port', [None])[0]
     args.request = entry[2]
     args.delay = data.get('delay', [None])[0]
@@ -87,6 +90,26 @@ async def process_request(args, config, daemon):
             return False
         args.hostname = config["aliases"][args.alias]["hostname"]
         args.port = config["aliases"][args.alias]["port"]
+    if args.group:
+        if args.hostname or args.port or args.alias:
+            logger.error("Trying to use hostname or alias or port, when also using group")
+            return False
+        aliases_in_group = []
+        for alias in config.get('aliases', {}).keys():
+            if config["aliases"][alias].get('group', False):
+                aliases_in_group.append(alias)
+        if aliases_in_group:
+            # add job for all the aliases
+            for alias in aliases_in_group:
+                new_args = Args()
+                new_args.request = args.request
+                new_args.delay = args.delay
+                new_args.hostname = config["aliases"][alias]["hostname"]
+                new_args.port = config["aliases"][alias]["port"]
+                await process_request(new_args, config, daemon)
+            return True
+        else:
+            logger.error("No aliases match the requested group")
     if not args.hostname or not args.port or not args.request:
         logger.info("One of hostname,port,request was not set")
         return False
