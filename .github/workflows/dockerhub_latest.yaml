@@ -1,6 +1,7 @@
-name: Publish Docker image
+---
+name: Publish latest Docker image
 
-on:
+"on":
   push:
     branches: ["main"]
 
