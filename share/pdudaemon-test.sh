@@ -35,6 +35,10 @@ sleep 10
 curl -q "http://localhost:16421/power/control/reboot?alias=aliastesthttp01&delay=5" &> /dev/null
 sleep 10
 
+# Test alias group HTTP request
+curl -q "http://localhost:16421/power/control/reboot?group=testgroup&delay=1" &> /dev/null
+sleep 10
+
 kill $PDU_PID
 sleep 10
 
