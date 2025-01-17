@@ -104,10 +104,12 @@ class TPLink(PDUDriver):
         context = None
         if command == "on":
             state = 1
-        if self.childinfo:
-            if int(port_number) > len(self.childinfo):
-                return (False)
-            context = self.get_context(port_number)
+        if not self.childinfo:
+            log.error(f"Device not yet initialised, can't send command")
+            return (False)
+        if int(port_number) > len(self.childinfo):
+            return (False)
+        context = self.get_context(port_number)
         datadict = {
             'context': context,
             'system': {
