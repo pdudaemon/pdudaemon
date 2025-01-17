@@ -92,24 +92,36 @@ class TPLink(PDUDriver):
         except socket.error:
             log.error(f"Could not connect to host {self.hostname}:9999")
 
-    def get_context(self, port_number):
+    # "port" is a string. We can match that against the alias or if it can
+    # be converted to an integer treat it as the port index. We need to send the port ID.
+    def get_id(self, port):
         for child in self.childinfo:
-            child_port = (int(child['alias'].split("_")[-1]) + 1)
-            if int(port_number) == int(child_port):
+            if child['alias'] == port:
                 return ({"child_ids": [child["id"]]})
-        return ({})
 
-    def port_interaction(self, command, port_number):
+        if port.isdigit():
+            if int(port) < 1 or int(port) > len(self.childinfo):
+                return False
+
+            return ({"child_ids": [self.childinfo[int(port) - 1]["id"]]})
+
+        return False
+
+    def port_interaction(self, command, port):
         state = 0
         context = None
         if command == "on":
             state = 1
+
         if not self.childinfo:
-            log.error(f"Device not yet initialised, can't send command")
-            return (False)
-        if int(port_number) > len(self.childinfo):
-            return (False)
-        context = self.get_context(port_number)
+            log.error("Device not yet initialised, can't send command.")
+            raise RuntimeError("Device not yet initialised, can't send command.")
+
+        context = self.get_id(port)
+        if not context:
+            log.error("Invalid port index or non-existent alias.")
+            raise RuntimeError("Invalid port index or non-existent alias.")
+
         datadict = {
             'context': context,
             'system': {
