@@ -145,5 +145,3 @@ pdudaemon.driver =
 
 ## Why can't PDUDaemon do $REQUIREMENT?
 Patches welcome, as long as it keeps the system simple and lightweight.
-## Contact
-#pdudaemon on Freenode
