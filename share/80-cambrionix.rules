@@ -1,0 +1,1 @@
+KERNEL=="ttyUSB[0-9]*", ATTRS{idVendor}=="0424", ATTRS{idProduct}=="2514", ATTRS{product}=="PDSync-4", GROUP="pdudaemon"
