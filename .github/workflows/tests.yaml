@@ -31,31 +31,11 @@ jobs:
         run: docker run -v $(pwd):/p -w /p pdudaemon-ci /root/.local/share/pipx/venvs/pdudaemon/bin/pytest
       - name: Run functional tests
         run: docker run -v $(pwd):/p -w /p pdudaemon-ci sh -c "./share/pdudaemon-test.sh"
-  tests-trixie-python312:
-    runs-on: ubuntu-latest
-    steps:
-      - name: check out repository code
-        uses: actions/checkout@v4
-      - name: Build container
-        run: >
-          docker build
-          --build-arg DEBIAN_VERSION=trixie
-          --build-arg PYTHON=python3.12
-          -t pdudaemon-ci -f Dockerfile.dockerhub
-          .
-      - name: Run pytest
-        run: docker run -v $(pwd):/p -w /p pdudaemon-ci /root/.local/share/pipx/venvs/pdudaemon/bin/pytest
-      - name:
-        # disable snmp as pysnmp is incompatible with python3.12
-        run: sed -i 's,"snmpv.","localcmdline",g' share/pdudaemon.conf
-      - name: Run functional tests
-        run: docker run -v $(pwd):/p -w /p pdudaemon-ci sh -c "./share/pdudaemon-test.sh"
 
   build:
     needs:
       - tests
       - tests-trixie
-      - tests-trixie-python312
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
