@@ -23,6 +23,7 @@ libusb-1.0-0-dev \
 pkg-config \
 psmisc \
 pipx \
+python3-packaging \
 python3-pycodestyle \
 python3-setuptools \
 python3-usb \

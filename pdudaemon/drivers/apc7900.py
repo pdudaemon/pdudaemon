@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 #  Copyright 2017 Matt Hart <matt@mattface.org>
-#  Copyright 2020 Nobuhiro Iwamatsu <iwamatsu@nigauri.org>
+#  Copyright 2020,2025 Nobuhiro Iwamatsu <iwamatsu@nigauri.org>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -21,6 +21,8 @@
 import logging
 from pdudaemon.drivers.apc7952 import APC7952
 import os
+from packaging import version
+
 log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 
 
@@ -35,15 +37,31 @@ class APC7900(APC7952):
     def _port_interaction(self, command, port_number):
         # make sure in main menu here
         self._back_to_main()
+
+        log.debug(f"Firmware version to use: {self.firmware_version}")
+
         self.connection.send("\r")
         self.connection.expect("1- Device Manager")
         self.connection.expect("> ")
         log.debug("Entering Device Manager")
         self.connection.send("1\r")
         self.connection.expect("------- Device Manager")
-        self.connection.send("3\r")
-        self.connection.expect("3- Outlet Control/Configuration")
-        self.connection.expect("> ")
+
+        if version.parse("3.7.3") <= version.parse(self.firmware_version):
+            log.debug("Entering Outlet Management")
+            self.connection.send("2\r")
+            self.connection.expect("------- Outlet Management")
+            self.connection.expect("> ")
+
+            log.debug("Entering Outlet Control/Configuration")
+            self.connection.send("1\r")
+            self.connection.expect("------- Outlet Control/Configuration")
+            self.connection.expect("> ")
+        else:
+            self.connection.send("3\r")
+            self.connection.expect("3- Outlet Control/Configuration")
+            self.connection.expect("> ")
+
         self._enter_outlet(port_number, False)
         self.connection.expect("1- Control Outlet")
         self.connection.send("1\r")
