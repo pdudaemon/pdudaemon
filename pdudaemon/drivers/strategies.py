@@ -75,6 +75,7 @@ from pdudaemon.drivers.ipower import LindyIPowerClassic8
 from pdudaemon.drivers.modbustcp import ModBusTCP
 from pdudaemon.drivers.gude1202 import Gude1202
 from pdudaemon.drivers.netio4 import Netio4
+from pdudaemon.drivers.netiojson import NetioJson
 from pdudaemon.drivers.cyberpower81001 import Cyberpower81001
 from pdudaemon.drivers.homeassistant import HomeAssistantHTTP
 from pdudaemon.drivers.ubus import Ubus
@@ -135,6 +136,7 @@ __all__ = [
     ModBusTCP.__name__,
     Gude1202.__name__,
     Netio4.__name__,
+    NetioJson.__name__,
     Cyberpower81001.__name__,
     HomeAssistantHTTP.__name__,
     Ubus.__name__,
