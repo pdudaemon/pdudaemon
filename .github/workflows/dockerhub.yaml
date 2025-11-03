@@ -1,8 +1,11 @@
-name: Publish Docker image
+---
+name: Publish latest Docker image
 
 on:
   push:
     branches: ["main"]
+    tags:
+      - '*'
 
 jobs:
   push_to_registry:
@@ -25,3 +28,12 @@ jobs:
           file: ./Dockerfile.dockerhub
           push: true
           tags: pdudaemon/pdudaemon:latest
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        with:
+          context: .
+          file: ./Dockerfile.dockerhub
+          push: true
+          tags: pdudaemon/pdudaemon:${{ github.ref_name }}
