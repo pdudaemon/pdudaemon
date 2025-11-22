@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 import pytest
-from unittest.mock import Mock, patch, call
+from unittest.mock import Mock, patch
 from pdudaemon.drivers.cyberpower41001 import Cyberpower41001
 
 
@@ -82,9 +82,9 @@ def test_port_interaction_unknown_command(mock_logger, mock_subprocess, pdu):
     """Test handling of unknown commands."""
     mock_log = Mock()
     mock_logger.return_value = mock_log
-    
+
     pdu._port_interaction("unknown", "1")
-    
+
     # Should not call subprocess for unknown commands
     mock_subprocess.assert_not_called()
 
