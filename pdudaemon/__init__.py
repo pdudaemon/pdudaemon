@@ -48,10 +48,10 @@ logger = logging.getLogger('pdud')
 
 
 def setup_logging(options, settings):
-    logger = logging.getLogger("pdud")
     """
     Setup the log handler and the log level
     """
+    log = logging.getLogger("pdud")
     if options.journal:
         from systemd.journal import JournalHandler
         handler = JournalHandler(SYSLOG_IDENTIFIER="pdudaemon")
@@ -63,20 +63,20 @@ def setup_logging(options, settings):
         handler = WatchedFileHandler(options.logfile)
         handler.setFormatter(logging.Formatter(logging_FORMAT))
 
-    logger.addHandler(handler)
+    log.addHandler(handler)
     settings_level = settings.get('daemon', {}).get('logging_level', None)
     if settings_level:
         options.loglevel = settings_level.upper()
     else:
         options.loglevel = options.loglevel.upper()
     if options.loglevel == "DEBUG":
-        logger.setLevel(logging.DEBUG)
+        log.setLevel(logging.DEBUG)
     elif options.loglevel == "INFO":
-        logger.setLevel(logging.INFO)
+        log.setLevel(logging.INFO)
     elif options.loglevel == "WARNING":
-        logger.setLevel(logging.WARNING)
+        log.setLevel(logging.WARNING)
     else:
-        logger.setLevel(logging.ERROR)
+        log.setLevel(logging.ERROR)
 
 
 class PDUDaemon:
