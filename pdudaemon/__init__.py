@@ -175,19 +175,19 @@ async def main_async():
         # Check that the requested PDU has config
         config = settings["pdus"].get(options.drivehostname, False)
         if not config:
-            logging.error("No config section for hostname: {}".format(options.drivehostname))
+            logging.error("No config section for hostname: %s", options.drivehostname)
             sys.exit(1)
 
         runner = PDURunner(config, options.drivehostname, options.driveretries)
         if options.driverequest == "reboot":
-            result = await runner.do_job_async(options.driveport, "off")
+            off_result = await runner.do_job_async(options.driveport, "off")
             await asyncio.sleep(int(options.drivedelay))
-            result = await runner.do_job_async(options.driveport, "on")
+            on_result = await runner.do_job_async(options.driveport, "on")
         else:
-            result = await runner.do_job_async(options.driveport, options.driverequest)
+            on_result = await runner.do_job_async(options.driveport, options.driverequest)
         await runner.shutdown()
         loop.stop()
-        return result
+        return on_result
 
     # Create daemon
     logger.info('PDUDaemon starting up')
@@ -206,11 +206,12 @@ async def main_async():
 
 def main():
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(main_async())
+    exit_code = loop.run_until_complete(main_async())
     try:
         loop.run_forever()
     except KeyboardInterrupt:
         pass
+    return exit_code
 
 
 if __name__ == "__main__":
