@@ -1,4 +1,9 @@
 #!/usr/bin/python3
+"""CyberPower 41001 PDU driver implementation.
+
+This driver provides support for CyberPower 41001 Power Distribution Units
+using SNMP v1 protocol for remote power control.
+"""
 
 #  Copyright 2025
 #  Author Sean van Osnabrugge
@@ -34,6 +39,11 @@ log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 
 
 class Cyberpower41001(LocalBase):
+    """CyberPower 41001 PDU driver using SNMP v1.
+
+    This driver controls CyberPower 41001 PDU outlets using SNMP SET commands
+    with configurable community strings.
+    """
 
     _actions = {
         "1": 1,
@@ -47,12 +57,27 @@ class Cyberpower41001(LocalBase):
     }
 
     def __init__(self, hostname, settings):
+        """Initialize CyberPower 41001 PDU driver.
+
+        Args:
+            hostname: PDU hostname or IP address
+            settings: Configuration dictionary, may contain 'community' key
+        """
         self.hostname = hostname
         self.settings = settings
         self.community = settings.get("community", "private")
+        super().__init__(hostname, settings)
 
     @classmethod
     def accepts(cls, drivername):
+        """Check if this driver accepts the given driver name.
+
+        Args:
+            drivername: The driver name to check
+
+        Returns:
+            bool: True if driver name is 'cyberpower41001', False otherwise
+        """
         if drivername == "cyberpower41001":
             return True
         return False
@@ -61,12 +86,15 @@ class Cyberpower41001(LocalBase):
 
         port_number = int(port_number)
         power_oid = f"SNMPv2-SMI::enterprises.3808.1.1.3.3.3.1.1.4.{port_number}"
-        cmd_base = f"/usr/bin/snmpset -v 1 -c {self.community} {self.hostname} {power_oid} integer"
+        cmd_base = (
+            f"/usr/bin/snmpset -v 1 -c {self.community} {self.hostname} "
+            f"{power_oid} integer"
+        )
 
         if command not in self._actions:
-            log.error(f"Unknown command {command}!")
+            log.error("Unknown command %s!", command)
             return
 
         cmd = f"{cmd_base} {self._actions[command]} >/dev/null"
-        log.debug("running %s" % cmd)
+        log.debug("running %s", cmd)
         subprocess.call(cmd, shell=True)
