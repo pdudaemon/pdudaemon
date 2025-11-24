@@ -37,7 +37,7 @@ dependencies = [
     "pysnmp>=4.4.12, <6",
     "pyasn1<0.6.1",
     "pyusb",
-    "pymodbus",
+    "pymodbus==3.7.4",
 ]
 dynamic = ["version"] # via setuptools_scm
 
