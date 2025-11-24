@@ -72,6 +72,18 @@ class DevantechUSB2(DevantechusbBase):
                  "devantech_USB-RLY82"]
 
 
+# 4 relay devices
+class DevantechUSB4(DevantechusbBase):
+    port_count = 4
+    supported = ["devantech_USB-RLY04"]
+
+
+# 6 relay devices
+class DevantechUSB6(DevantechusbBase):
+    port_count = 6
+    supported = ["devantech_USB-RLY06"]
+
+
 # Various 8 relay devices
 class DevantechUSB8(DevantechusbBase):
     port_count = 8
