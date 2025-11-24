@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Build container
         run: docker build -t pdudaemon-ci -f Dockerfile.dockerhub .
       - name: Run pytest
@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: check out repository code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Build container
         run: docker build --build-arg DEBIAN_VERSION=trixie -t pdudaemon-ci -f Dockerfile.dockerhub .
       - name: Run pytest
@@ -39,7 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           # include tags and full history for setuptools_scm
           fetch-depth: 0
@@ -48,7 +48,7 @@ jobs:
       - name: Build package
         run: python -m build
       - name: Upload dist
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: dist
           path: dist/
@@ -61,7 +61,7 @@ jobs:
       id-token: write
     steps:
       - name: Download dist
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: dist
           path: dist/
@@ -78,7 +78,7 @@ jobs:
       id-token: write
     steps:
       - name: Download dist
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: dist
           path: dist/
