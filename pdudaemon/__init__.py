@@ -48,10 +48,10 @@ logger = logging.getLogger('pdud')
 
 
 def setup_logging(options, settings):
-    logger = logging.getLogger("pdud")
     """
     Setup the log handler and the log level
     """
+    log = logging.getLogger("pdud")
     if options.journal:
         from systemd.journal import JournalHandler
         handler = JournalHandler(SYSLOG_IDENTIFIER="pdudaemon")
@@ -63,20 +63,20 @@ def setup_logging(options, settings):
         handler = WatchedFileHandler(options.logfile)
         handler.setFormatter(logging.Formatter(logging_FORMAT))
 
-    logger.addHandler(handler)
+    log.addHandler(handler)
     settings_level = settings.get('daemon', {}).get('logging_level', None)
     if settings_level:
         options.loglevel = settings_level.upper()
     else:
         options.loglevel = options.loglevel.upper()
     if options.loglevel == "DEBUG":
-        logger.setLevel(logging.DEBUG)
+        log.setLevel(logging.DEBUG)
     elif options.loglevel == "INFO":
-        logger.setLevel(logging.INFO)
+        log.setLevel(logging.INFO)
     elif options.loglevel == "WARNING":
-        logger.setLevel(logging.WARNING)
+        log.setLevel(logging.WARNING)
     else:
-        logger.setLevel(logging.ERROR)
+        log.setLevel(logging.ERROR)
 
 
 class PDUDaemon:
@@ -175,19 +175,19 @@ async def main_async():
         # Check that the requested PDU has config
         config = settings["pdus"].get(options.drivehostname, False)
         if not config:
-            logging.error("No config section for hostname: {}".format(options.drivehostname))
+            logging.error("No config section for hostname: %s", options.drivehostname)
             sys.exit(1)
 
         runner = PDURunner(config, options.drivehostname, options.driveretries)
         if options.driverequest == "reboot":
-            result = await runner.do_job_async(options.driveport, "off")
+            off_result = await runner.do_job_async(options.driveport, "off")
             await asyncio.sleep(int(options.drivedelay))
-            result = await runner.do_job_async(options.driveport, "on")
+            on_result = await runner.do_job_async(options.driveport, "on")
         else:
-            result = await runner.do_job_async(options.driveport, options.driverequest)
+            on_result = await runner.do_job_async(options.driveport, options.driverequest)
         await runner.shutdown()
         loop.stop()
-        return result
+        return on_result
 
     # Create daemon
     logger.info('PDUDaemon starting up')
@@ -206,11 +206,12 @@ async def main_async():
 
 def main():
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(main_async())
+    exit_code = loop.run_until_complete(main_async())
     try:
         loop.run_forever()
     except KeyboardInterrupt:
         pass
+    return exit_code
 
 
 if __name__ == "__main__":
