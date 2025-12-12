@@ -89,7 +89,8 @@ class PDUDaemon:
         for hostname in settings["pdus"]:
             config = settings["pdus"][hostname]
             retries = config.get("retries", 5)
-            self.runners[hostname] = PDURunner(config, hostname, retries)
+            retrydelay = config.get("retrydelay", 5)
+            self.runners[hostname] = PDURunner(config, hostname, retries, retrydelay)
 
         # Start the listener
         logger.info("Starting the listener")
@@ -141,6 +142,7 @@ async def main_async():
     drive.add_argument("--drive", action="store_true", default=False)
     drive.add_argument("--request", dest="driverequest", action="store", type=str)
     drive.add_argument("--retries", dest="driveretries", action="store", type=int, default=5)
+    drive.add_argument("--retry-delay", dest="driveretrydelay", action="store", type=int, default=5)
     drive.add_argument("--delay", dest="drivedelay", action="store", type=int, default=5)
     drive.add_argument("--port", dest="driveport", action="store", type=str)
 
@@ -178,7 +180,7 @@ async def main_async():
             logging.error("No config section for hostname: {}".format(options.drivehostname))
             sys.exit(1)
 
-        runner = PDURunner(config, options.drivehostname, options.driveretries)
+        runner = PDURunner(config, options.drivehostname, options.driveretries, options.driveretrydelay)
         if options.driverequest == "reboot":
             result = await runner.do_job_async(options.driveport, "off")
             await asyncio.sleep(int(options.drivedelay))
