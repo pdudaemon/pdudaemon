@@ -31,10 +31,11 @@ assert pdudaemon.drivers.strategies, "Subclasses are iterated to find all driver
 
 class PDURunner:
 
-    def __init__(self, config, hostname, retries):
+    def __init__(self, config, hostname, retries, retrydelay):
         self.config = config
         self.hostname = hostname
         self.retries = retries
+        self.retrydelay = retrydelay
         self.logger = logging.getLogger("pdud.pdu.%s" % hostname)
         self.driver = self.driver_from_hostname(hostname)
         # use single-worker ThreadPoolExecutor to serialize execution
@@ -60,7 +61,7 @@ class PDURunner:
                 self.logger.warn("Failed to execute job: {} {} (attempts left {})".format(port, request, retries - 1))
                 if self.driver:
                     self.driver._bombout()  # pylint: disable=W0212,E1101
-                time.sleep(5)
+                time.sleep(self.retrydelay)
                 retries -= 1
                 continue
         return False
