@@ -27,6 +27,7 @@ classifiers = [
 ]
 requires-python = ">= 3.4"
 dependencies = [
+    "setuptools",
     "aiohttp",
     "requests",
     "pexpect",
