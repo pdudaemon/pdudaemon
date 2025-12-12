@@ -54,9 +54,9 @@ class ESPHomeHTTP(PDUDriver):
             raise FailedRequestException("Unknown command %s" % (command))
 
         # Build the POST request
-        # url should be in the format http://{hostname}/switch/{id}/{cmd}
-        url = "http://{}/switch/{}/{}".format(
-            self.hostname, esphome_entity_id, esphome_cmd
+        # url should be in the format http://{hostname}:{port}/switch/{id}/{cmd}
+        url = "http://{}:{}/switch/{}/{}".format(
+            self.hostname, self.port, esphome_entity_id, esphome_cmd
         )
         log.debug("HTTP POST: {}".format(url))
 
