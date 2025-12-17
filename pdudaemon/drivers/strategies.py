@@ -33,6 +33,7 @@ from pdudaemon.drivers.apc8959 import APC8959
 from pdudaemon.drivers.apc9210 import APC9210
 from pdudaemon.drivers.apc7920 import APC7920
 from pdudaemon.drivers.apc7921 import APC7921
+from pdudaemon.drivers.cambrionix import CambrionixPDSyncC4
 from pdudaemon.drivers.cleware import ClewareUsbSwitch4
 from pdudaemon.drivers.conrad197720 import Conrad197720
 from pdudaemon.drivers.ubiquity import Ubiquity3Port
