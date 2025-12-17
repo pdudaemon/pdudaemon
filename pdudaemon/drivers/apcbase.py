@@ -33,6 +33,7 @@ class APCBase(PDUDriver):
         self.settings = settings
         self.username = settings.get("username", "apc")
         self.password = settings.get("password", "apc")
+        self.firmware_version = settings.get("firmware_version", "0")
         telnetport = settings.get('telnetport', 23)
 
         self.exec_string = "/usr/bin/telnet %s %d" % (hostname, telnetport)
