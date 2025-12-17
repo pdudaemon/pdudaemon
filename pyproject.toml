@@ -36,7 +36,7 @@ dependencies = [
     "pyserial",
     "hidapi",
     "pysnmp>=4.4.12, <6",
-    "pyasn1<0.6.1",
+    "pyasn1<0.6.2",
     "pyusb",
     "pymodbus",
 ]
