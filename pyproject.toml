@@ -12,12 +12,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)",
     "Operating System :: POSIX :: Linux",
-    "Programming Language :: Python :: 3.4",
-    "Programming Language :: Python :: 3.5",
-    "Programming Language :: Python :: 3.6",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3 :: Only",
@@ -25,9 +19,8 @@ classifiers = [
     "Topic :: Software Development :: Testing",
     "Topic :: System :: Networking",
 ]
-requires-python = ">= 3.4"
+requires-python = "> 3.10"
 dependencies = [
-    "setuptools",
     "aiohttp",
     "requests",
     "pexpect",
