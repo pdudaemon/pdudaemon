@@ -24,13 +24,23 @@ log = logging.getLogger("pdud.drivers")
 
 
 def get_named_entry_point(group, name):
-    import pkg_resources
-    eps = list(pkg_resources.iter_entry_points(group, name))
-    if len(eps) > 1:
+    try:
+        from importlib import metadata as importlib_metadata
+    except Exception:
+        import importlib_metadata as importlib_metadata
+
+    # Get all entry points and filter for the requested group/name.
+    eps_obj = importlib_metadata.entry_points()
+    try:
+        matches = list(eps_obj.select(group=group, name=name))
+    except Exception:
+        matches = [ep for ep in eps_obj if getattr(ep, "group", None) == group and ep.name == name]
+
+    if len(matches) > 1:
         raise Exception('Multiple entry points for {} under {}'.format(group, name))
-    if len(eps) == 0:
+    if len(matches) == 0:
         return None
-    return eps[0]
+    return matches[0]
 
 
 class PDUDriver(object):
