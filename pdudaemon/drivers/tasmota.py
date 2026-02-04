@@ -94,3 +94,12 @@ class BrennenstuhlWSPL01Tasmota(TasmotaBase):
         if drivername == "brennenstuhl_wspl01_tasmota":
             return True
         return False
+
+class GenericTasmota(TasmotaBase):
+    def __init__(self, hostname, settings):
+        self.port_count = int(settings.get("port_count", 1))
+        super().__init__(hostname, settings)
+
+    @classmethod
+    def accepts(cls, drivername):
+        return drivername == "tasmota"
