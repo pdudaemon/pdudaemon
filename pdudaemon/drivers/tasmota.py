@@ -35,7 +35,7 @@ class TasmotaBase(PDUDriver):
     port_count = None  # type: int
 
     def __init__(self, hostname, settings):
-        self.hostname = hostname
+        self.hostname = settings.get("ip", hostname)
         self.username = settings.get("username")
         self.password = settings.get("password")
         super().__init__()
