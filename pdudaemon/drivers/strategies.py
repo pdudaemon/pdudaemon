@@ -60,6 +60,7 @@ from pdudaemon.drivers.servertechpro2 import ServerTechPro2
 from pdudaemon.drivers.synaccess import SynNetBooter
 from pdudaemon.drivers.tasmota import SonoffS20Tasmota
 from pdudaemon.drivers.tasmota import BrennenstuhlWSPL01Tasmota
+from pdudaemon.drivers.tasmota import GenericTasmota
 from pdudaemon.drivers.egpms import EgPMS
 from pdudaemon.drivers.ykush import YkushXS
 from pdudaemon.drivers.ykush import Ykush
@@ -122,6 +123,7 @@ __all__ = [
     SynNetBooter.__name__,
     SonoffS20Tasmota.__name__,
     BrennenstuhlWSPL01Tasmota.__name__,
+    GenericTasmota.__name__,
     EgPMS.__name__,
     YkushXS.__name__,
     Ykush.__name__,
