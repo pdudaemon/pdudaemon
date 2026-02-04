@@ -48,9 +48,12 @@ class TasmotaBase(PDUDriver):
 
         params = {
             "cmnd": "Power{} {}".format(port_number, command),
-            "user": self.username,
-            "password": self.password
         }
+
+        if self.username is not None and self.password is not None:
+            params["user"] = self.username
+            params["password"] = self.password
+
         url = "http://{}/cm".format(self.hostname)
         log.debug("HTTP GET: {}".format(url))
         r = requests.get(url, params)
