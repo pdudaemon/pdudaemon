@@ -17,9 +17,13 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 
+import asyncio
 import logging
-from pysnmp.hlapi import setCmd, SnmpEngine, UsmUserData, UdpTransportTarget, ContextData, CommunityData, ObjectType, ObjectIdentity
-import pysnmp.hlapi as pysnmp_api
+from pysnmp.hlapi.v3arch.asyncio import (
+    set_cmd, SnmpEngine, UsmUserData, UdpTransportTarget,
+    ContextData, CommunityData, ObjectType, ObjectIdentity,
+)
+import pysnmp.hlapi.v3arch.asyncio as pysnmp_api
 from pdudaemon.drivers.driver import PDUDriver, FailedRequestException, UnknownCommandException
 import os
 log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
@@ -42,6 +46,7 @@ class SNMP(PDUDriver):
         self.static_ending = settings.get('static_ending', None)
         self.auth_protocol = settings.get('auth_protocol', None)
         self.priv_protocol = settings.get('priv_protocol', None)
+        self.engine = SnmpEngine()
         super(SNMP, self).__init__()
 
     @classmethod
@@ -61,7 +66,10 @@ class SNMP(PDUDriver):
         else:
             raise UnknownCommandException("Unknown command %s." % (command))
 
-        transport = UdpTransportTarget((self.hostname, 161))
+        asyncio.run(self._port_interaction_async(set_bit, port_number))
+
+    async def _port_interaction_async(self, set_bit, port_number):
+        transport = await UdpTransportTarget.create((self.hostname, 161))
 
         if self.inside_number:
             # It is possible to pass 2 or 3 snmp argument values
@@ -74,8 +82,8 @@ class SNMP(PDUDriver):
             indexed_object_list = [self.mib, self.controlpoint, port_number]
 
         objecttype = ObjectType(
-            ObjectIdentity(*indexed_object_list).addAsn1MibSource(
-                'http://mibs.snmplabs.com/asn1/@mib@'), int(set_bit))
+            ObjectIdentity(*indexed_object_list).add_asn1_mib_source(
+                'https://mibs.pysnmp.com/asn1/@mib@'), int(set_bit))
 
         if self.version == 'snmpv3':
             if not self.username:
@@ -91,22 +99,22 @@ class SNMP(PDUDriver):
                 protocols['privProtocol'] = p_protocol
 
             userdata = UsmUserData(self.username, self.authpass, self.privpass, **protocols)
-            errorIndication, errorStatus, errorIndex, varBinds = next(
-                setCmd(SnmpEngine(),
-                       userdata,
-                       transport,
-                       ContextData(),
-                       objecttype)
+            errorIndication, errorStatus, errorIndex, varBinds = await set_cmd(
+                self.engine,
+                userdata,
+                transport,
+                ContextData(),
+                objecttype,
             )
         elif self.version == 'snmpv1':
             if not self.community:
                 raise FailedRequestException("No community set for snmpv1")
-            errorIndication, errorStatus, errorIndex, varBinds = next(
-                setCmd(SnmpEngine(),
-                       CommunityData(self.community),
-                       transport,
-                       ContextData(),
-                       objecttype)
+            errorIndication, errorStatus, errorIndex, varBinds = await set_cmd(
+                self.engine,
+                CommunityData(self.community),
+                transport,
+                ContextData(),
+                objecttype,
             )
         else:
             raise FailedRequestException("Unknown snmp version")
