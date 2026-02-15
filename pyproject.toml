@@ -28,8 +28,8 @@ dependencies = [
     "paramiko",
     "pyserial",
     "hidapi",
-    "pysnmp>=4.4.12, <6",
-    "pyasn1<0.6.1",
+    "pysnmp>=7.1.22",
+    "pyasn1>=0.6.2",
     "pyusb",
     "pymodbus",
 ]
