@@ -38,6 +38,7 @@ dynamic = ["version"] # via setuptools_scm
 [project.optional-dependencies]
 test = [
     "pytest >= 4.6",
+    "pytest-asyncio",
     "pytest-mock",
 ]
 
