@@ -14,6 +14,9 @@ classifiers = [
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: 3 :: Only",
     "Topic :: Communications",
     "Topic :: Software Development :: Testing",
@@ -88,8 +91,8 @@ src = ["pdudaemon", "tests"]
 
 line-length = 88 # Match black
 
-# Minimum Python 3.8.
-target-version = "py38"
+# Minimum Python 3.10.
+target-version = "py310"
 
 [tool.ruff.isort]
 known-first-party = ["pdudaemon", "tests"]
