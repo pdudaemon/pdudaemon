@@ -2,12 +2,12 @@ ARG DEBIAN_VERSION=bookworm
 FROM debian:$DEBIAN_VERSION
 
 ARG HTTP_PROXY
-ENV http_proxy ${HTTP_PROXY}
-ENV https_proxy ${HTTP_PROXY}
+ENV http_proxy=${HTTP_PROXY}
+ENV https_proxy=${HTTP_PROXY}
 
 ARG PYTHON=python3
-ENV PIPX_BIN_DIR /usr/local/bin
-ENV PIPX_DEFAULT_PYTHON ${PYTHON}
+ENV PIPX_BIN_DIR=/usr/local/bin
+ENV PIPX_DEFAULT_PYTHON=${PYTHON}
 
 RUN apt-get update && apt-get install -y \
 curl \
