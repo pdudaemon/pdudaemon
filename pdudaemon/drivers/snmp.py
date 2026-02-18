@@ -99,25 +99,20 @@ class SNMP(PDUDriver):
                 protocols['privProtocol'] = p_protocol
 
             userdata = UsmUserData(self.username, self.authpass, self.privpass, **protocols)
-            errorIndication, errorStatus, errorIndex, varBinds = await set_cmd(
-                self.engine,
-                userdata,
-                transport,
-                ContextData(),
-                objecttype,
-            )
         elif self.version == 'snmpv1':
             if not self.community:
                 raise FailedRequestException("No community set for snmpv1")
-            errorIndication, errorStatus, errorIndex, varBinds = await set_cmd(
-                self.engine,
-                CommunityData(self.community),
-                transport,
-                ContextData(),
-                objecttype,
-            )
+            userdata = CommunityData(self.community)
         else:
             raise FailedRequestException("Unknown snmp version")
+
+        errorIndication, errorStatus, errorIndex, varBinds = await set_cmd(
+            self.engine,
+            userdata,
+            transport,
+            ContextData(),
+            objecttype,
+        )
 
         if errorIndication:
             raise FailedRequestException(errorIndication)
