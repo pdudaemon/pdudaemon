@@ -71,19 +71,7 @@ class SNMP(PDUDriver):
     async def _port_interaction_async(self, set_bit, port_number):
         transport = await UdpTransportTarget.create((self.hostname, 161))
 
-        if self.inside_number:
-            # It is possible to pass 2 or 3 snmp argument values
-            filled_controlpoint = self.controlpoint.replace('*', str(port_number))
-            indexed_object_list = [self.mib, filled_controlpoint]
-            # If there is a key static_ending available, add a static ending value
-            if self.static_ending is not None:
-                indexed_object_list.append(int(self.static_ending))
-        else:
-            indexed_object_list = [self.mib, self.controlpoint, port_number]
-
-        objecttype = ObjectType(
-            ObjectIdentity(*indexed_object_list).add_asn1_mib_source(
-                'https://mibs.pysnmp.com/asn1/@mib@'), int(set_bit))
+        objecttype = self._get_objecttype_mib(set_bit, port_number)
 
         if self.version == 'snmpv3':
             if not self.username:
@@ -122,3 +110,20 @@ class SNMP(PDUDriver):
             for varBind in varBinds:
                 log.debug(' = '.join([x.prettyPrint() for x in varBind]))
             return True
+
+    def _get_objecttype_mib(self, set_bit, port_number):
+        if self.inside_number:
+            # It is possible to pass 2 or 3 snmp argument values
+            filled_controlpoint = self.controlpoint.replace('*', str(port_number))
+            indexed_object_list = [self.mib, filled_controlpoint]
+            # If there is a key static_ending available, add a static ending value
+            if self.static_ending is not None:
+                indexed_object_list.append(int(self.static_ending))
+        else:
+            indexed_object_list = [self.mib, self.controlpoint, port_number]
+
+        objecttype = ObjectType(
+            ObjectIdentity(*indexed_object_list).add_asn1_mib_source(
+                'https://mibs.pysnmp.com/asn1/@mib@'), int(set_bit))
+
+        return objecttype
