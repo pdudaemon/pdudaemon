@@ -22,6 +22,7 @@ import logging
 from pysnmp.hlapi.v3arch.asyncio import (
     set_cmd, SnmpEngine, UsmUserData, UdpTransportTarget,
     ContextData, CommunityData, ObjectType, ObjectIdentity,
+    Integer32,
 )
 import pysnmp.hlapi.v3arch.asyncio as pysnmp_api
 from pdudaemon.drivers.driver import PDUDriver, FailedRequestException, UnknownCommandException
@@ -34,11 +35,12 @@ class SNMP(PDUDriver):
     def __init__(self, hostname, settings):
         self.hostname = hostname
         self.version = settings['driver']
-        self.mib = settings['mib']
+        self.mib = settings.get('mib', None)
+        self.oid = settings.get('oid', None)
         self.authpass = settings.get('authpassphrase', None)
         self.privpass = settings.get('privpassphrase', None)
         self.community = settings.get('community', None)
-        self.controlpoint = settings['controlpoint']
+        self.controlpoint = settings.get('controlpoint', None)
         self.username = settings.get('username', None)
         self.onsetting = settings['onsetting']
         self.offsetting = settings['offsetting']
@@ -72,7 +74,12 @@ class SNMP(PDUDriver):
     async def _port_interaction_async(self, set_bit, port_number):
         transport = await UdpTransportTarget.create((self.hostname, 161))
 
-        objecttype = self._get_objecttype_mib(set_bit, port_number)
+        if self.mib is not None and self.oid is None:
+            objecttype = self._get_objecttype_mib(set_bit, port_number)
+        elif self.oid is not None and self.mib is None:
+            objecttype = self._get_objecttype_oid(set_bit, port_number)
+        else:
+            raise FailedRequestException("Either 'mib' or 'oid' setting must be configured")
 
         if self.version == 'snmpv3':
             if not self.username:
@@ -126,5 +133,12 @@ class SNMP(PDUDriver):
         objecttype = ObjectType(
             ObjectIdentity(*indexed_object_list).add_asn1_mib_source(
                 'https://mibs.pysnmp.com/asn1/@mib@'), set_bit)
+
+        return objecttype
+
+    def _get_objecttype_oid(self, set_bit, port_number):
+        oid = self.oid.replace('*', str(port_number))
+
+        objecttype = ObjectType(ObjectIdentity(oid), Integer32(set_bit))
 
         return objecttype
