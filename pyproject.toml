@@ -19,7 +19,7 @@ classifiers = [
     "Topic :: Software Development :: Testing",
     "Topic :: System :: Networking",
 ]
-requires-python = "> 3.10"
+requires-python = ">= 3.10"
 dependencies = [
     "aiohttp",
     "requests",
