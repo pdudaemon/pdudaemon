@@ -65,6 +65,7 @@ class SNMP(PDUDriver):
             set_bit = self.offsetting
         else:
             raise UnknownCommandException("Unknown command %s." % (command))
+        set_bit = int(set_bit)
 
         asyncio.run(self._port_interaction_async(set_bit, port_number))
 
@@ -124,6 +125,6 @@ class SNMP(PDUDriver):
 
         objecttype = ObjectType(
             ObjectIdentity(*indexed_object_list).add_asn1_mib_source(
-                'https://mibs.pysnmp.com/asn1/@mib@'), int(set_bit))
+                'https://mibs.pysnmp.com/asn1/@mib@'), set_bit)
 
         return objecttype
