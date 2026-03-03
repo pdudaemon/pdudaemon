@@ -49,10 +49,11 @@ class Cyberpower81001(LocalBase):
     def __init__(self, hostname, settings):
         self.hostname = hostname
         self.settings = settings
+        self.community = settings.get("community", "private")
 
     @classmethod
     def accepts(cls, drivername):
-        if drivername == "cyberpower81001":
+        if drivername in ["cyberpower81001", "cyberpower41001"]:
             return True
         return False
 
@@ -60,7 +61,7 @@ class Cyberpower81001(LocalBase):
 
         port_number = int(port_number)
         power_oid = f"SNMPv2-SMI::enterprises.3808.1.1.3.3.3.1.1.4.{port_number}"
-        cmd_base = f"/usr/bin/snmpset -v 1 -c private {self.hostname} {power_oid} integer"
+        cmd_base = f"/usr/bin/snmpset -v 1 -c {self.community} {self.hostname} {power_oid} integer"
 
         if command not in self._actions:
             log.error(f"Unknown command {command}!")
