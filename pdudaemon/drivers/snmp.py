@@ -48,7 +48,6 @@ class SNMP(PDUDriver):
         self.static_ending = settings.get('static_ending', None)
         self.auth_protocol = settings.get('auth_protocol', None)
         self.priv_protocol = settings.get('priv_protocol', None)
-        self.engine = SnmpEngine()
         super(SNMP, self).__init__()
 
     @classmethod
@@ -102,13 +101,14 @@ class SNMP(PDUDriver):
         else:
             raise FailedRequestException("Unknown snmp version")
 
-        errorIndication, errorStatus, errorIndex, varBinds = await set_cmd(
-            self.engine,
-            userdata,
-            transport,
-            ContextData(),
-            objecttype,
-        )
+        with SnmpEngine() as snmp_engine:
+            errorIndication, errorStatus, errorIndex, varBinds = await set_cmd(
+                snmp_engine,
+                userdata,
+                transport,
+                ContextData(),
+                objecttype,
+            )
 
         if errorIndication:
             raise FailedRequestException(errorIndication)
