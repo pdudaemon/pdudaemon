@@ -1,5 +1,7 @@
 # PDUDaemon
 Python daemon for controlling/sequentially executing commands to PDUs (Power Distribution Units)
+## License
+PDUDaemon is licensed under GPL 2.0 or any later version.
 ## Why is this needed?
 #### Queueing
 Most PDUs have a very low power microprocessor, or low quality software, which cannot handle multiple requests at the same time. This quickly becomes an issue in environments that use power control frequently, such as board farms, and gets worse on PDUs that have a large number of controllable ports.
