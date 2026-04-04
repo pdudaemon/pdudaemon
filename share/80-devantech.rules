@@ -1,0 +1,2 @@
+# Devantech USB-RLY08C
+ACTION=="add", SUBSYSTEM=="tty", ATTRS{idVendor}=="04d8", ATTRS{idProduct}=="ffee", GROUP="pdudaemon"
