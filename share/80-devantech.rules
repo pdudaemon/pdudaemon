@@ -1,0 +1,5 @@
+# Devantech USB devices
+# The Devantech USB product range uses the Microchip VID & a sub-licenced PID
+# specific to all Devantech products.
+# Warning: This catch-all rule will match more than the USB relay range.
+ACTION=="add", SUBSYSTEM=="tty", ATTRS{idVendor}=="04d8", ATTRS{idProduct}=="ffee", GROUP="pdudaemon"
