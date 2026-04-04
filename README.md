@@ -20,6 +20,14 @@ sudo groupadd --system pdudaemon
 sudo useradd --system --gid pdudaemon --home-dir /nonexistent --shell /usr/sbin/nologin --comment "pdudaemon service user" pdudaemon
 ```
 
+Then install the udev rules for any devices you wish for pdudaemon to access:
+
+```
+sudo cp share/80-*.rules /etc/udev/rules.d/
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+```
+
 For now, make sure the requirements are met and then:
 
 ```python3 setup.py install```
