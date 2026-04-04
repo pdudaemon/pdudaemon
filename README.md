@@ -11,6 +11,15 @@ Every PDU manufacturer has a different way of controlling their PDUs. Though man
 APC, Devantech and ACME are well supported, however there is no official list yet. The [strategies.py](https://github.com/pdudaemon/pdudaemon/blob/main/pdudaemon/drivers/strategies.py) file is a good place to see all the current drivers.
 ## Installing
 Debian packages are on the way, hopefully.
+
+## Device access
+Before installing, create a dedicated system user and group for pdudaemon:
+
+```
+sudo groupadd --system pdudaemon
+sudo useradd --system --gid pdudaemon --home-dir /nonexistent --shell /usr/sbin/nologin --comment "pdudaemon service user" pdudaemon
+```
+
 For now, make sure the requirements are met and then:
 
 ```python3 setup.py install```
