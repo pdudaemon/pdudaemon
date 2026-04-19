@@ -48,7 +48,7 @@ $ git clone https://github.com/pdudaemon/pdudaemon
 $ cd pdudaemon
 $ vi share/pdudaemon.conf
 	- configure your PDUs
-$ sudo docker build -t pdudaemon --build-arg HTTP_PROXY=$http_proxy -f Dockerfile.dockerhub .
+$ sudo docker build -t pdudaemon --build-arg HTTP_PROXY=$http_proxy -f Dockerfile .
 $ docker run --rm -it -e http_proxy=$http_proxy -e https_proxy=$https_proxy -e NO_PROXY="$no_proxy" --net="host" pdudaemon:latest
 ```
 
