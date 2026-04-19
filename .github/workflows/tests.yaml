@@ -46,7 +46,7 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v6
       - name: Build container
-        run: docker build -t pdudaemon-ci -f Dockerfile.dockerhub .
+        run: docker build -t pdudaemon-ci -f Dockerfile .
       - name: Run pytest
         run: docker run -v $(pwd):/p -w /p pdudaemon-ci /root/.local/pipx/venvs/pdudaemon/bin/pytest
       - name: Run functional tests
@@ -57,7 +57,7 @@ jobs:
       - name: check out repository code
         uses: actions/checkout@v6
       - name: Build container
-        run: docker build --build-arg DEBIAN_VERSION=trixie -t pdudaemon-ci -f Dockerfile.dockerhub .
+        run: docker build --build-arg DEBIAN_VERSION=trixie -t pdudaemon-ci -f Dockerfile .
       - name: Run pytest
         run: docker run -v $(pwd):/p -w /p pdudaemon-ci /root/.local/share/pipx/venvs/pdudaemon/bin/pytest
       - name: Run functional tests

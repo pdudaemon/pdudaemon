@@ -22,6 +22,6 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .
-          file: ./Dockerfile.dockerhub
+          file: ./Dockerfile
           push: true
           tags: pdudaemon/pdudaemon:latest
