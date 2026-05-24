@@ -39,7 +39,10 @@ def do_tcp_request(options):
     except Exception:
         print ("Error sending command, wrong daemon hostname?")
         exit(1)
-    if reply == "ack":
+    if options.pducommand == "get-port-state":
+        print("Port state: %s" % reply)
+        exit(0)
+    elif reply == "ack":
         print("Command sent successfully.")
         exit(0)
     else:
@@ -61,7 +64,11 @@ def do_http_request(options):
         print ("Error sending command, wrong daemon hostname?")
         exit(1)
     if reply.ok:
-        print("Command sent successfully.")
+        if options.pducommand == "get-port-state":
+            data = reply.json()
+            print("Port state: %s" % data.get("state"))
+        else:
+            print("Command sent successfully.")
         exit(0)
     else:
         print("Error sending command! %s replied: %s" %
@@ -73,7 +80,7 @@ if __name__ == '__main__':
     usage = "Usage: %prog --daemon deamonhostname --hostname pduhostname " \
             "--port pduportnum --command pducommand"
     description = "PDUDaemon client"
-    commands = ["reboot", "on", "off"]
+    commands = ["reboot", "on", "off", "get-port-state"]
     parser = optparse.OptionParser(usage=usage, description=description)
     parser.add_option("-H", "--http", dest="use_http", action="store_true",
                       help="Use HTTP protocol")
@@ -85,7 +92,7 @@ if __name__ == '__main__':
     parser.add_option("--port", dest="pduportnum", action="store",
                       type="string", help="PDU Portnumber (ex: 04)")
     parser.add_option("--command", dest="pducommand", action="store",
-                      type="string", help="PDU command (ex: reboot|on|off)")
+                      type="string", help="PDU command (ex: reboot|on|off|get-port-state)")
     parser.add_option("--delay", dest="pdudelay", action="store", type="int",
                       help="Delay before command runs, or between off/on "
                            "when rebooting (ex: 5)")
