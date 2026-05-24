@@ -30,7 +30,8 @@ python3-wheel \
 rustc \
 supervisor \
 telnet \
-snmp
+snmp \
+uhubctl
 
 RUN apt-get update && apt-get install -y \
   ${PYTHON}-venv ${PYTHON}-dev
