@@ -54,6 +54,11 @@ class UHubCtl(LocalBase):
         return False
 
     def _port_interaction(self, command, port_number):
+        try:
+            port_number = int(port_number)
+        except (TypeError, ValueError):
+            raise RuntimeError("port_number must be an integer, got %r" % (port_number,))
+
         if command == "on":
             action = "on"
         elif command == "off":
