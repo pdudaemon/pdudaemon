@@ -27,6 +27,8 @@ class Args(object):
     alias = None
     request = None
     port = None
+    delay = None
+    group = None
     pass
 
 
@@ -58,13 +60,43 @@ def parse_http(data, path):
     # everything comes back from the http library in a 1 sized list
     args.alias = data.get('alias', [None])[0]
     args.hostname = data.get('hostname', [None])[0]
+    args.group = data.get('group', [None])[0]
     args.port = data.get('port', [None])[0]
     args.request = entry[2]
     args.delay = data.get('delay', [None])[0]
     return args
 
 
+async def process_group_request(args, config, daemon):
+    # A group fans a single request out to every alias tagged with that group
+    # name, so it is mutually exclusive with directly targeting a port.
+    if args.hostname or args.port or args.alias:
+        logger.error("Cannot combine a group request with a hostname, port or alias")
+        return False
+    aliases = config.get('aliases', {})
+    aliases_in_group = [
+        name for name, settings in aliases.items()
+        if settings.get('group') == args.group
+    ]
+    if not aliases_in_group:
+        logger.error("No aliases match the requested group: %s", args.group)
+        return False
+    # Attempt every member even if one fails, so a single unreachable PDU does
+    # not leave the rest of the group unactioned, then report failure if any
+    # member did not succeed.
+    results = []
+    for name in aliases_in_group:
+        member_args = Args()
+        member_args.request = args.request
+        member_args.delay = args.delay
+        member_args.alias = name
+        results.append(await process_request(member_args, config, daemon))
+    return all(results)
+
+
 async def process_request(args, config, daemon):
+    if args.group:
+        return await process_group_request(args, config, daemon)
     if args.request in ["on", "off"] and args.delay is not None:
         logger.warn("delay parameter is deprecated for on/off commands")
     if args.delay is not None:
