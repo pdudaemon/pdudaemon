@@ -31,11 +31,21 @@ log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 
 class ServerTechPro2(LocalBase):
 
+    DEFAULT_TIMEOUT = 60
+
     def __init__(self, hostname, settings):
         self.hostname = hostname
         self.settings = settings
         self.username = settings.get("username", "admin")
         self.password = settings.get("password", "admin")
+        self.timeout = ServerTechPro2.DEFAULT_TIMEOUT
+        try:
+            self.timeout = float(
+                settings.get("timeout", ServerTechPro2.DEFAULT_TIMEOUT)
+            )
+        except ValueError:
+            pass
+
         self.insecure = bool(settings.get("insecure", False))
 
         protocol = settings.get("protocol", "http")
@@ -60,10 +70,13 @@ class ServerTechPro2(LocalBase):
                 url=url,
                 data=json.dumps(data),
                 auth=(self.username, self.password),
-                headers={'Content-Type': 'application/json'},
-                verify=not self.insecure
+                headers={"Content-Type": "application/json"},
+                verify=not self.insecure,
+                timeout=self.timeout,
             )
             r.raise_for_status()
-            log.debug("Done")
+            log.debug("Done with command: '{}' port: '{}'".format(command, port_number))
         else:
-            log.debug("Unknown command!")
+            log.debug(
+                "Unknown command for: '{}' port: '{}'".format(command, port_number)
+            )
