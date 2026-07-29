@@ -22,7 +22,7 @@
 #  MA 02110-1301, USA.
 
 import logging
-from pdudaemon.drivers.driver import PDUDriver
+from pdudaemon.drivers.driver import FailedRequestException, PDUDriver
 import serial
 
 import os
@@ -60,6 +60,23 @@ class DevantechusbBase(PDUDriver):
         s = serial.serial_for_url(self.device, 9600, timeout=1, write_timeout=1)
         s.write([byte])
         s.close()
+
+    def get_port_state(self, port_number) -> bool:
+        port_number = int(port_number)
+        if port_number > self.port_count or port_number < 1:
+            err = "Port should be in the range 1 - %d" % (self.port_count)
+            log.error(err)
+            raise RuntimeError(err)
+
+        s = serial.serial_for_url(self.device, 9600, timeout=1, write_timeout=1)
+        s.write([0x5B])
+        reply = s.read(1)
+        s.close()
+        if not reply:
+            raise FailedRequestException("No reply from %s" % self.device)
+
+        relay_states = reply[0]
+        return bool(relay_states & (1 << (port_number - 1)))
 
     @classmethod
     def accepts(cls, drivername):
