@@ -53,8 +53,9 @@ class TCPListener:
 
     async def insert_request(self, data):
         args = listener.parse_tcp(data)
-        if args:
-            return await listener.process_request(args, self.config, self.daemon)
+        if not args:
+            return listener.RequestError("could not parse request")
+        return await listener.process_request(args, self.config, self.daemon)
 
     async def handle(self, reader, writer):
         request_ip = writer.get_extra_info('peername')[0]
@@ -70,7 +71,7 @@ class TCPListener:
                 request_host = request_ip
             logger.info("Received a request from %s: '%s'", request_host, data)
             res = await self.insert_request(data)
-            if res:
+            if isinstance(res, listener.CommandAccepted):
                 writer.write("ack\n".encode('utf-8'))
             else:
                 writer.write("nack\n".encode('utf-8'))
