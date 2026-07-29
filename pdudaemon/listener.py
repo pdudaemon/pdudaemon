@@ -19,7 +19,26 @@
 
 import asyncio
 import logging
+from dataclasses import dataclass
+
 logger = logging.getLogger('pdud.listener')
+
+
+class RequestResult:
+    """Base class for typed results returned by process_request."""
+    pass
+
+
+@dataclass
+class CommandAccepted(RequestResult):
+    """A set-style command (on/off/reboot) was successfully accepted."""
+    pass
+
+
+@dataclass
+class RequestError(RequestResult):
+    """The request was rejected or failed."""
+    message: str
 
 
 class Args(object):
@@ -64,7 +83,10 @@ def parse_http(data, path):
     return args
 
 
-async def process_request(args, config, daemon):
+def _resolve_args(args, config):
+    """Validate args and resolve any alias. Returns a RequestError on failure,
+    or None on success (mutating args in place).
+    """
     if args.request in ["on", "off"] and args.delay is not None:
         logger.warn("delay parameter is deprecated for on/off commands")
     if args.delay is not None:
@@ -79,30 +101,43 @@ async def process_request(args, config, daemon):
     if args.alias:
         if args.hostname or args.port:
             logger.error("Trying to use and alias and also a hostname/port")
-            return False
-        # Using alias support, get all pdu info from alias
+            return RequestError("alias cannot be combined with hostname/port")
         alias_settings = (config.get('aliases', {})).get(args.alias, False)
         if not alias_settings:
             logger.error("Alias requested but not found")
-            return False
+            return RequestError("alias not found")
         args.hostname = config["aliases"][args.alias]["hostname"]
         args.port = config["aliases"][args.alias]["port"]
     if not args.hostname or not args.port or not args.request:
         logger.info("One of hostname,port,request was not set")
-        return False
+        return RequestError("hostname, port or request was not set")
     if args.hostname not in config['pdus']:
         logger.info("PDU was not found in config")
-        return False
+        return RequestError("PDU not found in config")
     if args.request not in ["reboot", "on", "off"]:
         logger.info("Unknown request: %s", args.request)
-        return False
+        return RequestError("unknown request: %s" % args.request)
+    return None
+
+
+async def process_request(args, config, daemon) -> RequestResult:
+    err = _resolve_args(args, config)
+    if err is not None:
+        return err
     runner = daemon.runners[args.hostname]
-    if args.request == "reboot":
-        logger.debug("reboot requested, submitting off/on")
-        if not await runner.do_job_async(args.port, "off"):
-            return False
+    try:
+        if args.request == "reboot":
+            logger.debug("reboot requested, submitting off/on")
+            await runner.port_off_async(args.port)
+            await asyncio.sleep(int(args.delay))
+            await runner.port_on_async(args.port)
+            return CommandAccepted()
         await asyncio.sleep(int(args.delay))
-        return await runner.do_job_async(args.port, "on")
-    else:
-        await asyncio.sleep(int(args.delay))
-        return await runner.do_job_async(args.port, args.request)
+        if args.request == "on":
+            await runner.port_on_async(args.port)
+        else:  # "off"
+            await runner.port_off_async(args.port)
+        return CommandAccepted()
+    except Exception as exc:  # pylint: disable=broad-except
+        logger.warn("Request failed: %s", exc)
+        return RequestError(str(exc))
