@@ -61,6 +61,20 @@ class DevantechusbBase(PDUDriver):
         s.write([byte])
         s.close()
 
+    def get_port_state(self, port_number) -> bool:
+        port_number = int(port_number)
+        if port_number > self.port_count or port_number < 1:
+            err = "Port should be in the range 1 - %d" % (self.port_count)
+            log.error(err)
+            raise RuntimeError(err)
+
+        s = serial.serial_for_url(self.device, 9600)
+        s.write([0x5B])
+        relay_states = ord(s.read(1))
+        s.close()
+
+        return bool(relay_states & (1 << (port_number - 1)))
+
     @classmethod
     def accepts(cls, drivername):
         return drivername in cls.supported
