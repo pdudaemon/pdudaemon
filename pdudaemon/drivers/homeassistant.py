@@ -69,6 +69,28 @@ class HomeAssistantHTTP(PDUDriver):
         )
         response.raise_for_status()
 
+    def get_port_state(self, ha_entity_id) -> bool:
+        url = "http://{}:{}/api/states/switch.{}".format(
+            self.hostname, self.port, ha_entity_id
+        )
+        log.debug("HTTP GET: {}".format(url))
+
+        headers = {"Authorization": "Bearer {}".format(self.api_key)}
+
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        data = response.json()
+
+        log.debug(
+            "Response for request to {}: code: {}, data: {}".format(
+                self.hostname, response.status_code, data
+            )
+        )
+        state = data.get("state")
+        if state not in ("on", "off"):
+            raise FailedRequestException("Unexpected state for {}: {}".format(ha_entity_id, state))
+        return state == "on"
+
     @classmethod
     def accepts(cls, drivername):
         return drivername == "home-assistant-http"
