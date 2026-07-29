@@ -21,7 +21,7 @@
 import logging
 import os
 from shutil import which
-from subprocess import check_call
+from subprocess import check_call, check_output
 from pdudaemon.drivers.localbase import LocalBase
 
 log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
@@ -76,3 +76,24 @@ class UHubCtl(LocalBase):
         ]
         log.debug("running %r" % cmd)
         check_call(cmd)
+
+    def get_port_state(self, port_number) -> bool:
+        try:
+            port_number = int(port_number)
+        except (TypeError, ValueError):
+            raise RuntimeError("port_number must be an integer, got %r" % (port_number,))
+
+        # Run uhubctl to retrieve the port status
+        cmd = [
+            self.uhubctl_bin,
+            "--location", str(self.location),
+            "--port", str(port_number),
+        ]
+        log.debug("running %r" % cmd)
+        output = check_output(cmd, text=True)
+
+        prefix = "  Port %s:" % port_number
+        for line in output.splitlines():
+            if line.startswith(prefix):
+                return " power" in line
+        raise RuntimeError("uhubctl did not report status for port %s" % port_number)
