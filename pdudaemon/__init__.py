@@ -191,6 +191,9 @@ async def main_async():
                 await runner.port_on_async(options.driveport)
             elif options.driverequest == "off":
                 await runner.port_off_async(options.driveport)
+            elif options.driverequest == "get-port-state":
+                result = await runner.get_port_state_async(options.driveport)
+                logger.info("Port %s state: %s", options.driveport, "on" if result else "off")
             else:
                 logger.error("Unknown request: %s", options.driverequest)
                 result = False

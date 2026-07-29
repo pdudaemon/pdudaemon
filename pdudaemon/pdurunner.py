@@ -75,6 +75,9 @@ class PDURunner:
     def port_off(self, port):
         self._run_with_retries(port, "off", lambda: self.driver.port_off(port))
 
+    def get_port_state(self, port) -> bool:
+        return self._run_with_retries(port, "get-port-state", lambda: self.driver.get_port_state(port))
+
     async def _in_executor(self, fn, *args):
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(self.executor, fn, *args)
@@ -84,3 +87,6 @@ class PDURunner:
 
     async def port_off_async(self, port) -> None:
         await self._in_executor(self.port_off, port)
+
+    async def get_port_state_async(self, port) -> bool:
+        return await self._in_executor(self.get_port_state, port)

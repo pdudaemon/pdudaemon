@@ -101,6 +101,7 @@ An HTTP request URL has the following syntax:
       - **on**: power on
       - **off**: power off
       - **reboot**: reboot
+      - **get-port-state**: retrieve the powered state of the port (see the `Get port state` section below)
     - query-string can have 3 parameters (same as pduclient, see below)
       - **hostname**: the PDU hostname or IP address used in the [configuration file](https://github.com/pdudaemon/pdudaemon/blob/main/share/pdudaemon.conf) (e.g.: "192.168.10.2")
       - **port**: the PDU port number
@@ -132,7 +133,7 @@ Options:
   --hostname=PDUHOSTNAME
                         PDU Hostname (ex: pdu05)
   --port=PDUPORTNUM     PDU Portnumber (ex: 04)
-  --command=PDUCOMMAND  PDU command (ex: reboot|on|off)
+  --command=PDUCOMMAND  PDU command (ex: reboot|on|off|get-port-state)
   --delay=PDUDELAY      Delay before command runs, or between off/on when
                         rebooting (ex: 5)
 ```
@@ -146,6 +147,42 @@ $ pdudaemon --conf=share/pdudaemon.conf --drive --hostname pdu01 --port 1 --requ
 
 If requesting reboot, the delay between turning the port off and on can be modified with `--delay`
 and is by default 5 seconds.
+
+## Get port state
+pdudaemon can retrieve a port's powered state (on or off), if it is supported by the driver.
+Not all drivers implement status retrieval; unsupported drivers will return an error.
+
+- **HTTP**
+
+  Send a `GET` request to the `get-port-state` endpoint with the same `hostname` and `port` query parameters used for control commands:
+
+  ```
+  $ curl "http://localhost:16421/power/control/get-port-state?hostname=192.168.10.2&port=1"
+  {"state": "on"}
+  ```
+
+  The response body is a JSON object with a single `state` key:
+  - `on` - port is powered **on**
+  - `off` - port is powered **off**
+
+  HTTP 200 is returned when the state was read from the PDU. HTTP 500 is returned if the request is invalid or the driver does not support status retrieval.
+
+- **pduclient (TCP)**
+
+  Use `get-port-state` as the command. With the `--http` flag, the output is human-readable:
+
+  ```
+  $ pduclient --http --daemon localhost --hostname 192.168.10.2 --port 1 --command get-port-state
+  Port status: on
+  ```
+
+  Without `--http` (plain TCP), the raw daemon response (`on` or `off`) is printed.
+
+- **non-daemon (--drive)**
+
+  ```
+  $ pdudaemon --conf=share/pdudaemon.conf --drive --hostname pdu01 --port 1 --request get-port-state
+  ```
 
 ## Adding drivers
 Drivers are implemented children of the "PDUDriver" class and many example

@@ -71,7 +71,9 @@ class TCPListener:
                 request_host = request_ip
             logger.info("Received a request from %s: '%s'", request_host, data)
             res = await self.insert_request(data)
-            if isinstance(res, listener.CommandAccepted):
+            if isinstance(res, listener.PortStatus):
+                writer.write(("on\n" if res.on else "off\n").encode('utf-8'))
+            elif isinstance(res, listener.CommandAccepted):
                 writer.write("ack\n".encode('utf-8'))
             else:
                 writer.write("nack\n".encode('utf-8'))

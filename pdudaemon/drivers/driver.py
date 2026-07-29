@@ -70,6 +70,13 @@ class PDUDriver(object):
     def port_off(self, port_number):
         self.port_interaction("off", port_number)
 
+    def get_port_state(self, port_number) -> bool:
+        """Return True if the port is powered on, False if powered off. Raises
+        UnknownCommandException if retrieving the port status is unsupported by
+        the driver.
+        """
+        raise UnknownCommandException("Driver doesn't support get-port-state")
+
     def port_interaction(self, command, port_number):
         pass
 

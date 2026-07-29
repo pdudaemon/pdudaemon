@@ -38,6 +38,7 @@ class HTTPListener:
             web.get('/power/control/on', self.handle),
             web.get('/power/control/off', self.handle),
             web.get('/power/control/reboot', self.handle),
+            web.get('/power/control/get-port-state', self.handle),
         ])
         self.apprunner = None
 
@@ -61,6 +62,9 @@ class HTTPListener:
         data = urlparse.parse_qs(urlparse.urlparse(request.path_qs).query)
         path = urlparse.urlparse(request.path_qs).path
         res = await self.insert_request(data, path)
+        if isinstance(res, listener.PortStatus):
+            return web.Response(status=200, content_type="application/json",
+                                text='{"state": "%s"}\n' % ("on" if res.on else "off"))
         if isinstance(res, listener.CommandAccepted):
             return web.Response(status=200, text="OK - accepted request\n")
         if isinstance(res, listener.RequestError):
