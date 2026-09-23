@@ -40,3 +40,12 @@ def test_port_interaction(mocker, command, port_number, expected):
     pdu.port_interaction("on", port_number)
 
     call.assert_called_once_with(expected, shell=True)
+
+
+def test_port_interaction_unknown_command(mocker):
+    call = mocker.patch("pdudaemon.drivers.localcmdline.call")
+    pdu = LocalCmdline("dummy", {"cmd_on": "echo on"})
+
+    pdu.port_interaction("reboot", 1)
+
+    call.assert_not_called()
