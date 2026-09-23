@@ -42,11 +42,16 @@ class LocalCmdline(LocalBase):
     def _port_interaction(self, command, port_number):
         cmd = None
         if command == "on" and self.cmd_on:
-            cmd = self.cmd_on % port_number
+            cmd = self.cmd_on
         elif command == "off" and self.cmd_off:
-            cmd = self.cmd_off % port_number
+            cmd = self.cmd_off
         else:
             log.debug("Unknown command!")
+            return
+
+        # only substitute port_number when the command requires it
+        if "%s" in cmd or "%d" in cmd:
+            cmd = cmd % port_number
 
         if cmd:
             log.debug("running %s" % cmd)
