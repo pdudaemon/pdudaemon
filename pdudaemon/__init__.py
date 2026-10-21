@@ -154,7 +154,7 @@ async def main_async():
         settings = json.loads(options.conf.read())
     except Exception as exc:
         logging.error("Unable to read configuration file '%s': %s", options.conf.name, exc)
-        return 1
+        sys.exit(1)
 
     # Setup logging
     setup_logging(options, settings)
