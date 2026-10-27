@@ -118,6 +118,14 @@ An HTTP request URL has the following syntax:
     - HTTP 200 - Request Accepted
     - HTTP 503 - Invalid Request, Request not accepted
 
+  ***Port Status***
+
+  The last state set on each port since PDUDaemon started is available as JSON from `/power/status` (or `/power/status/json`), and as a web page from `/power/status/html`. Only ports which have been successfully switched are listed, along with any ports in the `aliases` section of the config file, which show as `unknown` until they are switched. Add `?hostname=<pdu-hostname>` to only show one PDU.
+  ```
+  $ curl "http://localhost:16421/power/status"
+  {"192.168.10.2": {"1": "on", "2": "off"}}
+  ```
+
 - **TCP (legacy pduclient)**
 The bundled client is used when PDUDaemon is configured to listen to 'tcp' requests. TCP support is considered legacy but will remain functional.
 ```
