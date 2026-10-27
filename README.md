@@ -105,12 +105,27 @@ An HTTP request URL has the following syntax:
       - **hostname**: the PDU hostname or IP address used in the [configuration file](https://github.com/pdudaemon/pdudaemon/blob/main/share/pdudaemon.conf) (e.g.: "192.168.10.2")
       - **port**: the PDU port number
       - **delay**: delay between power off and on during reboot (optional, by default 5 seconds)
+      - **alias**: an alias from the `aliases` section of the config file, instead of hostname and port
+      - **group**: a group from the `groups` section of the config file, to send the request to every port in the group
 
   Some example requests would be:
   ```
   $ curl "http://localhost:16421/power/control/on?hostname=192.168.10.2&port=1"
   $ curl "http://localhost:16421/power/control/off?hostname=192.168.10.2&port=1"
   $ curl "http://localhost:16421/power/control/reboot?hostname=192.168.10.2&port=1&delay=10"
+  ```
+
+  A group lists aliases and/or hostname/port pairs. A request to a group is sent to every member, and only succeeds if every member succeeds. Members on different PDUs are switched at the same time, members on the same PDU one after another.
+  ```
+  "groups": {
+      "rack1": [
+          "board01",
+          {"hostname": "192.168.10.2", "port": 2}
+      ]
+  }
+  ```
+  ```
+  $ curl "http://localhost:16421/power/control/reboot?group=rack1"
   ```
 
   ***Return Codes***
