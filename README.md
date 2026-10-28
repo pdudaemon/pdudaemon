@@ -59,8 +59,9 @@ all managed PDUs are listed and configured. For example:
 
 ```json
   "pdus": {
-      "hostname_or_ip": {
+      "name": {
           "driver": "driver_name",
+          "address": "192.168.0.10",
           "additional_parameter": "42"
       },
       "test": {
@@ -77,8 +78,8 @@ all managed PDUs are listed and configured. For example:
       }
   }
 ```
-It is important to mention, that `hostname` can be an arbitrary name for a locally connected device (like `energenie` in this example).
-For some (or most) network connected devices, it needs to be the actual hostname or IP address the PDU responds to (see `query-string` in [next section](#making-a-power-control-request)).
+Each PDU has a name, which is used to refer to it in requests (see `query-string` in [next section](#making-a-power-control-request)).
+For network connected devices, set `address` to the hostname or IP address the PDU responds to. If `address` is not set, the name is used as the address, so a PDU can also be named by its hostname or IP address (like `192.168.0.42` in this example).
 The correct value for `driver` is highly dependent on the used child class and the specific implementation.
 Check the imported [Python module](https://github.com/pdudaemon/pdudaemon/tree/main/pdudaemon/drivers) for that class and look for `drivername` to be sure.
 Some drivers require additional parameters (like a device ID).
@@ -102,15 +103,15 @@ An HTTP request URL has the following syntax:
       - **off**: power off
       - **reboot**: reboot
     - query-string can have 3 parameters (same as pduclient, see below)
-      - **hostname**: the PDU hostname or IP address used in the [configuration file](https://github.com/pdudaemon/pdudaemon/blob/main/share/pdudaemon.conf) (e.g.: "192.168.10.2")
+      - **name**: the PDU name used in the [configuration file](https://github.com/pdudaemon/pdudaemon/blob/main/share/pdudaemon.conf) (e.g.: "192.168.10.2"). **hostname** is also accepted for compatibility
       - **port**: the PDU port number
       - **delay**: delay between power off and on during reboot (optional, by default 5 seconds)
 
   Some example requests would be:
   ```
-  $ curl "http://localhost:16421/power/control/on?hostname=192.168.10.2&port=1"
-  $ curl "http://localhost:16421/power/control/off?hostname=192.168.10.2&port=1"
-  $ curl "http://localhost:16421/power/control/reboot?hostname=192.168.10.2&port=1&delay=10"
+  $ curl "http://localhost:16421/power/control/on?name=192.168.10.2&port=1"
+  $ curl "http://localhost:16421/power/control/off?name=192.168.10.2&port=1"
+  $ curl "http://localhost:16421/power/control/reboot?name=192.168.10.2&port=1&delay=10"
   ```
 
   ***Return Codes***
@@ -121,7 +122,7 @@ An HTTP request URL has the following syntax:
 - **TCP (legacy pduclient)**
 The bundled client is used when PDUDaemon is configured to listen to 'tcp' requests. TCP support is considered legacy but will remain functional.
 ```
-Usage: pduclient --daemon deamonhostname --hostname pduhostname --port pduportnum --command pducommand
+Usage: pduclient --daemon deamonhostname --name pduname --port pduportnum --command pducommand
 
 PDUDaemon client
 
@@ -129,8 +130,8 @@ Options:
   -h, --help            show this help message and exit
   --daemon=PDUDAEMONHOSTNAME
                         PDUDaemon listener hostname (ex: localhost)
-  --hostname=PDUHOSTNAME
-                        PDU Hostname (ex: pdu05)
+  --name=PDUHOSTNAME, --hostname=PDUHOSTNAME
+                        PDU name (ex: pdu05)
   --port=PDUPORTNUM     PDU Portnumber (ex: 04)
   --command=PDUCOMMAND  PDU command (ex: reboot|on|off)
   --delay=PDUDELAY      Delay before command runs, or between off/on when
@@ -141,7 +142,7 @@ Options:
 If you would just like to use pdudaemon as an executable to drive a PDU without needing to run a daemon, you can use the --drive option.
 Configure the PDU in the config file as usual, then launch pdudaemon with the following options
 ```
-$ pdudaemon --conf=share/pdudaemon.conf --drive --hostname pdu01 --port 1 --request reboot
+$ pdudaemon --conf=share/pdudaemon.conf --drive --name pdu01 --port 1 --request reboot
 ```
 
 If requesting reboot, the delay between turning the port off and on can be modified with `--delay`
