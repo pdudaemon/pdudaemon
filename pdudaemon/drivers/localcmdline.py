@@ -49,8 +49,9 @@ class LocalCmdline(LocalBase):
             log.debug("Unknown command!")
             return
 
-        # only substitute port_number when the command requires it
-        if "%s" in cmd or "%d" in cmd:
+        try:
+            cmd = cmd % ()
+        except TypeError:
             cmd = cmd % port_number
 
         if cmd:

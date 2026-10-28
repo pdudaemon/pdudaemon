@@ -31,6 +31,7 @@ from pdudaemon.drivers.localcmdline import LocalCmdline
         ("echo on", 3, "echo on"),
         ("echo on", "3", "echo on"),
         ("echo on", "test", "echo on"),
+        ("echo 50%%", 3, "echo 50%"),
     ],
 )
 def test_port_interaction(mocker, command, port_number, expected):
