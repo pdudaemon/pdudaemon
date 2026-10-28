@@ -57,7 +57,7 @@ def parse_http(data, path):
         return False
     # everything comes back from the http library in a 1 sized list
     args.alias = data.get('alias', [None])[0]
-    args.hostname = data.get('hostname', [None])[0]
+    args.hostname = data.get('name', data.get('hostname', [None]))[0]
     args.port = data.get('port', [None])[0]
     args.request = entry[2]
     args.delay = data.get('delay', [None])[0]
@@ -78,17 +78,17 @@ async def process_request(args, config, daemon):
             args.delay = 0
     if args.alias:
         if args.hostname or args.port:
-            logger.error("Trying to use and alias and also a hostname/port")
+            logger.error("Trying to use an alias and also a name/port")
             return False
         # Using alias support, get all pdu info from alias
         alias_settings = (config.get('aliases', {})).get(args.alias, False)
         if not alias_settings:
             logger.error("Alias requested but not found")
             return False
-        args.hostname = config["aliases"][args.alias]["hostname"]
+        args.hostname = alias_settings.get("name", alias_settings.get("hostname"))
         args.port = config["aliases"][args.alias]["port"]
     if not args.hostname or not args.port or not args.request:
-        logger.info("One of hostname,port,request was not set")
+        logger.info("One of name,port,request was not set")
         return False
     if args.hostname not in config['pdus']:
         logger.info("PDU was not found in config")

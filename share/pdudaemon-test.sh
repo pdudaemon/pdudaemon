@@ -35,6 +35,10 @@ sleep 10
 curl -q "http://localhost:16421/power/control/reboot?alias=aliastesthttp01&delay=5" &> /dev/null
 sleep 10
 
+# Test name HTTP request
+curl -q "http://localhost:16421/power/control/reboot?name=http&port=8&delay=1" &> /dev/null
+sleep 10
+
 kill $PDU_PID
 sleep 10
 
@@ -55,6 +59,8 @@ fi
 
 # Test drive feature
 $PDUD_BINARY --loglevel=DEBUG --conf=share/pdudaemon.conf --drive --hostname drive --port 4 --request reboot
+# Test drive feature with name
+$PDUD_BINARY --loglevel=DEBUG --conf=share/pdudaemon.conf --drive --name drive --port 5 --request reboot
 # Test drive feature with alias feature
 $PDUD_BINARY --loglevel=DEBUG --conf=share/pdudaemon.conf --drive --alias aliastestdrive02 --request reboot
 

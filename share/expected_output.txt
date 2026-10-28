@@ -2,9 +2,13 @@ http 2 off
 http 2 on
 httpalias 1 off
 httpalias 1 on
+http 8 off
+http 8 on
 tcp 3 off
 tcp 3 on
 drive 4 off
 drive 4 on
+drive 5 off
+drive 5 on
 drivealias 2 off
 drivealias 2 on
