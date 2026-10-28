@@ -18,6 +18,7 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 
+import inspect
 import logging
 from pdudaemon.drivers.driver import PDUDriver
 from pymodbus.client import ModbusTcpClient
@@ -32,14 +33,21 @@ class ModBusTCP(PDUDriver):
         self.port = settings.get("port", 502)
         self.unit = settings.get("unit", settings.get("slave", 1))
         self._client = ModbusTcpClient(host=self.hostname, port=self.port)
-        self._client.connect()
+        if "device_id" in inspect.signature(self._client.write_coil).parameters:
+            self._unit_arg = "device_id"
+        else:
+            self._unit_arg = "slave"
         super().__init__()
 
     def port_interaction(self, command, port_number):
         port_number = int(port_number)
-        self._client.write_coil(address=port_number, value=(command == "on"), slave=self.unit)
+        self._client.connect()
+        self._client.write_coil(address=port_number, value=(command == "on"), **{self._unit_arg: self.unit})
 
     def _cleanup(self):
+        self._client.close()
+
+    def _bombout(self):
         self._client.close()
 
     @classmethod
