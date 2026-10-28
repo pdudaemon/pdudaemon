@@ -137,7 +137,7 @@ async def main_async():
     parser.add_argument("--listener", type=str, help="PDUDaemon listener setting")
     conflict = parser.add_mutually_exclusive_group()
     conflict.add_argument("--alias", dest="alias", action="store", type=str)
-    conflict.add_argument("--hostname", dest="drivehostname", action="store", type=str)
+    conflict.add_argument("--name", "--hostname", dest="drivehostname", action="store", type=str)
     drive = parser.add_argument_group("drive")
     drive.add_argument("--drive", action="store_true", default=False)
     drive.add_argument("--request", dest="driverequest", action="store", type=str)
@@ -171,13 +171,13 @@ async def main_async():
             if not alias_settings:
                 logging.error("Alias requested but not found")
                 sys.exit(1)
-            options.drivehostname = settings["aliases"][options.alias]["hostname"]
+            options.drivehostname = alias_settings.get("name", alias_settings.get("hostname"))
             options.driveport = settings["aliases"][options.alias]["port"]
 
         # Check that the requested PDU has config
         config = settings["pdus"].get(options.drivehostname, False)
         if not config:
-            logging.error("No config section for hostname: {}".format(options.drivehostname))
+            logging.error("No config section for name: {}".format(options.drivehostname))
             sys.exit(1)
 
         runner = PDURunner(config, options.drivehostname, options.driveretries, options.driveretrydelay)
