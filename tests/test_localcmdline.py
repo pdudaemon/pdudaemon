@@ -32,11 +32,16 @@ from pdudaemon.drivers.localcmdline import LocalCmdline
         ("echo on", "3", "echo on"),
         ("echo on", "test", "echo on"),
         ("echo 50%%", 3, "echo 50%"),
+        ("echo %(port)s", 3, "echo 3"),
+        ("echo %(port)02d", 3, "echo 03"),
+        ("echo %(hostname)s %(port)s", 3, "echo dummy 3"),
+        ("echo %(serial)s %(port)s", 3, "echo 262305 3"),
+        ("echo %(serial)s 50%%", 3, "echo 262305 50%"),
     ],
 )
 def test_port_interaction(mocker, command, port_number, expected):
     call = mocker.patch("pdudaemon.drivers.localcmdline.call")
-    pdu = LocalCmdline("dummy", {"cmd_on": command})
+    pdu = LocalCmdline("dummy", {"cmd_on": command, "serial": "262305"})
 
     pdu.port_interaction("on", port_number)
 
@@ -48,5 +53,15 @@ def test_port_interaction_unknown_command(mocker):
     pdu = LocalCmdline("dummy", {"cmd_on": "echo on"})
 
     pdu.port_interaction("reboot", 1)
+
+    call.assert_not_called()
+
+
+def test_port_interaction_missing_setting(mocker):
+    call = mocker.patch("pdudaemon.drivers.localcmdline.call")
+    pdu = LocalCmdline("dummy", {"cmd_on": "echo %(serial)s"})
+
+    with pytest.raises(KeyError):
+        pdu.port_interaction("on", 1)
 
     call.assert_not_called()

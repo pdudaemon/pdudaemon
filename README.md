@@ -79,6 +79,7 @@ all managed PDUs are listed and configured. For example:
 ```
 It is important to mention, that `hostname` can be an arbitrary name for a locally connected device (like `energenie` in this example).
 For the `localcmdline` driver, a `%` placeholder such as `%s` or `%i` in `cmd_on`/`cmd_off` is replaced with the requested port number; it can be left out entirely for devices which only have a single port.
+Named placeholders such as `%(serial)s` are replaced with the PDU setting of that name, and `%(port)s` and `%(hostname)s` with the requested port and the PDU name.
 For some (or most) network connected devices, it needs to be the actual hostname or IP address the PDU responds to (see `query-string` in [next section](#making-a-power-control-request)).
 The correct value for `driver` is highly dependent on the used child class and the specific implementation.
 Check the imported [Python module](https://github.com/pdudaemon/pdudaemon/tree/main/pdudaemon/drivers) for that class and look for `drivername` to be sure.

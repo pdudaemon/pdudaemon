@@ -49,10 +49,13 @@ class LocalCmdline(LocalBase):
             log.debug("Unknown command!")
             return
 
-        try:
-            cmd = cmd % ()
-        except TypeError:
-            cmd = cmd % port_number
+        if "%(" in cmd:
+            cmd = cmd % dict(self.settings, hostname=self.hostname, port=port_number)
+        else:
+            try:
+                cmd = cmd % ()
+            except TypeError:
+                cmd = cmd % port_number
 
         if cmd:
             log.debug("running %s" % cmd)
