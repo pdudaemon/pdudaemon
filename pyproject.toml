@@ -24,6 +24,7 @@ classifiers = [
 requires-python = ">= 3.10"
 dependencies = [
     "aiohttp",
+    "jinja2",
     "requests",
     "pexpect",
     "systemd_python",
@@ -49,6 +50,9 @@ packages = [
     "pdudaemon",
     "pdudaemon.drivers",
 ]
+
+[tool.setuptools.package-data]
+pdudaemon = ["templates/*"]
 
 [tool.setuptools_scm]
 local_scheme = "no-local-version"
