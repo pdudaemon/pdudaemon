@@ -56,7 +56,7 @@ class ip9850(PDUDriver):
         }
         url = "http://{}/set.cmd".format(self.hostname)
         log.debug("HTTP GET: {}".format(url))
-        r = requests.get(url, params)
+        r = requests.get(url, params, timeout=self.timeout)
 
         r.raise_for_status()
         if r.text.find("401") != -1:

@@ -63,4 +63,4 @@ class Sainsmart(LocalBase):
         if (val >= 0):
             url = self.url_base + "%02d" % val
             log.debug("HTTP GET at %s" % url)
-            requests.get(url)
+            requests.get(url, timeout=self.timeout)

@@ -38,7 +38,7 @@ def test_port_interaction(pdu, get_mock, command):
 
     pdu.port_interaction(command, 2)
 
-    get_mock.assert_called_once_with("http://192.0.2.1/cm", {"cmnd": "Power2 %s" % command})
+    get_mock.assert_called_once_with("http://192.0.2.1/cm", {"cmnd": "Power2 %s" % command}, timeout=10)
 
 
 def test_port_interaction_unexpected_state(pdu, get_mock):
@@ -54,7 +54,7 @@ def test_get_port_state(pdu, get_mock, state, expected):
 
     assert pdu.get_port_state(2) is expected
 
-    get_mock.assert_called_once_with("http://192.0.2.1/cm", {"cmnd": "Power2"})
+    get_mock.assert_called_once_with("http://192.0.2.1/cm", {"cmnd": "Power2"}, timeout=10)
 
 
 def test_get_port_state_credentials(get_mock):
@@ -64,7 +64,7 @@ def test_get_port_state_credentials(get_mock):
     assert pdu.get_port_state(1) is True
 
     get_mock.assert_called_once_with(
-        "http://192.0.2.1/cm", {"cmnd": "Power1", "user": "user", "password": "pass"}
+        "http://192.0.2.1/cm", {"cmnd": "Power1", "user": "user", "password": "pass"}, timeout=10
     )
 
 

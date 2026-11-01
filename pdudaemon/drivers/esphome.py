@@ -63,7 +63,7 @@ class ESPHomeHTTP(PDUDriver):
         auth = None
         if self.username and self.password:
             auth = HTTPDigestAuth(self.username, self.password)
-        response = requests.post(url, auth=auth)
+        response = requests.post(url, auth=auth, timeout=self.timeout)
 
         log.debug(
             "Response code for request to {}: {}".format(
@@ -80,7 +80,7 @@ class ESPHomeHTTP(PDUDriver):
         if self.username and self.password:
             auth = HTTPDigestAuth(self.username, self.password)
 
-        response = requests.get(url, auth=auth)
+        response = requests.get(url, auth=auth, timeout=self.timeout)
         response.raise_for_status()
         data = response.json()
 

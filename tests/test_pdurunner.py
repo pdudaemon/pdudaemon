@@ -160,6 +160,18 @@ def test_get_cached_port_states(runner):
     assert runner.get_cached_port_state(1) is True
 
 
+@pytest.mark.parametrize("config, timeout", [
+    ({"driver": "localcmdline"}, 10),
+    ({"driver": "localcmdline", "timeout": "2.5"}, 2.5),
+    ({"driver": "servertechpro2"}, 60),
+    ({"driver": "servertechpro2", "timeout": 5}, 5),
+])
+def test_timeout(config, timeout):
+    runner = PDURunner(config, "dummy", 1, 0)
+
+    assert runner.driver.timeout == timeout
+
+
 def test_get_ports_unknown(runner):
     assert runner.driver.get_ports() == []
 

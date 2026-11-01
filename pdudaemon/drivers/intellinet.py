@@ -61,7 +61,7 @@ class Intellinet(PDUDriver):
         url = "http://{}:{}/{}".format(self.hostname, self.port, page)
 
         log.debug("HTTP GET: {}".format(url))
-        r = requests.get(url, params, auth=self.auth)
+        r = requests.get(url, params, auth=self.auth, timeout=self.timeout)
 
         r.raise_for_status()
         if r.text.find("401") != -1:

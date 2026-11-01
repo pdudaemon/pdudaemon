@@ -72,7 +72,7 @@ class EgPMS(PDUDriver):
             log.debug("on: %d (raw: %x)" % (s >> 4 == 1, s))
 
     def connect(self):
-        self.socket = socket.create_connection((self.ip, 5000))
+        self.socket = socket.create_connection((self.ip, 5000), timeout=self.timeout)
         self.socket.send(b'\x11')
         self.challenge = array('B', self.socket.recv(4))
 

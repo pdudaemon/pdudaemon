@@ -45,15 +45,20 @@ class PDUDriver(object):
     first_port = 1
     # names of the ports of the PDU, or None to number the ports instead
     port_names = None
+    # seconds to wait for the PDU to connect or respond, for drivers which
+    # talk to the PDU over the network
+    timeout = 10
 
     def __init__(self):
         super(PDUDriver, self).__init__()
 
     def configure_ports(self, settings):
-        """Apply the port_count, first_port and port_names PDU settings.
-        port_count is only used if the driver doesn't know how many ports the
-        PDU has; first_port overrides the driver's.
+        """Apply the port_count, first_port, port_names and timeout PDU
+        settings. port_count is only used if the driver doesn't know how many
+        ports the PDU has; first_port and timeout override the driver's.
         """
+        if "timeout" in settings:
+            self.timeout = float(settings["timeout"])
         if not self.port_count and "port_count" in settings:
             self.port_count = int(settings["port_count"])
         if "first_port" in settings:

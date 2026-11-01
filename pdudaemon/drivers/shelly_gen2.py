@@ -49,7 +49,8 @@ class ShellyGen2(PDUDriver):
                 "id": 1,
                 "method": method,
                 "params": params,
-            }
+            },
+            timeout=self.timeout,
         )
 
         r.raise_for_status()

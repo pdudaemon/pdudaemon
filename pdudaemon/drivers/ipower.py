@@ -78,7 +78,7 @@ class LindyIPowerClassic8(PDUDriver):
         if self.username and self.password:
             auth = HTTPBasicAuth(self.username, self.password)
 
-        response = requests.get(url, params=params, auth=auth)
+        response = requests.get(url, params=params, auth=auth, timeout=self.timeout)
         log.debug(
             "Response code for request to {}: {}".format(
                 self.hostname, response.status_code

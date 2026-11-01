@@ -60,7 +60,7 @@ class HomeAssistantHTTP(PDUDriver):
         headers = { "Authorization": "Bearer {}".format(self.api_key) }
         body = { "entity_id": "switch.{}".format(ha_entity_id) }
 
-        response = requests.post(url, headers=headers, json=body)
+        response = requests.post(url, headers=headers, json=body, timeout=self.timeout)
 
         log.debug(
             "Response code for request to {}: {}".format(
@@ -77,7 +77,7 @@ class HomeAssistantHTTP(PDUDriver):
 
         headers = {"Authorization": "Bearer {}".format(self.api_key)}
 
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, timeout=self.timeout)
         response.raise_for_status()
         data = response.json()
 

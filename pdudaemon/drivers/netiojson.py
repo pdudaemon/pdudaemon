@@ -59,7 +59,7 @@ class NetioJson(PDUDriver):
             raise UnknownCommandException(f'Unknown command: {command}')
 
     def _do_request(self, url, port, action):
-        response = requests.post(url, json=self._get_request_json(port, action))
+        response = requests.post(url, json=self._get_request_json(port, action), timeout=self.timeout)
 
         if not self._is_request_successful(response, port, action):
             raise FailedRequestException(f'Request failed. Received following response:\n{response.text}')

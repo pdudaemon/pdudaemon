@@ -47,6 +47,7 @@ class Ubus(PDUDriver):
                 "method": "call",
                 "params": [ "00000000000000000000000000000000", path, method, message ],
             },
+            timeout=self.timeout,
         )
 
         r.raise_for_status()

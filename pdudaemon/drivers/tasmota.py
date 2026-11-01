@@ -57,7 +57,7 @@ class TasmotaBase(PDUDriver):
 
         url = "http://{}/cm".format(self.hostname)
         log.debug("HTTP GET: {}".format(url))
-        r = requests.get(url, params)
+        r = requests.get(url, params, timeout=self.timeout)
 
         # check response
         response = r.json()

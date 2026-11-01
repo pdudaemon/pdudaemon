@@ -39,7 +39,7 @@ def test_get_port_state(pdu, get_mock, state, expected):
 
     assert pdu.get_port_state("relay1") is expected
 
-    get_mock.assert_called_once_with("http://192.0.2.1:8080/switch/relay1", auth=None)
+    get_mock.assert_called_once_with("http://192.0.2.1:8080/switch/relay1", auth=None, timeout=10)
 
 
 def test_get_port_state_credentials(get_mock):
@@ -49,7 +49,7 @@ def test_get_port_state_credentials(get_mock):
     assert pdu.get_port_state("relay1") is True
 
     get_mock.assert_called_once_with(
-        "http://192.0.2.1:80/switch/relay1", auth=HTTPDigestAuth("user", "pass")
+        "http://192.0.2.1:80/switch/relay1", auth=HTTPDigestAuth("user", "pass"), timeout=10
     )
 
 

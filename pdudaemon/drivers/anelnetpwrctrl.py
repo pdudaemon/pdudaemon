@@ -44,7 +44,7 @@ class AnelNETPwrCtrlBase(PDUDriver):
         url = "http://{}?Sw_{}={},{}{}".format(
             self.hostname, command, port, self.username, self.password)
         log.debug("HTTP GET: {}".format(url))
-        r = requests.get(url)
+        r = requests.get(url, timeout=self.timeout)
 
         r.raise_for_status()
         if r.text == "User or password error.":

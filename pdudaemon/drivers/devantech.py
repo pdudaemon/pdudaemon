@@ -42,7 +42,7 @@ class DevantechBase(PDUDriver):
         super(DevantechBase, self).__init__()
 
     def connect(self):
-        self.connection = socket.create_connection((self.ip, self.port))
+        self.connection = socket.create_connection((self.ip, self.port), timeout=self.timeout)
         if self.password:
             log.debug("Attempting connection to %s:%s with provided password.", self.hostname, self.port)
             msg = b'\x79' + self.password.encode("utf-8")
@@ -169,7 +169,7 @@ class DevantechDSBase(PDUDriver):
         super().__init__()
 
     def connect(self):
-        self.connection = socket.create_connection((self.ip, self.port))
+        self.connection = socket.create_connection((self.ip, self.port), timeout=self.timeout)
 
     def port_interaction(self, command, port):
         self.connect()

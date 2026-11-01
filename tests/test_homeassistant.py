@@ -45,6 +45,7 @@ def test_get_port_state(pdu, get_mock, state, expected):
     get_mock.assert_called_once_with(
         "http://192.0.2.1:8123/api/states/switch.relay1",
         headers={"Authorization": "Bearer secret"},
+        timeout=10,
     )
 
 
