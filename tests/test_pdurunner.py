@@ -40,6 +40,15 @@ def test_unknown_command_is_not_retried(mocker, runner):
     bombout.assert_not_called()
 
 
+def test_unsupported_get_port_state_is_not_retried(mocker, runner):
+    get_port_state = mocker.spy(runner.driver, "get_port_state")
+
+    with pytest.raises(UnknownCommandException):
+        runner.get_port_state(1)
+
+    get_port_state.assert_called_once_with(1)
+
+
 def test_failure_is_retried(mocker, runner):
     port_on = mocker.patch.object(runner.driver, "port_on", side_effect=OSError("nope"))
 
@@ -79,8 +88,16 @@ def test_failed_request_clears_cached_state(mocker, runner):
 
 
 def test_get_cached_port_state_does_not_query_driver(mocker, runner):
-    port_interaction = mocker.patch.object(runner.driver, "port_interaction")
+    get_port_state = mocker.patch.object(runner.driver, "get_port_state")
 
     runner.get_cached_port_state(1)
 
-    port_interaction.assert_not_called()
+    get_port_state.assert_not_called()
+
+
+@pytest.mark.parametrize("on", [True, False])
+def test_get_port_state_updates_cache(mocker, runner, on):
+    mocker.patch.object(runner.driver, "get_port_state", return_value=on)
+
+    assert runner.get_port_state(1) is on
+    assert runner.get_cached_port_state(1) is on
