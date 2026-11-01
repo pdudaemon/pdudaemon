@@ -40,7 +40,8 @@ class PDURunner:
         self.logger = logging.getLogger("pdud.pdu.%s" % hostname)
         self.driver = self.driver_from_hostname(hostname)
         # last known state of each port on this PDU, keyed by str(port);
-        # only access through get_cached_port_state() and _set_cached_port_state()
+        # only access through get_cached_port_state(), get_cached_port_states()
+        # and _set_cached_port_state()
         self.port_state_cache = {}
         # use single-worker ThreadPoolExecutor to serialize execution
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=1, thread_name_prefix=hostname)
@@ -98,6 +99,12 @@ class PDURunner:
         or None if it is unknown.
         """
         return self.port_state_cache.get(str(port))
+
+    def get_cached_port_states(self) -> dict:
+        """Return the last known state of every port with a known state,
+        keyed by str(port), without querying the PDU.
+        """
+        return dict(self.port_state_cache)
 
     def _set_cached_port_state(self, port, on: bool):
         """Cache the new state of a port."""

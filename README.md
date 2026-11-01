@@ -123,6 +123,14 @@ An HTTP request URL has the following syntax:
     - HTTP 200 - Request Accepted
     - HTTP 503 - Invalid Request, Request not accepted
 
+  ***Port Status***
+
+  The cached state of each port (see the `Get cached port state` section below) is available as JSON from `/power/status` (or `/power/status/json`). Every PDU in the config file is listed with its driver and ports. Only ports with a known state are listed, along with any ports in the `aliases` section of the config file, which show as `unknown` until their state is known. Ports in the `aliases` section also include their alias name. Add `?hostname=<pdu-hostname>` to only show one PDU.
+  ```
+  $ curl "http://localhost:16421/power/status"
+  {"192.168.10.2": {"driver": "tasmota", "ports": {"1": {"state": "on", "alias": "board1"}, "2": {"state": "off"}}}}
+  ```
+
 - **TCP (legacy pduclient)**
 The bundled client is used when PDUDaemon is configured to listen to 'tcp' requests. TCP support is considered legacy but will remain functional.
 ```

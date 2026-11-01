@@ -40,6 +40,8 @@ class HTTPListener:
             web.get('/power/control/reboot', self.handle),
             web.get('/power/control/get-cached-port-state', self.handle),
             web.get('/power/control/get-port-state', self.handle),
+            web.get('/power/status', self.handle_status),
+            web.get('/power/status/json', self.handle_status),
         ])
         self.apprunner = None
 
@@ -77,3 +79,36 @@ class HTTPListener:
         if not args:
             return listener.RequestError("could not parse request")
         return await listener.process_request(args, self.config, self.daemon)
+
+    def get_alias_names(self):
+        alias_names = {}
+        for name, alias in self.config.get('aliases', {}).items():
+            if alias.get('hostname') in self.daemon.runners:
+                alias_names.setdefault(alias['hostname'], {})[str(alias.get('port'))] = name
+        return alias_names
+
+    def get_status(self, request):
+        hostname = request.query.get('hostname')
+        runners = self.daemon.runners
+        if hostname and hostname not in runners:
+            return None
+        status = {}
+        alias_names = self.get_alias_names()
+        for name, runner in runners.items():
+            aliases = alias_names.get(name, {})
+            ports = {port: {"state": "unknown", "alias": alias} for port, alias in aliases.items()}
+            for port, on in runner.get_cached_port_states().items():
+                port_status = {"state": listener.PortStatus(on=on).state}
+                if port in aliases:
+                    port_status["alias"] = aliases[port]
+                ports[port] = port_status
+            status[name] = {"driver": runner.config["driver"], "ports": ports}
+        if hostname:
+            return {hostname: status[hostname]}
+        return status
+
+    async def handle_status(self, request):
+        status = self.get_status(request)
+        if status is None:
+            return web.Response(status=404, text="PDU not found\n")
+        return web.json_response(status)
