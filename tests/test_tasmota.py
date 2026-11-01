@@ -82,3 +82,7 @@ def test_get_port_state_port_out_of_range(pdu, get_mock, port):
         pdu.get_port_state(port)
 
     get_mock.assert_not_called()
+
+
+def test_get_ports(pdu):
+    assert pdu.get_ports() == [1, 2]
