@@ -78,6 +78,7 @@ all managed PDUs are listed and configured. For example:
   }
 ```
 It is important to mention, that `hostname` can be an arbitrary name for a locally connected device (like `energenie` in this example).
+Each PDU name must be unique, pdudaemon refuses to start if a name is used more than once.
 For the `localcmdline` driver, a `%` placeholder such as `%s` or `%i` in `cmd_on`/`cmd_off` is replaced with the requested port number; it can be left out entirely for devices which only have a single port.
 Named placeholders such as `%(serial)s` are replaced with the PDU setting of that name, and `%(port)s` and `%(hostname)s` with the requested port and the PDU name.
 An optional `cmd_state` command, using the same placeholders, implements `get-port-state`: it must exit with status 0 and print `on` when the port is powered on, or `off` when it is powered off. Any other exit status or output is an error.
@@ -90,6 +91,18 @@ Check the imported [Python module](https://github.com/pdudaemon/pdudaemon/tree/m
 Some drivers require additional parameters (like a device ID).
 Which parameters are required can also be extracted from the associated python module and child class definition.
 It is also worth checking out the [share](https://github.com/pdudaemon/pdudaemon/tree/main/share) folder for some driver specific example configuration files and helpful scripts that can help prevent major headaches!
+
+The optional `aliases` section names ports of the PDUs, so requests can use the alias (`alias=<name>` in HTTP requests, or `--alias <name>` with `--drive`) instead of the hostname and port. For example:
+
+```json
+  "aliases": {
+      "board1": {
+          "hostname": "192.168.0.42",
+          "port": 1
+      }
+  }
+```
+Each alias name must be unique, pdudaemon refuses to start if a name is used more than once.
 
 ## Making a power control request
 - **HTTP**

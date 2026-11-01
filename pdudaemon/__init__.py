@@ -20,6 +20,7 @@
 
 import argparse
 import asyncio
+import collections
 import json
 import logging
 from logging.handlers import WatchedFileHandler
@@ -77,6 +78,37 @@ def setup_logging(options, settings):
         logger.setLevel(logging.WARNING)
     else:
         logger.setLevel(logging.ERROR)
+
+
+class _ConfigObject(dict):
+    """A JSON object of the configuration file, which remembers the keys
+    used more than once, as json silently keeps only the last of them.
+    """
+    def __init__(self, pairs):
+        super().__init__(pairs)
+        counts = collections.Counter(key for key, _ in pairs)
+        self.duplicate_keys = sorted(key for key, count in counts.items() if count > 1)
+
+
+def load_config(text):
+    """Parse and check the configuration file. Raises ValueError if it is
+    invalid.
+    """
+    settings = json.loads(text, object_pairs_hook=_ConfigObject)
+    check_config(settings)
+    return settings
+
+
+def check_config(settings):
+    """Raise ValueError if the configuration is invalid."""
+    pdus = settings.get("pdus", {})
+    duplicates = getattr(pdus, "duplicate_keys", [])
+    if duplicates:
+        raise ValueError("Duplicate PDU names: {}".format(", ".join(duplicates)))
+    aliases = settings.get("aliases", {})
+    duplicates = getattr(aliases, "duplicate_keys", [])
+    if duplicates:
+        raise ValueError("Duplicate alias names: {}".format(", ".join(duplicates)))
 
 
 class PDUDaemon:
@@ -154,7 +186,7 @@ async def main_async():
 
     # Read the configuration file
     try:
-        settings = json.loads(options.conf.read())
+        settings = load_config(options.conf.read())
     except Exception as exc:
         logging.error("Unable to read configuration file '%s': %s", options.conf.name, exc)
         sys.exit(1)
