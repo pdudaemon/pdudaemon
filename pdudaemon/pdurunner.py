@@ -25,7 +25,7 @@ import traceback
 import pexpect
 import concurrent.futures
 from typing import Optional
-from pdudaemon.drivers.driver import FailedRequestException, PDUDriver
+from pdudaemon.drivers.driver import FailedRequestException, PDUDriver, UnknownCommandException
 import pdudaemon.drivers.strategies
 
 assert pdudaemon.drivers.strategies, "Subclasses are iterated to find all drivers"
@@ -61,6 +61,10 @@ class PDURunner:
                 result = action()
                 self.driver._cleanup()  # pylint: disable=W0212
                 return result
+            except UnknownCommandException:
+                # the driver can't handle the request, retrying won't help
+                self.logger.warn("Driver cannot execute job: {} {}".format(port, request))
+                raise
             except (OSError, pexpect.exceptions.EOF, Exception):  # pylint: disable=broad-except
                 self.logger.warn(traceback.format_exc())
                 self.logger.warn("Failed to execute job: {} {} (attempts left {})".format(port, request, retries - 1))
@@ -81,6 +85,14 @@ class PDURunner:
         self._run_with_retries(port, "off", lambda: self.driver.port_off(port))
         self._set_cached_port_state(port, False)
 
+    def get_port_state(self, port) -> bool:
+        """Query the PDU for the state of the port and cache the result.
+        Returns True if the port is powered on, False if powered off.
+        """
+        on = self._run_with_retries(port, "get-port-state", lambda: self.driver.get_port_state(port))
+        self._set_cached_port_state(port, on)
+        return on
+
     def get_cached_port_state(self, port) -> Optional[bool]:
         """Return the last known state of the port without querying the PDU,
         or None if it is unknown.
@@ -100,3 +112,6 @@ class PDURunner:
 
     async def port_off_async(self, port) -> None:
         await self._in_executor(self.port_off, port)
+
+    async def get_port_state_async(self, port) -> bool:
+        return await self._in_executor(self.get_port_state, port)

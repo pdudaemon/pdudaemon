@@ -104,6 +104,7 @@ An HTTP request URL has the following syntax:
       - **off**: power off
       - **reboot**: reboot
       - **get-cached-port-state**: return the last known powered state of the port (see the `Get cached port state` section below)
+      - **get-port-state**: retrieve the powered state of the port (see the `Get port state` section below)
     - query-string can have 3 parameters (same as pduclient, see below)
       - **hostname**: the PDU hostname or IP address used in the [configuration file](https://github.com/pdudaemon/pdudaemon/blob/main/share/pdudaemon.conf) (e.g.: "192.168.10.2")
       - **port**: the PDU port number
@@ -135,7 +136,7 @@ Options:
   --hostname=PDUHOSTNAME
                         PDU Hostname (ex: pdu05)
   --port=PDUPORTNUM     PDU Portnumber (ex: 04)
-  --command=PDUCOMMAND  PDU command (ex: reboot|on|off|get-cached-port-state)
+  --command=PDUCOMMAND  PDU command (ex: reboot|on|off|get-cached-port-state|get-port-state)
   --delay=PDUDELAY      Delay before command runs, or between off/on when
                         rebooting (ex: 5)
 ```
@@ -151,12 +152,13 @@ If requesting reboot, the delay between turning the port off and on can be modif
 and is by default 5 seconds.
 
 ## Get cached port state
-pdudaemon remembers the last known powered state of each port. It is updated every time an `on`, `off`
-or `reboot` request succeeds. `get-cached-port-state` returns this cached state without
+pdudaemon remembers the last known powered state of each port. It is updated every time an `on`, `off`,
+`reboot` or `get-port-state` request succeeds. `get-cached-port-state` returns this cached state without
 querying the PDU, so it works with every driver and returns immediately.
 
 The cached state is lost when pdudaemon restarts, and it can be out of date if the port was switched
-by something other than pdudaemon. A port with no known state reports `unknown`.
+by something other than pdudaemon. A port with no known state reports `unknown`. Use
+`get-port-state` to read the actual state from the PDU.
 
 - **HTTP**
 
@@ -172,6 +174,40 @@ by something other than pdudaemon. A port with no known state reports `unknown`.
   ```
   $ pduclient --daemon localhost --hostname 192.168.10.2 --port 1 --command get-cached-port-state
   Port state: unknown
+  ```
+
+## Get port state
+pdudaemon can retrieve a port's powered state (on or off), if it is supported by the driver.
+Not all drivers implement status retrieval; unsupported drivers will return an error.
+
+- **HTTP**
+
+  Send a `GET` request to the `get-port-state` endpoint with the same `hostname` and `port` query parameters used for control commands:
+
+  ```
+  $ curl "http://localhost:16421/power/control/get-port-state?hostname=192.168.10.2&port=1"
+  {"state": "on"}
+  ```
+
+  The response body is a JSON object with a single `state` key:
+  - `on` - port is powered **on**
+  - `off` - port is powered **off**
+
+  HTTP 200 is returned when the state was read from the PDU. HTTP 500 is returned if the request is invalid or the driver does not support status retrieval.
+
+- **pduclient (TCP)**
+
+  Use `get-port-state` as the command, with or without the `--http` flag:
+
+  ```
+  $ pduclient --daemon localhost --hostname 192.168.10.2 --port 1 --command get-port-state
+  Port state: on
+  ```
+
+- **non-daemon (--drive)**
+
+  ```
+  $ pdudaemon --conf=share/pdudaemon.conf --drive --hostname pdu01 --port 1 --request get-port-state
   ```
 
 ## Adding drivers

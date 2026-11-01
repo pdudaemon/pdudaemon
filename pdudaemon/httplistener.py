@@ -39,6 +39,7 @@ class HTTPListener:
             web.get('/power/control/off', self.handle),
             web.get('/power/control/reboot', self.handle),
             web.get('/power/control/get-cached-port-state', self.handle),
+            web.get('/power/control/get-port-state', self.handle),
         ])
         self.apprunner = None
 
