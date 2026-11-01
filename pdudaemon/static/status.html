@@ -159,6 +159,23 @@ async function loadStatus() {
     }
 }
 
+// Format a number of seconds as e.g. "2d 3h 4m", or "42s" if less than a
+// minute.
+function formatDuration(seconds) {
+    const parts = [
+        [Math.floor(seconds / 86400), "d"],
+        [Math.floor(seconds % 86400 / 3600), "h"],
+        [Math.floor(seconds % 3600 / 60), "m"],
+    ];
+    while (parts.length && parts[0][0] === 0) {
+        parts.shift();
+    }
+    if (parts.length === 0) {
+        return seconds + "s";
+    }
+    return parts.map(([value, unit]) => value + unit).join(" ");
+}
+
 // Show which daemon this is. Failures are ignored, as loadStatus()
 // already reports the daemon being unreachable.
 async function loadInfo() {
@@ -169,7 +186,8 @@ async function loadInfo() {
             const title = "PDUDaemon on " + info.hostname;
             document.title = title;
             document.getElementById("title").textContent = title;
-            document.getElementById("info").textContent = "Version " + info.version;
+            document.getElementById("info").textContent =
+                "Version " + info.version + ", up " + formatDuration(info.uptime);
         }
     } catch (e) {
     }

@@ -155,15 +155,15 @@ An HTTP request URL has the following syntax:
 
   ***Daemon Info***
 
-  Information about the daemon itself is available as JSON from `/power/info`: `hostname` is the hostname of the machine running PDUDaemon and `version` is the version of PDUDaemon, or `unknown` if it isn't installed as a package.
+  Information about the daemon itself is available as JSON from `/power/info`: `hostname` is the hostname of the machine running PDUDaemon and `version` is the version of PDUDaemon, or `unknown` if it isn't installed as a package, and `uptime` is the number of seconds since the daemon started.
   ```
   $ curl "http://localhost:16421/power/info"
-  {"hostname": "lab-host", "version": "1.2.0"}
+  {"hostname": "lab-host", "version": "1.2.0", "uptime": 3600}
   ```
 
   ***Web UI***
 
-  A web page showing the same status and the hostname and version from [Daemon Info](#making-a-power-control-request), with buttons to switch each port on or off, to reset it (off, then on again after 5 seconds), or to read its state from the PDU (disabled if the driver doesn't support `get-port-state`), is available from `/power/dashboard`, which `/` also redirects to. The result of each request is shown above the table, in red if it failed. It refreshes the status every 5 seconds, and also accepts `?hostname=<pdu-hostname>`. It is disabled by default; to enable it, set `"web_ui": true` in the 'daemon' section of the config file.
+  A web page showing the same status and the hostname, version and uptime from [Daemon Info](#making-a-power-control-request), with buttons to switch each port on or off, to reset it (off, then on again after 5 seconds), or to read its state from the PDU (disabled if the driver doesn't support `get-port-state`), is available from `/power/dashboard`, which `/` also redirects to. The result of each request is shown above the table, in red if it failed. It refreshes the status every 5 seconds, and also accepts `?hostname=<pdu-hostname>`. It is disabled by default; to enable it, set `"web_ui": true` in the 'daemon' section of the config file.
 
 - **TCP (legacy pduclient)**
 The bundled client is used when PDUDaemon is configured to listen to 'tcp' requests. TCP support is considered legacy but will remain functional.

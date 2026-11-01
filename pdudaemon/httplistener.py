@@ -20,6 +20,7 @@
 import urllib.parse as urlparse
 import logging
 import socket
+import time
 import pdudaemon.listener as listener
 
 from aiohttp import web
@@ -42,6 +43,8 @@ class HTTPListener:
         self.config = config
         self.daemon = daemon
         self.settings = config["daemon"]
+        # the listener is created when the daemon starts
+        self.start_time = time.monotonic()
 
         self.app = web.Application()
         self.app.add_routes([
@@ -138,7 +141,11 @@ class HTTPListener:
         return web.json_response(status)
 
     def get_info(self):
-        return {"hostname": socket.gethostname(), "version": VERSION}
+        return {
+            "hostname": socket.gethostname(),
+            "version": VERSION,
+            "uptime": int(time.monotonic() - self.start_time),
+        }
 
     async def handle_info(self, request):
         return web.json_response(self.get_info())

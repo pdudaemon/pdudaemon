@@ -137,11 +137,15 @@ async def test_status_unknown_hostname(client):
 
 
 @pytest.mark.asyncio
-async def test_info(client):
-    resp = await client.get("/power/info")
+async def test_info(daemon, mocker):
+    monotonic = mocker.patch("pdudaemon.httplistener.time.monotonic", return_value=100.0)
+    listener = HTTPListener(CONFIG, daemon)
+    monotonic.return_value = 3700.9
 
-    assert resp.status == 200
-    assert await resp.json() == {"hostname": socket.gethostname(), "version": VERSION}
+    async with TestClient(TestServer(listener.app)) as client:
+        resp = await client.get("/power/info")
+        assert resp.status == 200
+        assert await resp.json() == {"hostname": socket.gethostname(), "version": VERSION, "uptime": 3600}
 
 
 @pytest.mark.asyncio
