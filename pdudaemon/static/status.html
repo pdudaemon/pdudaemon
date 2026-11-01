@@ -15,6 +15,7 @@ col.control { width: 6.5em; }
 button { font-size: 0.85em; padding: 0.15em 0.4em; }
 th, td { padding: 0.3em 0.6em; border-bottom: 1px solid #ccc; text-align: left; }
 th { background: #eee; }
+#info { color: #666; margin-top: -0.5em; }
 #message { min-height: 1.2em; }
 #message.error { color: #a00; font-weight: bold; }
 .pdu { margin: 0 0 1em; padding: 0.5em 1em 1em; border: 1px solid #ccc; border-radius: 4px; }
@@ -31,6 +32,7 @@ tr.state-unknown td:nth-child(3) { color: #888; }
 <body>
 
 <h1 id="title">PDUDaemon status</h1>
+<p id="info"></p>
 <p id="message"></p>
 <div id="status">Loading...</div>
 <div id="statusbar">Loading...</div>
@@ -167,6 +169,7 @@ async function loadInfo() {
             const title = "PDUDaemon on " + info.hostname;
             document.title = title;
             document.getElementById("title").textContent = title;
+            document.getElementById("info").textContent = "Version " + info.version;
         }
     } catch (e) {
     }

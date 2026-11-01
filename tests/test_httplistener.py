@@ -23,7 +23,7 @@ from types import SimpleNamespace
 import pytest
 import pytest_asyncio
 from aiohttp.test_utils import TestClient, TestServer
-from pdudaemon.httplistener import HTTPListener
+from pdudaemon.httplistener import VERSION, HTTPListener
 from pdudaemon.pdurunner import PDURunner
 
 
@@ -141,7 +141,7 @@ async def test_info(client):
     resp = await client.get("/power/info")
 
     assert resp.status == 200
-    assert await resp.json() == {"hostname": socket.gethostname()}
+    assert await resp.json() == {"hostname": socket.gethostname(), "version": VERSION}
 
 
 @pytest.mark.asyncio

@@ -23,9 +23,15 @@ import socket
 import pdudaemon.listener as listener
 
 from aiohttp import web
+from importlib.metadata import PackageNotFoundError, version
 from importlib.resources import files
 
 logger = logging.getLogger('pdud.http')
+
+try:
+    VERSION = version("pdudaemon")
+except PackageNotFoundError:
+    VERSION = "unknown"
 
 STATUS_HTML = files("pdudaemon").joinpath("static/status.html").read_text()
 
@@ -132,7 +138,7 @@ class HTTPListener:
         return web.json_response(status)
 
     def get_info(self):
-        return {"hostname": socket.gethostname()}
+        return {"hostname": socket.gethostname(), "version": VERSION}
 
     async def handle_info(self, request):
         return web.json_response(self.get_info())
