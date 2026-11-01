@@ -21,6 +21,7 @@
 import optparse
 
 def do_http_request(options):
+    import json
     import urllib.error
     import urllib.request
     request = "http://%s:16421/power/control/%s?hostname=%s&port=%s" % (
@@ -30,7 +31,7 @@ def do_http_request(options):
     if options.pdudelay:
         request += "&delay=%s" % options.pdudelay
     try:
-        urllib.request.urlopen(request)
+        reply = urllib.request.urlopen(request)
     except urllib.error.HTTPError as reply:
         print("Error sending command! %s replied: %s %s" %
               (options.pdudaemonhostname, reply.code,
@@ -39,7 +40,11 @@ def do_http_request(options):
     except Exception:
         print ("Error sending command, wrong daemon hostname?")
         exit(1)
-    print("Command sent successfully.")
+    if options.pducommand == "get-cached-port-state":
+        data = json.load(reply)
+        print("Port state: %s" % data.get("state"))
+    else:
+        print("Command sent successfully.")
     exit(0)
 
 
@@ -47,7 +52,7 @@ if __name__ == '__main__':
     usage = "Usage: %prog --daemon deamonhostname --hostname pduhostname " \
             "--port pduportnum --command pducommand"
     description = "PDUDaemon client"
-    commands = ["reboot", "on", "off"]
+    commands = ["reboot", "on", "off", "get-cached-port-state"]
     parser = optparse.OptionParser(usage=usage, description=description)
     parser.add_option("-H", "--http", dest="use_http", action="store_true",
                       help=optparse.SUPPRESS_HELP)
@@ -59,7 +64,7 @@ if __name__ == '__main__':
     parser.add_option("--port", dest="pduportnum", action="store",
                       type="string", help="PDU Portnumber (ex: 04)")
     parser.add_option("--command", dest="pducommand", action="store",
-                      type="string", help="PDU command (ex: reboot|on|off)")
+                      type="string", help="PDU command (ex: reboot|on|off|get-cached-port-state)")
     parser.add_option("--delay", dest="pdudelay", action="store", type="int",
                       help="Delay before command runs, or between off/on "
                            "when rebooting (ex: 5)")

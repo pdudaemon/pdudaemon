@@ -24,6 +24,7 @@ import time
 import traceback
 import pexpect
 import concurrent.futures
+from typing import Optional
 from pdudaemon.drivers.driver import FailedRequestException, PDUDriver, UnknownCommandException
 import pdudaemon.drivers.strategies
 
@@ -38,6 +39,9 @@ class PDURunner:
         self.retrydelay = retrydelay
         self.logger = logging.getLogger("pdud.pdu.%s" % hostname)
         self.driver = self.driver_from_hostname(hostname)
+        # last known state of each port on this PDU, keyed by str(port);
+        # only access through get_cached_port_state() and _set_cached_port_state()
+        self.port_state_cache = {}
         # use single-worker ThreadPoolExecutor to serialize execution
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=1, thread_name_prefix=hostname)
 
@@ -73,11 +77,30 @@ class PDURunner:
             "Failed to {} port {} on PDU {} after {} retries".format(request, port, self.hostname, self.retries)
         )
 
+    def _switch_port(self, port, request, action, on: bool):
+        try:
+            self._run_with_retries(port, request, action)
+        except Exception:
+            # the port may or may not have switched, so its state is unknown
+            self._set_cached_port_state(port, None)
+            raise
+        self._set_cached_port_state(port, on)
+
     def port_on(self, port):
-        self._run_with_retries(port, "on", lambda: self.driver.port_on(port))
+        self._switch_port(port, "on", lambda: self.driver.port_on(port), True)
 
     def port_off(self, port):
-        self._run_with_retries(port, "off", lambda: self.driver.port_off(port))
+        self._switch_port(port, "off", lambda: self.driver.port_off(port), False)
+
+    def get_cached_port_state(self, port) -> Optional[bool]:
+        """Return the last known state of the port without querying the PDU,
+        or None if it is unknown.
+        """
+        return self.port_state_cache.get(str(port))
+
+    def _set_cached_port_state(self, port, on: Optional[bool]):
+        """Cache the new state of a port."""
+        self.port_state_cache[str(port)] = on
 
     async def _in_executor(self, fn, *args):
         loop = asyncio.get_running_loop()
