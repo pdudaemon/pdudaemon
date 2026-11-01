@@ -103,6 +103,7 @@ An HTTP request URL has the following syntax:
       - **on**: power on
       - **off**: power off
       - **reboot**: reboot
+      - **get-cached-port-state**: return the last known powered state of the port (see the `Get cached port state` section below)
     - query-string can have 3 parameters (same as pduclient, see below)
       - **hostname**: the PDU hostname or IP address used in the [configuration file](https://github.com/pdudaemon/pdudaemon/blob/main/share/pdudaemon.conf) (e.g.: "192.168.10.2")
       - **port**: the PDU port number
@@ -134,7 +135,7 @@ Options:
   --hostname=PDUHOSTNAME
                         PDU Hostname (ex: pdu05)
   --port=PDUPORTNUM     PDU Portnumber (ex: 04)
-  --command=PDUCOMMAND  PDU command (ex: reboot|on|off)
+  --command=PDUCOMMAND  PDU command (ex: reboot|on|off|get-cached-port-state)
   --delay=PDUDELAY      Delay before command runs, or between off/on when
                         rebooting (ex: 5)
 ```
@@ -148,6 +149,30 @@ $ pdudaemon --conf=share/pdudaemon.conf --drive --hostname pdu01 --port 1 --requ
 
 If requesting reboot, the delay between turning the port off and on can be modified with `--delay`
 and is by default 5 seconds.
+
+## Get cached port state
+pdudaemon remembers the last known powered state of each port. It is updated every time an `on`, `off`
+or `reboot` request succeeds. `get-cached-port-state` returns this cached state without
+querying the PDU, so it works with every driver and returns immediately.
+
+The cached state is lost when pdudaemon restarts, and it can be out of date if the port was switched
+by something other than pdudaemon. A port with no known state reports `unknown`.
+
+- **HTTP**
+
+  ```
+  $ curl "http://localhost:16421/power/control/get-cached-port-state?hostname=192.168.10.2&port=1"
+  {"state": "on"}
+  ```
+
+  The response body is a JSON object with a single `state` key, one of `on`, `off` or `unknown`.
+
+- **pduclient (TCP)**
+
+  ```
+  $ pduclient --daemon localhost --hostname 192.168.10.2 --port 1 --command get-cached-port-state
+  Port state: unknown
+  ```
 
 ## Adding drivers
 Drivers are implemented children of the "PDUDriver" class and many example

@@ -20,6 +20,7 @@
 import asyncio
 import logging
 from dataclasses import dataclass
+from typing import Optional
 
 logger = logging.getLogger('pdud.listener')
 
@@ -33,6 +34,19 @@ class RequestResult:
 class CommandAccepted(RequestResult):
     """A set-style command (on/off/reboot) was successfully accepted."""
     pass
+
+
+@dataclass
+class PortStatus(RequestResult):
+    """Result of a get-cached-port-state request - True if the port is powered
+    on, None if the state is unknown."""
+    on: Optional[bool]
+
+    @property
+    def state(self) -> str:
+        if self.on is None:
+            return "unknown"
+        return "on" if self.on else "off"
 
 
 @dataclass
@@ -114,7 +128,7 @@ def _resolve_args(args, config):
     if args.hostname not in config['pdus']:
         logger.info("PDU was not found in config")
         return RequestError("PDU not found in config")
-    if args.request not in ["reboot", "on", "off"]:
+    if args.request not in ["reboot", "on", "off", "get-cached-port-state"]:
         logger.info("Unknown request: %s", args.request)
         return RequestError("unknown request: %s" % args.request)
     return None
@@ -132,6 +146,8 @@ async def process_request(args, config, daemon) -> RequestResult:
             await asyncio.sleep(int(args.delay))
             await runner.port_on_async(args.port)
             return CommandAccepted()
+        if args.request == "get-cached-port-state":
+            return PortStatus(on=runner.get_cached_port_state(args.port))
         await asyncio.sleep(int(args.delay))
         if args.request == "on":
             await runner.port_on_async(args.port)
