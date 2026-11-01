@@ -86,13 +86,13 @@ class PDUDriver(object):
         log.debug("%s accepted the request", willing[0])
         return willing[0]
 
-    def port_on(self, port_number):
-        self.port_interaction("on", port_number)
+    def port_on(self, port):
+        self.port_interaction("on", port)
 
-    def port_off(self, port_number):
-        self.port_interaction("off", port_number)
+    def port_off(self, port):
+        self.port_interaction("off", port)
 
-    def get_port_state(self, port_number) -> bool:
+    def get_port_state(self, port) -> bool:
         """Return True if the port is powered on, False if powered off. Raises
         UnknownCommandException if retrieving the port status is unsupported by
         the driver.
@@ -107,7 +107,7 @@ class PDUDriver(object):
             return list(self.port_names)
         return list(range(self.first_port, self.first_port + (self.port_count or 0)))
 
-    def port_interaction(self, command, port_number):
+    def port_interaction(self, command, port):
         pass
 
     def _bombout(self):

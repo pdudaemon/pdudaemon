@@ -50,7 +50,7 @@ class Servo(PDUDriver):
 
         super().__init__()
 
-    def port_interaction(self, command, port_number):
+    def port_interaction(self, command, port):
         if command not in ('on', 'off'):
             log.error("Unknown command %s." % (command))
             return

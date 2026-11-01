@@ -6,7 +6,7 @@ from pdudaemon.drivers.localcmdline import LocalCmdline
 
 
 @pytest.mark.parametrize(
-    "command, port_number, expected",
+    "command, port, expected",
     [
         ("echo %s", 3, "echo 3"),
         ("echo %s", "3", "echo 3"),
@@ -18,10 +18,10 @@ from pdudaemon.drivers.localcmdline import LocalCmdline
     ],
 )
 @pytest.mark.parametrize("request_name", ["on", "off"])
-def test_port_substitution(mocker, request_name, command, port_number, expected):
+def test_port_substitution(mocker, request_name, command, port, expected):
     call = mocker.patch("pdudaemon.drivers.localcmdline.call")
     pdu = LocalCmdline("dummy", {"cmd_" + request_name: command})
 
-    pdu.port_interaction(request_name, port_number)
+    pdu.port_interaction(request_name, port)
 
     call.assert_called_once_with(expected, shell=True)

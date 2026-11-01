@@ -73,13 +73,13 @@ class BCU(PDUDriver):
     def _set_gpio(self, gpio, value):
         return self._run(['set_gpio', gpio, value])
 
-    def port_on(self, port_number):
+    def port_on(self, port):
         self._init()
         self._set_gpio(
             self.reset_gpio,
             '1' if self.reset_gpio_active_low else '0')
 
-    def port_off(self, port_number):
+    def port_off(self, port):
         self._init()
         self._set_gpio(
             self.reset_gpio,

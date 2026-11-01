@@ -50,7 +50,7 @@ class VUSBHID(PDUDriver):
         self.invert = settings.get("invert", False)
         log.debug("serial: %s" % self.serial)
 
-    def port_interaction(self, command, port_number):
+    def port_interaction(self, command, port):
         def xor(a, b):
             return bool(a) != bool(b)
 
@@ -78,20 +78,20 @@ class VUSBHID(PDUDriver):
             log.error(err)
             raise RuntimeError(err)
 
-        port_number = int(port_number)
+        port = int(port)
 
         # The end of the product string indicates the number of relays
         max_ports = int(product[8:])
 
-        if port_number > max_ports or port_number < 1:
+        if port > max_ports or port < 1:
             err = "Port should be in the range 1 - {}".format(max_ports)
             log.error(err)
             raise RuntimeError(err)
 
         if command == "on":
-            self.set_state(dev, port_number, xor(True, self.invert))
+            self.set_state(dev, port, xor(True, self.invert))
         elif command == "off":
-            self.set_state(dev, port_number, xor(False, self.invert))
+            self.set_state(dev, port, xor(False, self.invert))
         else:
             log.error("Unknown command %s." % (command))
             return

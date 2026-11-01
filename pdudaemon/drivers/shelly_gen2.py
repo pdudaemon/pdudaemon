@@ -55,25 +55,25 @@ class ShellyGen2(PDUDriver):
         r.raise_for_status()
         return r.json()["result"]
 
-    def port_get(self, port_number):
+    def port_get(self, port):
         r = self.jsonrpc_call("Switch.GetStatus", {
-            "id": int(port_number)
+            "id": int(port)
         })
         return r["output"]
 
-    def port_interaction(self, command, port_number):
-        if not 0 <= port_number <= 3:
+    def port_interaction(self, command, port):
+        if not 0 <= port <= 3:
             raise ValueError("Invalid port number")
 
         if command == "get":
-            return self.port_get(port_number)
+            return self.port_get(port)
 
         port_status = False
         if command == "on":
             port_status = True
 
         self.jsonrpc_call("Switch.Set", {
-            "id": int(port_number),
+            "id": int(port),
             "on": port_status
         })
 

@@ -33,7 +33,7 @@ class APC9218(APC7952):
             return True
         return False
 
-    def _port_interaction(self, command, port_number):
+    def _port_interaction(self, command, port):
         # make sure in main menu here
         self._back_to_main()
         self.connection.send("\r")
@@ -43,7 +43,7 @@ class APC9218(APC7952):
         self.connection.send("1\r")
         self.connection.expect("------- Device Manager")
         log.debug("Got to Device Manager")
-        self._enter_outlet(port_number, False)
+        self._enter_outlet(port, False)
         self.connection.expect(["1- Control Outlet",
                                 "1- Outlet Control/Configuration"])
         self.connection.expect("> ")
@@ -53,7 +53,7 @@ class APC9218(APC7952):
             log.debug("Stupid paging thingmy detected, pressing enter")
             self.connection.send("\r")
         self.connection.send("\r")
-        self.connection.expect(["Control Outlet %s" % port_number,
+        self.connection.expect(["Control Outlet %s" % port,
                                 "Control Outlet"])
         self.connection.expect("3- Immediate Reboot")
         self.connection.expect("> ")

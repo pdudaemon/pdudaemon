@@ -24,7 +24,7 @@ from pdudaemon.drivers.localcmdline import LocalCmdline
 
 
 @pytest.mark.parametrize(
-    "command, port_number, expected",
+    "command, port, expected",
     [
         ("echo %s", 3, "echo 3"),
         ("echo %s", "3", "echo 3"),
@@ -41,11 +41,11 @@ from pdudaemon.drivers.localcmdline import LocalCmdline
         ("echo %(serial)s 50%%", 3, "echo 262305 50%"),
     ],
 )
-def test_port_interaction(mocker, command, port_number, expected):
+def test_port_interaction(mocker, command, port, expected):
     call = mocker.patch("pdudaemon.drivers.localcmdline.call")
     pdu = LocalCmdline("dummy", {"cmd_on": command, "serial": "262305"})
 
-    pdu.port_interaction("on", port_number)
+    pdu.port_interaction("on", port)
 
     call.assert_called_once_with(expected, shell=True)
 

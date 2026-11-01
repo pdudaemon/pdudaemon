@@ -53,11 +53,11 @@ class UHubCtl(LocalBase):
             return True
         return False
 
-    def _port_interaction(self, command, port_number):
+    def _port_interaction(self, command, port):
         try:
-            port_number = int(port_number)
+            port = int(port)
         except (TypeError, ValueError):
-            raise RuntimeError("port_number must be an integer, got %r" % (port_number,))
+            raise RuntimeError("port must be an integer, got %r" % (port,))
 
         if command == "on":
             action = "on"
@@ -71,29 +71,29 @@ class UHubCtl(LocalBase):
         cmd = [
             self.uhubctl_bin,
             "--location", str(self.location),
-            "--port", str(port_number),
+            "--port", str(port),
             "--action", str(action)
         ]
         log.debug("running %r" % cmd)
         check_call(cmd)
 
-    def get_port_state(self, port_number) -> bool:
+    def get_port_state(self, port) -> bool:
         try:
-            port_number = int(port_number)
+            port = int(port)
         except (TypeError, ValueError):
-            raise RuntimeError("port_number must be an integer, got %r" % (port_number,))
+            raise RuntimeError("port must be an integer, got %r" % (port,))
 
         # Run uhubctl to retrieve the port status
         cmd = [
             self.uhubctl_bin,
             "--location", str(self.location),
-            "--port", str(port_number),
+            "--port", str(port),
         ]
         log.debug("running %r" % cmd)
         output = check_output(cmd, text=True)
 
-        prefix = "  Port %s:" % port_number
+        prefix = "  Port %s:" % port
         for line in output.splitlines():
             if line.startswith(prefix):
                 return " power" in line
-        raise RuntimeError("uhubctl did not report status for port %s" % port_number)
+        raise RuntimeError("uhubctl did not report status for port %s" % port)

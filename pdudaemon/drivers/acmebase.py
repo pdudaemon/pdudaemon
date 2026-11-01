@@ -47,11 +47,11 @@ class ACMEBase(PDUDriver):
     def accepts(cls, drivername):  # pylint: disable=unused-argument
         return False
 
-    def port_interaction(self, command, port_number):
+    def port_interaction(self, command, port):
         log.debug("Running port_interaction from ACMEBase")
         self.get_connection()
         self._port_interaction(command,  # pylint: disable=no-member
-                               port_number)
+                               port)
 
     def get_connection(self):
         log.debug("Connecting to Baylibre ACME with: {}".format(self.exec_string))

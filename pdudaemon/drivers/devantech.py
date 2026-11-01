@@ -55,10 +55,10 @@ class DevantechBase(PDUDriver):
                 log.error("Authentication failed.")
                 raise RuntimeError("Failed to authenticate. Verify your password.")
 
-    def port_interaction(self, command, port_number):
+    def port_interaction(self, command, port):
         self.connect()
-        port_number = int(port_number)
-        if port_number > self.port_count:
+        port = int(port)
+        if port > self.port_count:
             log.error("There are only %d ports. Provide a port number lesser than %d." % (self.port_count, self.port_count))
             raise RuntimeError("There are only %d ports. Provide a port number lesser than %d." % (self.port_count, self.port_count))
         if self.logic not in ["NO", "NC"]:
@@ -71,17 +71,17 @@ class DevantechBase(PDUDriver):
         else:
             log.error("Unknown command %s." % (command))
             return
-        msg += port_number.to_bytes(1, 'big')
+        msg += port.to_bytes(1, 'big')
         msg += b'\x00'
-        log.debug("Attempting control: %s port: %d hostname: %s." % (command, port_number, self.hostname))
+        log.debug("Attempting control: %s port: %d hostname: %s." % (command, port, self.hostname))
         ret = self.connection.sendall(msg)
         if ret:
             log.error("Failed to send message.")
             raise RuntimeError("Failed to send message.")
         ret = self.connection.recv(1)
         if ret != b'\x00':
-            log.error("Failed to send %s command on port %d of %s." % (command, port_number, self.hostname))
-            raise RuntimeError("Failed to send %s command on port %d of %s." % (command, port_number, self.hostname))
+            log.error("Failed to send %s command on port %d of %s." % (command, port, self.hostname))
+            raise RuntimeError("Failed to send %s command on port %d of %s." % (command, port, self.hostname))
 
     def _close_connection(self):
         # Logout
@@ -174,20 +174,20 @@ class DevantechDSBase(PDUDriver):
     def connect(self):
         self.connection = socket.create_connection((self.ip, self.port))
 
-    def port_interaction(self, command, port_number):
+    def port_interaction(self, command, port):
         self.connect()
-        port_number = int(port_number)
-        if port_number > self.port_count:
+        port = int(port)
+        if port > self.port_count:
             log.error("There are only %d ports. Provide a port number lesser than %d." % (self.port_count, self.port_count))
             raise RuntimeError("There are only %d ports. Provide a port number lesser than %d." % (self.port_count, self.port_count))
 
-        msg = 'SR {} '.format(port_number)
+        msg = 'SR {} '.format(port)
         if command in ["on", "off"]:
             msg += command
         else:
             log.error("Unknown command %s." % (command))
             return
-        log.debug("Attempting control: %s port: %d hostname: %s." % (command, port_number, self.hostname))
+        log.debug("Attempting control: %s port: %d hostname: %s." % (command, port, self.hostname))
         ret = self.connection.sendall(msg.encode('ascii'))
         if ret:
             log.error("Failed to send message.")

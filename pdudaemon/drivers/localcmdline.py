@@ -40,7 +40,7 @@ class LocalCmdline(LocalBase):
             return True
         return False
 
-    def _port_interaction(self, command, port_number):
+    def _port_interaction(self, command, port):
         cmd = None
         if command == "on" and self.cmd_on:
             cmd = self.cmd_on
@@ -50,16 +50,16 @@ class LocalCmdline(LocalBase):
             log.debug("Unknown command!")
             return
 
-        cmd = self._format_cmd(cmd, port_number)
+        cmd = self._format_cmd(cmd, port)
         if cmd:
             log.debug("running %s" % cmd)
             call(cmd, shell=True)
 
-    def get_port_state(self, port_number) -> bool:
+    def get_port_state(self, port) -> bool:
         if not self.cmd_state:
-            return super().get_port_state(port_number)
+            return super().get_port_state(port)
 
-        cmd = self._format_cmd(self.cmd_state, port_number)
+        cmd = self._format_cmd(self.cmd_state, port)
         log.debug("running %s" % cmd)
         # check_output raises CalledProcessError if cmd_state exits non-zero
         output = check_output(cmd, shell=True, text=True).strip()
@@ -69,10 +69,10 @@ class LocalCmdline(LocalBase):
             return False
         raise RuntimeError("cmd_state returned unexpected output: %r" % output)
 
-    def _format_cmd(self, cmd, port_number):
+    def _format_cmd(self, cmd, port):
         if "%(" in cmd:
-            return cmd % dict(self.settings, hostname=self.hostname, port=port_number)
+            return cmd % dict(self.settings, hostname=self.hostname, port=port)
         try:
             return cmd % ()
         except TypeError:
-            return cmd % port_number
+            return cmd % port

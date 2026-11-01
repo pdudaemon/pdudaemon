@@ -39,7 +39,7 @@ class EnerGenieUSB(PDUDriver):
         self.device = settings.get("device", "")
         log.debug("device: %s" % self.device)
 
-    def port_interaction(self, command, port_number):
+    def port_interaction(self, command, port):
 
         devices = self.connect()
 
@@ -58,16 +58,16 @@ class EnerGenieUSB(PDUDriver):
             log.error(err)
             raise RuntimeError(err)
 
-        port_number = int(port_number)
-        if port_number > 4 or port_number < 1:
+        port = int(port)
+        if port > 4 or port < 1:
             err = "Port should be in the range 1 - 4"
             log.error(err)
             raise RuntimeError(err)
 
         if command == "on":
-            self.switchon(dev, port_number)
+            self.switchon(dev, port)
         elif command == "off":
-            self.switchoff(dev, port_number)
+            self.switchoff(dev, port)
         else:
             log.error("Unknown command %s." % (command))
             return

@@ -40,16 +40,16 @@ class TasmotaBase(PDUDriver):
         self.password = settings.get("password")
         super().__init__()
 
-    def _power(self, port_number, command=None):
+    def _power(self, port, command=None):
         """Send a Power command for the port and return the reported state,
         e.g. "ON" or "OFF". Without a command, the current state is queried.
         """
-        if int(port_number) > self.port_count or int(port_number) < 1:
+        if int(port) > self.port_count or int(port) < 1:
             err = "Port number must be in range 1 - {}".format(self.port_count)
             log.error(err)
             raise FailedRequestException(err)
 
-        cmnd = "Power{}".format(port_number)
+        cmnd = "Power{}".format(port)
         if command is not None:
             cmnd += " {}".format(command)
         params = {
@@ -67,7 +67,7 @@ class TasmotaBase(PDUDriver):
         # check response
         response = r.json()
         r.raise_for_status()
-        expected_response_key = "POWER{}".format(port_number)
+        expected_response_key = "POWER{}".format(port)
         try:
             state = response[expected_response_key]
         except BaseException:
@@ -76,14 +76,14 @@ class TasmotaBase(PDUDriver):
         log.debug('HTTP response: {}'.format(response))
         return state
 
-    def port_interaction(self, command, port_number):
-        if self._power(port_number, command) != command.upper():
-            raise FailedRequestException("Failed to turn port {} {}".format(port_number, command))
+    def port_interaction(self, command, port):
+        if self._power(port, command) != command.upper():
+            raise FailedRequestException("Failed to turn port {} {}".format(port, command))
 
-    def get_port_state(self, port_number) -> bool:
-        state = self._power(port_number)
+    def get_port_state(self, port) -> bool:
+        state = self._power(port)
         if state not in ("ON", "OFF"):
-            raise FailedRequestException("Unexpected state for port {}: {}".format(port_number, state))
+            raise FailedRequestException("Unexpected state for port {}: {}".format(port, state))
         return state == "ON"
 
     @classmethod

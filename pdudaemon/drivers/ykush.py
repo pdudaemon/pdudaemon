@@ -48,17 +48,17 @@ class YkushBase(PDUDriver):
 
         super().__init__()
 
-    def port_interaction(self, command, port_number):
-        port_number = int(port_number)
-        if port_number > self.port_count or port_number < 1:
+    def port_interaction(self, command, port):
+        port = int(port)
+        if port > self.port_count or port < 1:
             err = "Port should be in the range 1 - %d" % (self.port_count)
             log.error(err)
             raise RuntimeError(err)
 
         if command == "on":
-            byte = 0x10 + port_number
+            byte = 0x10 + port
         elif command == "off":
-            byte = 0x00 + port_number
+            byte = 0x00 + port
         else:
             log.error("Unknown command %s." % (command))
             return

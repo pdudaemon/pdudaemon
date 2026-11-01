@@ -46,16 +46,16 @@ class Sainsmart(LocalBase):
             return True
         return False
 
-    def _port_interaction(self, command, port_number):
+    def _port_interaction(self, command, port):
 
         val = -1
         if command == "on":
-            log.debug("Attempting control: {} port: {}".format(command, port_number))
-            val = (port_number - 1) * 2 + 1
+            log.debug("Attempting control: {} port: {}".format(command, port))
+            val = (port - 1) * 2 + 1
 
         elif command == "off":
-            log.debug("Attempting control: {} port: {}".format(command, port_number))
-            val = (port_number - 1) * 2
+            log.debug("Attempting control: {} port: {}".format(command, port))
+            val = (port - 1) * 2
 
         else:
             log.debug("Unknown command!")

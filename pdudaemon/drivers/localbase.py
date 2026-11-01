@@ -36,10 +36,10 @@ class LocalBase(PDUDriver):
     def accepts(cls, drivername):
         return False
 
-    def port_interaction(self, command, port_number):
+    def port_interaction(self, command, port):
         log.debug("Running port_interaction from LocalBase")
-        log.debug("Attempting control: {} port: {}".format(command, port_number))
-        self._port_interaction(command, port_number)
+        log.debug("Attempting control: {} port: {}".format(command, port))
+        self._port_interaction(command, port)
 
     def _bombout(self):
         log.debug("Bombing out of driver: %s" % self.connection)

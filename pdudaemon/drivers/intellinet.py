@@ -69,10 +69,10 @@ class Intellinet(PDUDriver):
             raise FailedRequestException(r.text)
         log.debug("HTTP response: {}".format(r.text))
 
-    def port_interaction(self, command, port_number):
-        port_number = int(port_number)
+    def port_interaction(self, command, port):
+        port = int(port)
 
-        if port_number >= self.port_count or port_number < 0:
+        if port >= self.port_count or port < 0:
             err = "Port number must be in range 0 - {}".format(self.port_count - 1)
             log.error(err)
             raise FailedRequestException(err)
@@ -84,7 +84,7 @@ class Intellinet(PDUDriver):
             raise FailedRequestException(err)
 
         endpoint = self.endpoints['outlet']
-        params = {"outlet{}".format(port_number): 1}
+        params = {"outlet{}".format(port): 1}
         params["op"] = command_map[command]
         params["submit"] = "Anwenden"
         self._api(endpoint, params)
