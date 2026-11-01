@@ -138,6 +138,23 @@ def test_first_port_invalid(first_port):
         PDURunner({"driver": "localcmdline", "port_count": 3, "first_port": first_port}, "dummy", 1, 0)
 
 
+@pytest.mark.parametrize("config, warns", [
+    ({}, True),
+    ({"port_count": 3}, False),
+    ({"port_names": ["board"]}, False),
+])
+def test_get_ports_warning(config, warns):
+    runner = PDURunner({"driver": "localcmdline", **config}, "dummy", 1, 0)
+
+    assert (runner.get_ports_warning() is not None) == warns
+
+
+def test_get_ports_warning_driver_ports():
+    runner = PDURunner({"driver": "devantech_USB-RLY04"}, "dummy", 1, 0)
+
+    assert runner.get_ports_warning() is None
+
+
 def test_port_count_does_not_override_driver():
     runner = PDURunner({"driver": "devantech_USB-RLY04", "port_count": 8}, "dummy", 1, 0)
 
