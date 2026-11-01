@@ -40,10 +40,6 @@ class ip9850(PDUDriver):
 
     def port_interaction(self, command, port):
         port = int(port)
-        if port > self.port_count or port < 1:
-            err = "Port number must be in range 1 - {}".format(self.port_count)
-            log.error(err)
-            raise FailedRequestException(err)
         if command == "on":
             pwr = "1"
         elif command == "off":

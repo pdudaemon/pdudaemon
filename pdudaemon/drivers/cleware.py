@@ -97,10 +97,6 @@ class ClewareSwitch1Base(ClewareBase):
 
     def port_interaction(self, command, port):
         port = int(port)
-        if port > self.port_count or port < 1:
-            err = f"Port should be in the range 1 - {self.port_count}"
-            log.error(err)
-            raise RuntimeError(err)
 
         relay = 0x10 + port - 1
         if command == "on":
@@ -124,10 +120,6 @@ class ClewareContact00Base(ClewareBase):
 
     def port_interaction(self, command, port):
         port = int(port)
-        if port > self.port_count or port < 1:
-            err = f"Port should be in the range 1 - {self.port_count}"
-            log.error(err)
-            raise RuntimeError(err)
 
         mask = 1 << (port - 1)
         if command == "on":

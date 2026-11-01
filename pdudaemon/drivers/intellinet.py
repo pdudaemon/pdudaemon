@@ -72,15 +72,11 @@ class Intellinet(PDUDriver):
     def port_interaction(self, command, port):
         port = int(port)
 
-        if port >= self.port_count or port < 0:
-            err = "Port number must be in range 0 - {}".format(self.port_count - 1)
-            log.error(err)
-            raise FailedRequestException(err)
-
         command_map = {"on": 0, "off": 1, "reboot": 2}
 
         if command not in command_map:
-            log.error("Unknown command %s." % (command))
+            err = "Unknown command %s." % (command)
+            log.error(err)
             raise FailedRequestException(err)
 
         endpoint = self.endpoints['outlet']

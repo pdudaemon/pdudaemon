@@ -98,10 +98,6 @@ class EgPMS(PDUDriver):
         SWITCH_OFF = 0x2
         DONT_SWITCH = 0x4
         port = int(port)
-        if port > self.port_count or port < 1:
-            err = "Port should be in the range 1 - %d" % (self.port_count)
-            log.error(err)
-            raise RuntimeError(err)
 
         if command == "on":
             on = True

@@ -71,9 +71,6 @@ class UbiquityBase(PDUDriver):
         port = int(port)
         log.debug("Running port_interaction from UbiquityBase")
         self.connect()
-        if port > self.port_count:
-            raise RuntimeError("We only have ports 1 - %d. %d > maxPorts (%d)"
-                               % self.port_count, port, self.port_count)
 
         if command == "on":
             command = "sh -c 'echo 1 > /proc/power/relay%d'" % port

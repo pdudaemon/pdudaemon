@@ -44,10 +44,6 @@ class DevantechusbBase(PDUDriver):
 
     def port_interaction(self, command, port):
         port = int(port)
-        if port > self.port_count or port < 1:
-            err = "Port should be in the range 1 - %d" % (self.port_count)
-            log.error(err)
-            raise RuntimeError(err)
 
         if command == "on":
             byte = 0x64 + port
@@ -63,10 +59,6 @@ class DevantechusbBase(PDUDriver):
 
     def get_port_state(self, port) -> bool:
         port = int(port)
-        if port > self.port_count or port < 1:
-            err = "Port should be in the range 1 - %d" % (self.port_count)
-            log.error(err)
-            raise RuntimeError(err)
 
         s = serial.serial_for_url(self.device, 9600)
         s.write([0x5B])

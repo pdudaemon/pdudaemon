@@ -18,6 +18,7 @@
 #  MA 02110-1301, USA.
 
 import pytest
+from pdudaemon.drivers.driver import FailedRequestException
 from pdudaemon.drivers.devantechusb import DevantechUSB4
 
 
@@ -47,11 +48,9 @@ def test_get_port_state(pdu, serial_mock, port, expected):
 
 
 @pytest.mark.parametrize("port", [0, 5])
-def test_get_port_state_port_out_of_range(pdu, serial_mock, port):
-    with pytest.raises(RuntimeError):
-        pdu.get_port_state(port)
-
-    serial_mock.assert_not_called()
+def test_port_out_of_range(pdu, port):
+    with pytest.raises(FailedRequestException):
+        pdu.check_port(port)
 
 
 def test_get_ports(pdu):

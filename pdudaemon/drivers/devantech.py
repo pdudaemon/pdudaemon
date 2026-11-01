@@ -58,9 +58,6 @@ class DevantechBase(PDUDriver):
     def port_interaction(self, command, port):
         self.connect()
         port = int(port)
-        if port > self.port_count:
-            log.error("There are only %d ports. Provide a port number lesser than %d." % (self.port_count, self.port_count))
-            raise RuntimeError("There are only %d ports. Provide a port number lesser than %d." % (self.port_count, self.port_count))
         if self.logic not in ["NO", "NC"]:
             log.error("Invalid logic setting: %s." % (self.logic))
             return
@@ -177,9 +174,6 @@ class DevantechDSBase(PDUDriver):
     def port_interaction(self, command, port):
         self.connect()
         port = int(port)
-        if port > self.port_count:
-            log.error("There are only %d ports. Provide a port number lesser than %d." % (self.port_count, self.port_count))
-            raise RuntimeError("There are only %d ports. Provide a port number lesser than %d." % (self.port_count, self.port_count))
 
         msg = 'SR {} '.format(port)
         if command in ["on", "off"]:

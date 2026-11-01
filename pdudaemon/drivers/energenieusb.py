@@ -32,6 +32,7 @@ log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 class EnerGenieUSB(PDUDriver):
     supported = ["EG-PMS",
                  "EG-PM2"]
+    port_count = 4
 
     def __init__(self, hostname, settings):
         self.hostname = hostname
@@ -59,10 +60,6 @@ class EnerGenieUSB(PDUDriver):
             raise RuntimeError(err)
 
         port = int(port)
-        if port > 4 or port < 1:
-            err = "Port should be in the range 1 - 4"
-            log.error(err)
-            raise RuntimeError(err)
 
         if command == "on":
             self.switchon(dev, port)

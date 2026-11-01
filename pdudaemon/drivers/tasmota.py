@@ -44,11 +44,6 @@ class TasmotaBase(PDUDriver):
         """Send a Power command for the port and return the reported state,
         e.g. "ON" or "OFF". Without a command, the current state is queried.
         """
-        if int(port) > self.port_count or int(port) < 1:
-            err = "Port number must be in range 1 - {}".format(self.port_count)
-            log.error(err)
-            raise FailedRequestException(err)
-
         cmnd = "Power{}".format(port)
         if command is not None:
             cmnd += " {}".format(command)

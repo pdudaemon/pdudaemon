@@ -77,11 +77,9 @@ def test_get_port_state_unexpected_response(pdu, get_mock, response):
 
 
 @pytest.mark.parametrize("port", [0, 3])
-def test_get_port_state_port_out_of_range(pdu, get_mock, port):
+def test_port_out_of_range(pdu, port):
     with pytest.raises(FailedRequestException):
-        pdu.get_port_state(port)
-
-    get_mock.assert_not_called()
+        pdu.check_port(port)
 
 
 def test_get_ports(pdu):

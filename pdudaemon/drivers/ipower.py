@@ -66,11 +66,6 @@ class LindyIPowerClassic8(PDUDriver):
         else:
             raise FailedRequestException("Unknown command %s" % (command))
 
-        if int(port) > self.port_count or int(port) < 1:
-            err = "Port number must be in range 1 - {}".format(self.port_count)
-            log.error(err)
-            raise FailedRequestException(err)
-
         # Pad the value to 24 bits and set a single bit
         port_value = 1 << (24 - int(port))
         port_value = "{0:024b}".format(port_value)
