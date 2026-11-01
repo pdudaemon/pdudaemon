@@ -22,6 +22,7 @@ th { background: #eee; }
 .pdu h2 { margin: 0.3em 0 0.5em; font-size: 1.2em; }
 .pdu .driver { color: #666; font-weight: normal; }
 .pdu .warning { color: #a60; }
+.pdu .busy { color: #a60; font-weight: normal; }
 tr.state-on td:nth-child(3) { color: #080; font-weight: bold; }
 tr.state-off td:nth-child(3) { color: #a00; font-weight: bold; }
 tr.state-unknown td:nth-child(3) { color: #888; }
@@ -76,6 +77,9 @@ function buildPdu(hostname, pdu) {
     const section = element("section", "", "pdu");
     const heading = element("h2", hostname + " ");
     heading.append(element("span", "(" + pdu.driver + ")", "driver"));
+    if (pdu.busy) {
+        heading.append(" ", element("span", "busy", "busy"));
+    }
     section.append(heading);
     if (pdu.warning) {
         section.append(element("p", "Warning: " + pdu.warning, "warning"));

@@ -125,6 +125,7 @@ class HTTPListener:
             status[name] = {
                 "driver": runner.config["driver"],
                 "get_port_state": runner.driver.supports_get_port_state(),
+                "busy": runner.busy,
                 "ports": ports,
             }
             warning = runner.get_ports_warning()
