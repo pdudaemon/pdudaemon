@@ -99,9 +99,14 @@ The optional `aliases` section names ports of the PDUs, so requests can use the 
       "board1": {
           "hostname": "192.168.0.42",
           "port": 1
+      },
+      "board2": {
+          "hostname": "test",
+          "port": "board2"
       }
   }
 ```
+The `port` can be a port number or a port name (e.g. one of the `port_names` of the PDU).
 Each alias name must be unique, its `hostname` must be one of the PDUs in the `pdus` section, and its `port` must be one of the ports of that PDU if they are known (see `port_count` and `port_names` above), otherwise pdudaemon refuses to start.
 
 ## Making a power control request

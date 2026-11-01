@@ -19,6 +19,8 @@
 
 """Tests for loading and checking the configuration file."""
 
+import json
+
 import pytest
 from pdudaemon import check_alias_ports, load_config
 from pdudaemon.pdurunner import PDURunner
@@ -47,16 +49,38 @@ def test_alias_unknown_hostname(alias):
         load_config('{"pdus": {"pdu1": {"driver": "a"}}, "aliases": {"board": %s}}' % alias)
 
 
-@pytest.mark.parametrize("config, port", [
-    ({}, 9),
-    ({"port_count": 3}, 3),
-    ({"port_count": 3}, "03"),
-    ({"port_names": ["board"]}, "board"),
-])
-def test_alias_port(config, port):
-    runners = {"pdu1": PDURunner({"driver": "localcmdline", **config}, "pdu1", 1, 0)}
+@pytest.mark.parametrize("port", [1, "1", "switch.board"])
+def test_alias_port_type(port):
+    load_config('{"pdus": {"pdu1": {"driver": "a"}}, "aliases": {"board": {"hostname": "pdu1", "port": %s}}}'
+                % json.dumps(port))
 
-    check_alias_ports({"board": {"hostname": "pdu1", "port": port}}, runners)
+
+@pytest.mark.parametrize("port", [None, "", True, 1.5, [1]])
+def test_alias_port_type_invalid(port):
+    with pytest.raises(ValueError, match="Alias board: port must be a port number or name"):
+        load_config('{"pdus": {"pdu1": {"driver": "a"}}, "aliases": {"board": {"hostname": "pdu1", "port": %s}}}'
+                    % json.dumps(port))
+
+
+def test_alias_port_missing():
+    with pytest.raises(ValueError, match="Alias board: port must be a port number or name, not None"):
+        load_config('{"pdus": {"pdu1": {"driver": "a"}}, "aliases": {"board": {"hostname": "pdu1"}}}')
+
+
+@pytest.mark.parametrize("config, port, expected", [
+    ({}, 9, "9"),
+    ({}, "switch.board", "switch.board"),
+    ({"port_count": 3}, 3, "3"),
+    ({"port_count": 3}, "03", "3"),
+    ({"port_names": ["board"]}, "board", "board"),
+])
+def test_alias_port(config, port, expected):
+    runners = {"pdu1": PDURunner({"driver": "localcmdline", **config}, "pdu1", 1, 0)}
+    aliases = {"board": {"hostname": "pdu1", "port": port}}
+
+    check_alias_ports(aliases, runners)
+
+    assert aliases["board"]["port"] == expected
 
 
 @pytest.mark.parametrize("config, port", [

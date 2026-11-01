@@ -112,15 +112,20 @@ def check_config(settings):
     for name, alias in aliases.items():
         if alias.get("hostname") not in pdus:
             raise ValueError("Alias {}: PDU {} is not in the config".format(name, alias.get("hostname")))
+        port = alias.get("port")
+        if isinstance(port, bool) or not isinstance(port, (int, str)) or port == "":
+            raise ValueError("Alias {}: port must be a port number or name, not {!r}".format(name, port))
 
 
 def check_alias_ports(aliases, runners):
     """Raise ValueError if the port of an alias isn't one of the ports of its
-    PDU. The port isn't checked if the ports of the PDU are unknown.
+    PDU. The port isn't checked if the ports of the PDU are unknown. Each port
+    is replaced with the string passed to the driver, so it matches the port
+    of cached states, e.g. "03" becomes "3".
     """
     for name, alias in aliases.items():
         try:
-            runners[alias["hostname"]].driver.check_port(alias.get("port"))
+            alias["port"] = runners[alias["hostname"]].driver.check_port(alias["port"])
         except FailedRequestException as e:
             raise ValueError("Alias {}: {} of PDU {}".format(name, e, alias["hostname"]))
 
