@@ -41,6 +41,12 @@ CONFIG = {
 
 
 WARNING = "Ports unknown, set port_count or port_names in the driver or config"
+CHANGED = "1970-01-02T00:00:00+00:00"
+
+
+@pytest.fixture(autouse=True)
+def now(mocker):
+    return mocker.patch("pdudaemon.pdurunner.time.time", return_value=86400.0)
 
 
 @pytest.fixture
@@ -74,7 +80,7 @@ async def test_status(client, daemon, path):
 
     assert resp.status == 200
     assert await resp.json() == {
-        "pdu1": {"driver": "localcmdline", "get_port_state": False, "busy": False, "ports": {"1": {"state": "on"}, "2": {"state": "off"}}, "warning": WARNING},
+        "pdu1": {"driver": "localcmdline", "get_port_state": False, "busy": False, "ports": {"1": {"state": "on", "changed": CHANGED}, "2": {"state": "off", "changed": CHANGED}}, "warning": WARNING},
         "pdu2": {"driver": "localcmdline", "get_port_state": False, "busy": False, "ports": {"4": {"state": "unknown", "alias": "board"}}, "warning": WARNING},
     }
 
@@ -87,7 +93,7 @@ async def test_status_alias_with_known_state(client, daemon):
 
     assert await resp.json() == {
         "pdu1": {"driver": "localcmdline", "get_port_state": False, "busy": False, "ports": {}, "warning": WARNING},
-        "pdu2": {"driver": "localcmdline", "get_port_state": False, "busy": False, "ports": {"4": {"state": "on", "alias": "board"}}, "warning": WARNING},
+        "pdu2": {"driver": "localcmdline", "get_port_state": False, "busy": False, "ports": {"4": {"state": "on", "changed": CHANGED, "alias": "board"}}, "warning": WARNING},
     }
 
 
@@ -103,7 +109,7 @@ async def test_status_driver_ports(client, daemon, mocker):
             "driver": "localcmdline",
             "get_port_state": False,
             "busy": False,
-            "ports": {"1": {"state": "off"}, "4": {"state": "unknown", "alias": "board"}},
+            "ports": {"1": {"state": "off", "changed": CHANGED}, "4": {"state": "unknown", "alias": "board"}},
         },
     }
 
@@ -114,7 +120,7 @@ async def test_status_hostname(client, daemon):
 
     resp = await client.get("/power/status", params={"hostname": "pdu1"})
     assert resp.status == 200
-    assert await resp.json() == {"pdu1": {"driver": "localcmdline", "get_port_state": False, "busy": False, "ports": {"1": {"state": "on"}}, "warning": WARNING}}
+    assert await resp.json() == {"pdu1": {"driver": "localcmdline", "get_port_state": False, "busy": False, "ports": {"1": {"state": "on", "changed": CHANGED}}, "warning": WARNING}}
 
     resp = await client.get("/power/status", params={"hostname": "pdu2"})
     assert await resp.json() == {

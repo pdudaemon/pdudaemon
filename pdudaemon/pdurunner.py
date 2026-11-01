@@ -21,6 +21,7 @@
 import asyncio
 import logging
 import threading
+import time
 import traceback
 import pexpect
 import concurrent.futures
@@ -43,6 +44,9 @@ class PDURunner:
         # only access through get_cached_port_state(), get_cached_port_states()
         # and _set_cached_port_state()
         self.port_state_cache = {}
+        # time.time() the cached state of each port last changed, keyed by
+        # str(port)
+        self.port_state_changed = {}
         # use single-worker ThreadPoolExecutor to serialize execution
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=1, thread_name_prefix=hostname)
         # set on shutdown to stop retrying the running job
@@ -146,9 +150,19 @@ class PDURunner:
         """
         return dict(self.port_state_cache)
 
+    def get_port_state_change_times(self) -> dict:
+        """Return the time.time() the cached state of every port with a known
+        state last changed, keyed by str(port). Setting the same state again,
+        e.g. switching on a port which is already on, isn't a change.
+        """
+        return dict(self.port_state_changed)
+
     def _set_cached_port_state(self, port, on: bool):
         """Cache the new state of a port."""
-        self.port_state_cache[str(port)] = on
+        port = str(port)
+        if self.port_state_cache.get(port) != on:
+            self.port_state_changed[port] = time.time()
+        self.port_state_cache[port] = on
 
     async def _in_executor(self, fn, *args):
         loop = asyncio.get_running_loop()

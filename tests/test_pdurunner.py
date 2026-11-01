@@ -160,6 +160,29 @@ def test_get_cached_port_states(runner):
     assert runner.get_cached_port_state(1) is True
 
 
+def test_get_port_state_change_times(mocker, runner):
+    now = mocker.patch("pdudaemon.pdurunner.time.time", return_value=100.0)
+    assert runner.get_port_state_change_times() == {}
+
+    runner._set_cached_port_state(1, True)
+    now.return_value = 200.0
+    runner._set_cached_port_state("2", False)
+    assert runner.get_port_state_change_times() == {"1": 100.0, "2": 200.0}
+
+    # setting the same state again isn't a change
+    now.return_value = 300.0
+    runner._set_cached_port_state(1, True)
+    assert runner.get_port_state_change_times() == {"1": 100.0, "2": 200.0}
+
+    runner._set_cached_port_state(1, False)
+    times = runner.get_port_state_change_times()
+    assert times == {"1": 300.0, "2": 200.0}
+
+    # the returned dict is a copy, so callers can't change the times
+    times["1"] = 0.0
+    assert runner.get_port_state_change_times()["1"] == 300.0
+
+
 @pytest.mark.parametrize("config, timeout", [
     ({"driver": "localcmdline"}, 10),
     ({"driver": "localcmdline", "timeout": "2.5"}, 2.5),

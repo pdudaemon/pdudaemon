@@ -7,10 +7,11 @@
 <style>
 body { font-family: sans-serif; margin: 1em; padding-bottom: 2em; }
 /* fixed column widths, so every PDU's table lines up */
-table { border-collapse: collapse; table-layout: fixed; width: 61em; max-width: 100%; }
+table { border-collapse: collapse; table-layout: fixed; width: 73em; max-width: 100%; }
 col.port { width: 14em; }
 col.alias { width: 14em; }
 col.status { width: 7em; }
+col.changed { width: 12em; }
 col.control { width: 6.5em; }
 button { font-size: 0.85em; padding: 0.15em 0.4em; }
 th, td { padding: 0.3em 0.6em; border-bottom: 1px solid #ccc; text-align: left; }
@@ -92,11 +93,11 @@ function buildPdu(hostname, pdu) {
         return section;
     }
     const colgroup = document.createElement("colgroup");
-    for (const className of ["port", "alias", "status", "control", "control", "control", "control"]) {
+    for (const className of ["port", "alias", "status", "changed", "control", "control", "control", "control"]) {
         colgroup.append(element("col", "", className));
     }
     const header = document.createElement("tr");
-    header.append(element("th", "Port"), element("th", "Alias"), element("th", "Status"));
+    header.append(element("th", "Port"), element("th", "Alias"), element("th", "Status"), element("th", "Changed"));
     const control = element("th", "Control");
     control.colSpan = 4;
     header.append(control);
@@ -110,6 +111,7 @@ function buildPdu(hostname, pdu) {
             cell(port),
             cell(info.alias ?? ""),
             cell(info.state),
+            cell(info.changed ? new Date(info.changed).toLocaleString() : ""),
             controlButton("Switch On", "on", hostname, port),
             controlButton("Switch Off", "off", hostname, port),
             controlButton("Reset (5s)", "reboot", hostname, port, {delay: 5}),

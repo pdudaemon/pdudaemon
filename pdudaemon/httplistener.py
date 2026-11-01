@@ -18,6 +18,7 @@
 #  MA 02110-1301, USA.
 
 import urllib.parse as urlparse
+import datetime
 import logging
 import socket
 import time
@@ -120,6 +121,9 @@ class HTTPListener:
                 ports[port] = {"state": "unknown"}
             for port, on in runner.get_cached_port_states().items():
                 ports[port] = {"state": listener.PortStatus(on=on).state}
+            for port, changed in runner.get_port_state_change_times().items():
+                changed = datetime.datetime.fromtimestamp(changed, datetime.timezone.utc)
+                ports[port]["changed"] = changed.isoformat(timespec="seconds")
             for port, alias in aliases.items():
                 ports[port]["alias"] = alias
             status[name] = {
