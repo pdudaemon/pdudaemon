@@ -30,7 +30,7 @@ tr.state-unknown td:nth-child(3) { color: #888; }
 </head>
 <body>
 
-<h1>PDUDaemon status</h1>
+<h1 id="title">PDUDaemon status</h1>
 <p id="message"></p>
 <div id="status">Loading...</div>
 <div id="statusbar">Loading...</div>
@@ -41,6 +41,7 @@ tr.state-unknown td:nth-child(3) { color: #888; }
 // the query string so ?hostname= still only shows one PDU.
 const REFRESH_SECONDS = 5;
 const STATUS_URL = "/power/status/json" + window.location.search;
+const INFO_URL = "/power/info";
 
 function cell(text, colSpan = 1) {
     const td = document.createElement("td");
@@ -156,8 +157,23 @@ async function loadStatus() {
     }
 }
 
+// Show which daemon this is. Failures are ignored, as loadStatus()
+// already reports the daemon being unreachable.
+async function loadInfo() {
+    try {
+        const resp = await fetch(INFO_URL, {cache: "no-store"});
+        if (resp.ok) {
+            const info = await resp.json();
+            const title = "PDUDaemon on " + info.hostname;
+            document.title = title;
+            document.getElementById("title").textContent = title;
+        }
+    } catch (e) {
+    }
+}
+
 async function refreshStatus() {
-    await loadStatus();
+    await Promise.all([loadInfo(), loadStatus()]);
     setTimeout(refreshStatus, REFRESH_SECONDS * 1000);
 }
 

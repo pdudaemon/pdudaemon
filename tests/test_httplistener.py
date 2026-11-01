@@ -17,6 +17,7 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 
+import socket
 from types import SimpleNamespace
 
 import pytest
@@ -136,6 +137,14 @@ async def test_status_unknown_hostname(client):
 
 
 @pytest.mark.asyncio
+async def test_info(client):
+    resp = await client.get("/power/info")
+
+    assert resp.status == 200
+    assert await resp.json() == {"hostname": socket.gethostname()}
+
+
+@pytest.mark.asyncio
 async def test_dashboard(ui_client):
     resp = await ui_client.get("/power/dashboard")
 
@@ -144,6 +153,7 @@ async def test_dashboard(ui_client):
     text = await resp.text()
     assert '"/power/status/json"' in text
     assert '"/power/control/"' in text
+    assert '"/power/info"' in text
 
 
 @pytest.mark.asyncio

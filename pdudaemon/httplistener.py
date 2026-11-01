@@ -19,6 +19,7 @@
 
 import urllib.parse as urlparse
 import logging
+import socket
 import pdudaemon.listener as listener
 
 from aiohttp import web
@@ -45,6 +46,7 @@ class HTTPListener:
             web.get('/power/control/get-port-state', self.handle),
             web.get('/power/status', self.handle_status),
             web.get('/power/status/json', self.handle_status),
+            web.get('/power/info', self.handle_info),
         ])
         if self.settings.get("web_ui", False):
             self.app.add_routes([
@@ -128,6 +130,12 @@ class HTTPListener:
         if status is None:
             return web.Response(status=404, text="PDU not found\n")
         return web.json_response(status)
+
+    def get_info(self):
+        return {"hostname": socket.gethostname()}
+
+    async def handle_info(self, request):
+        return web.json_response(self.get_info())
 
     async def handle_index(self, request):
         raise web.HTTPFound('/power/dashboard')
