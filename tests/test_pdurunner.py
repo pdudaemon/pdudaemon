@@ -20,7 +20,7 @@ def test_unknown_command_is_not_retried(mocker, runner):
     with pytest.raises(UnknownCommandException):
         runner.port_on(1)
 
-    port_on.assert_called_once_with(1)
+    port_on.assert_called_once_with("1")
     bombout.assert_not_called()
 
 
@@ -30,7 +30,7 @@ def test_unsupported_get_port_state_is_not_retried(mocker, runner):
     with pytest.raises(UnknownCommandException):
         runner.get_port_state(1)
 
-    get_port_state.assert_called_once_with(1)
+    get_port_state.assert_called_once_with("1")
 
 
 def test_failure_is_retried(mocker, runner):
@@ -182,3 +182,71 @@ def test_get_ports_port_names(port_count):
     runner = PDURunner(config, "dummy", 1, 0)
 
     assert runner.driver.get_ports() == ["switch.board", "2"]
+
+
+@pytest.mark.parametrize("request_", ["port_on", "port_off", "get_port_state"])
+def test_port_not_in_port_names_is_rejected(mocker, request_):
+    runner = PDURunner({"driver": "localcmdline", "port_names": ["board"]}, "dummy", 5, 0)
+    action = mocker.patch.object(runner.driver, request_)
+
+    with pytest.raises(FailedRequestException):
+        getattr(runner, request_)("other")
+
+    action.assert_not_called()
+    assert runner.get_cached_port_state("other") is None
+
+
+def test_port_in_port_names_is_accepted(mocker):
+    runner = PDURunner({"driver": "localcmdline", "port_names": ["board", 2]}, "dummy", 1, 0)
+    port_on = mocker.patch.object(runner.driver, "port_on")
+
+    runner.port_on("board")
+    runner.port_on(2)
+
+    assert port_on.call_args_list == [mocker.call("board"), mocker.call("2")]
+
+
+@pytest.mark.parametrize("port", [0, 4, "x"])
+@pytest.mark.parametrize("request_", ["port_on", "port_off", "get_port_state"])
+def test_port_out_of_range_is_rejected(mocker, request_, port):
+    runner = PDURunner({"driver": "localcmdline", "port_count": 3}, "dummy", 5, 0)
+    action = mocker.patch.object(runner.driver, request_)
+
+    with pytest.raises(FailedRequestException, match="1..3 of PDU dummy"):
+        getattr(runner, request_)(port)
+
+    action.assert_not_called()
+    assert runner.get_cached_port_state(port) is None
+
+
+@pytest.mark.parametrize("port", [1, "3", "03"])
+def test_port_in_range_is_passed_as_string(mocker, port):
+    runner = PDURunner({"driver": "localcmdline", "port_count": 3}, "dummy", 1, 0)
+    port_on = mocker.patch.object(runner.driver, "port_on")
+
+    runner.port_on(port)
+
+    port_on.assert_called_once_with(str(int(port)))
+    assert runner.get_cached_port_state(int(port)) is True
+
+
+def test_first_port_range():
+    runner = PDURunner({"driver": "localcmdline", "port_count": 3, "first_port": 0}, "dummy", 1, 0)
+
+    assert runner.driver.check_port(0) == "0"
+    with pytest.raises(FailedRequestException):
+        runner.driver.check_port(3)
+
+
+@pytest.mark.parametrize("config, warns", [
+    ({}, True),
+    ({"port_count": 3}, False),
+    ({"port_names": ["1"]}, False),
+])
+def test_unchecked_port_warning(mocker, caplog, config, warns):
+    runner = PDURunner({"driver": "localcmdline", **config}, "dummy", 1, 0)
+    mocker.patch.object(runner.driver, "port_on")
+
+    runner.port_on(1)
+
+    assert ("Can't check port 1" in caplog.text) == warns

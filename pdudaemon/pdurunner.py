@@ -87,11 +87,25 @@ class PDURunner:
             "Failed to {} port {} on PDU {} after {} retries".format(request, port, self.hostname, self.retries)
         )
 
+    def _check_port(self, port) -> str:
+        """Return the port as a string to pass to the driver. Raises
+        FailedRequestException if the port isn't one of the ports of the PDU.
+        """
+        try:
+            port = self.driver.check_port(port)
+        except FailedRequestException as e:
+            raise FailedRequestException("{} of PDU {}".format(e, self.hostname))
+        if not self.driver.get_ports():
+            self.logger.warning("Can't check port %s is valid, the ports of PDU %s are unknown", port, self.hostname)
+        return port
+
     def port_on(self, port):
+        port = self._check_port(port)
         self._run_with_retries(port, "on", lambda: self.driver.port_on(port))
         self._set_cached_port_state(port, True)
 
     def port_off(self, port):
+        port = self._check_port(port)
         self._run_with_retries(port, "off", lambda: self.driver.port_off(port))
         self._set_cached_port_state(port, False)
 
@@ -99,6 +113,7 @@ class PDURunner:
         """Query the PDU for the state of the port and cache the result.
         Returns True if the port is powered on, False if powered off.
         """
+        port = self._check_port(port)
         on = self._run_with_retries(port, "get-port-state", lambda: self.driver.get_port_state(port))
         self._set_cached_port_state(port, on)
         return on

@@ -107,6 +107,29 @@ class PDUDriver(object):
             return list(self.port_names)
         return list(range(self.first_port, self.first_port + (self.port_count or 0)))
 
+    def check_port(self, port) -> str:
+        """Return the port as a string to pass to the driver. Raises
+        FailedRequestException if the port isn't one of the ports of the PDU.
+        The port isn't checked if the driver doesn't know which ports the PDU
+        has.
+        """
+        if self.port_names is not None:
+            if str(port) not in self.port_names:
+                raise FailedRequestException("Port {} is not one of the ports {}".format(
+                    port, ", ".join(self.port_names)))
+            return str(port)
+        if self.port_count:
+            last_port = self.first_port + self.port_count - 1
+            try:
+                number = int(port)
+            except ValueError:
+                number = None
+            if number is None or not self.first_port <= number <= last_port:
+                raise FailedRequestException("Port {} is not one of the ports {}..{}".format(
+                    port, self.first_port, last_port))
+            return str(number)
+        return str(port)
+
     def port_interaction(self, command, port):
         pass
 
