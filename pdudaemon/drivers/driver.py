@@ -38,9 +38,31 @@ def get_named_entry_point(group, name):
 class PDUDriver(object):
     connection = None
     hostname = ""
+    # number of ports of the PDU, numbered from first_port; 0 if the driver
+    # doesn't know how many ports the PDU has
+    port_count = 0
+    # number of the first port of the PDU, 0 or 1
+    first_port = 1
+    # names of the ports of the PDU, or None to number the ports instead
+    port_names = None
 
     def __init__(self):
         super(PDUDriver, self).__init__()
+
+    def configure_ports(self, settings):
+        """Apply the port_count, first_port and port_names PDU settings.
+        port_count is only used if the driver doesn't know how many ports the
+        PDU has; first_port overrides the driver's.
+        """
+        if not self.port_count and "port_count" in settings:
+            self.port_count = int(settings["port_count"])
+        if "first_port" in settings:
+            first_port = int(settings["first_port"])
+            if first_port not in (0, 1):
+                raise ValueError("first_port must be 0 or 1, not {}".format(first_port))
+            self.first_port = first_port
+        if "port_names" in settings:
+            self.port_names = [str(name) for name in settings["port_names"]]
 
     @classmethod
     def select(cls, drivername):
@@ -76,6 +98,14 @@ class PDUDriver(object):
         the driver.
         """
         raise UnknownCommandException("Driver doesn't support get-port-state")
+
+    def get_ports(self) -> list:
+        """Return the port names or numbers of the PDU, or an empty list if the
+        driver doesn't know which ports the PDU has.
+        """
+        if self.port_names is not None:
+            return list(self.port_names)
+        return list(range(self.first_port, self.first_port + (self.port_count or 0)))
 
     def port_interaction(self, command, port_number):
         pass

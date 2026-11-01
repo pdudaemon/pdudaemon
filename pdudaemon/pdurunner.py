@@ -52,6 +52,7 @@ class PDURunner:
     def driver_from_hostname(self, hostname):
         drivername = self.config['driver']
         driver = PDUDriver.select(drivername)(hostname, self.config)
+        driver.configure_ports(self.config)
         return driver
 
     def _run_with_retries(self, port, request, action):

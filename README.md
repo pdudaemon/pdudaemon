@@ -81,6 +81,9 @@ It is important to mention, that `hostname` can be an arbitrary name for a local
 For the `localcmdline` driver, a `%` placeholder such as `%s` or `%i` in `cmd_on`/`cmd_off` is replaced with the requested port number; it can be left out entirely for devices which only have a single port.
 Named placeholders such as `%(serial)s` are replaced with the PDU setting of that name, and `%(port)s` and `%(hostname)s` with the requested port and the PDU name.
 An optional `cmd_state` command, using the same placeholders, implements `get-port-state`: it must exit with status 0 and print `on` when the port is powered on, or `off` when it is powered off. Any other exit status or output is an error.
+Any PDU can have an optional `port_count` setting, the number of ports of the PDU, which is used if the driver doesn't already know how many ports the PDU has. The ports are numbered from 1, or from the driver's first port if it knows it; `"first_port"` (0 or 1) overrides this.
+An optional `port_names` setting lists the names of the ports of the PDU, for drivers which identify ports by name rather than number (e.g. `"port_names": ["switch.board1", "switch.board2"]`). It is independent of `port_count`.
+Both settings are used to list the ports in [Port Status](#making-a-power-control-request).
 For some (or most) network connected devices, it needs to be the actual hostname or IP address the PDU responds to (see `query-string` in [next section](#making-a-power-control-request)).
 The correct value for `driver` is highly dependent on the used child class and the specific implementation.
 Check the imported [Python module](https://github.com/pdudaemon/pdudaemon/tree/main/pdudaemon/drivers) for that class and look for `drivername` to be sure.

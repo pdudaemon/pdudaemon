@@ -39,6 +39,7 @@ class Intellinet(PDUDriver):
     """
 
     port_count = 8
+    first_port = 0
     endpoints = {
         "outlet": "control_outlet.htm",
     }
