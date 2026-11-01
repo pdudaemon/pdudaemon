@@ -18,6 +18,8 @@
 #  MA 02110-1301, USA.
 
 import pytest
+from subprocess import CalledProcessError
+from pdudaemon.drivers.driver import UnknownCommandException
 from pdudaemon.drivers.localcmdline import LocalCmdline
 
 
@@ -65,3 +67,56 @@ def test_port_interaction_missing_setting(mocker):
         pdu.port_interaction("on", 1)
 
     call.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "output, expected",
+    [
+        ("on\n", True),
+        ("on", True),
+        ("off\n", False),
+        (" off ", False),
+    ],
+)
+def test_get_port_state(mocker, output, expected):
+    check_output = mocker.patch("pdudaemon.drivers.localcmdline.check_output",
+                                return_value=output)
+    pdu = LocalCmdline("dummy", {"cmd_state": "cat /tmp/%(hostname)s-%(port)s"})
+
+    assert pdu.get_port_state(3) is expected
+
+    check_output.assert_called_once_with("cat /tmp/dummy-3", shell=True, text=True)
+
+
+@pytest.mark.parametrize("output", ["maybe\n", "1\n", "0\n", "ON\n", ""])
+def test_get_port_state_unexpected_output(mocker, output):
+    mocker.patch("pdudaemon.drivers.localcmdline.check_output", return_value=output)
+    pdu = LocalCmdline("dummy", {"cmd_state": "echo maybe"})
+
+    with pytest.raises(RuntimeError):
+        pdu.get_port_state(1)
+
+
+def test_get_port_state_unsupported(mocker):
+    check_output = mocker.patch("pdudaemon.drivers.localcmdline.check_output")
+    pdu = LocalCmdline("dummy", {"cmd_on": "echo on"})
+
+    with pytest.raises(UnknownCommandException):
+        pdu.get_port_state(1)
+
+    check_output.assert_not_called()
+
+
+def test_get_port_state_command(tmp_path):
+    state = tmp_path / "state"
+    state.write_text("on\n")
+    pdu = LocalCmdline("dummy", {"cmd_state": "cat %s" % state})
+
+    assert pdu.get_port_state(1) is True
+
+
+def test_get_port_state_command_fails():
+    pdu = LocalCmdline("dummy", {"cmd_state": "echo on; exit 1"})
+
+    with pytest.raises(CalledProcessError):
+        pdu.get_port_state(1)
