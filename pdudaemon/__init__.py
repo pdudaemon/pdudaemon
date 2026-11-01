@@ -23,6 +23,7 @@ import asyncio
 import collections
 import json
 import logging
+import os
 from logging.handlers import WatchedFileHandler
 import signal
 import sys
@@ -164,11 +165,18 @@ class PDUDaemon:
         await self.listener.start()
 
     async def shutdown(self):
-        logger.info("Shutting down listener...")
-        await self.listener.shutdown()
         logger.info("Shutting down runners...")
         for runner in self.runners.values():
             await runner.shutdown()
+        busy = [hostname for hostname, runner in self.runners.items() if runner.busy]
+        if busy:
+            # the listener and the interpreter would wait for the running
+            # jobs to finish, which can take a long time
+            logger.warning("Not waiting for the running jobs of PDUs %s", ", ".join(busy))
+            logging.shutdown()
+            os._exit(0)
+        logger.info("Shutting down listener...")
+        await self.listener.shutdown()
         logger.info("Stopping loop...")
         loop = asyncio.get_running_loop()
         loop.stop()

@@ -20,7 +20,7 @@
 
 import asyncio
 import logging
-import time
+import threading
 import traceback
 import pexpect
 import concurrent.futures
@@ -45,9 +45,18 @@ class PDURunner:
         self.port_state_cache = {}
         # use single-worker ThreadPoolExecutor to serialize execution
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=1, thread_name_prefix=hostname)
+        # set on shutdown to stop retrying the running job
+        self.stopping = threading.Event()
+        # True while the driver is running a job
+        self.busy = False
 
     async def shutdown(self):
-        self.executor.shutdown(wait=True, cancel_futures=True)
+        """Cancel the queued jobs and stop retrying the running job, without
+        waiting for it: a driver call can't be interrupted, and can take a
+        long time. Check busy to know if a job is still running.
+        """
+        self.stopping.set()
+        self.executor.shutdown(wait=False, cancel_futures=True)
 
     def driver_from_hostname(self, hostname):
         drivername = self.config['driver']
@@ -66,8 +75,9 @@ class PDURunner:
     def _run_with_retries(self, port, request, action):
         self.logger.info("Processing job for PDU %s: (%s %s)", self.hostname, request, port)
         retries = self.retries
-        while retries > 0:
+        while retries > 0 and not self.stopping.is_set():
             try:
+                self.busy = True
                 result = action()
                 self.driver._cleanup()  # pylint: disable=W0212
                 return result
@@ -80,9 +90,15 @@ class PDURunner:
                 self.logger.warn("Failed to execute job: {} {} (attempts left {})".format(port, request, retries - 1))
                 if self.driver:
                     self.driver._bombout()  # pylint: disable=W0212,E1101
-                time.sleep(self.retrydelay)
+                self.stopping.wait(self.retrydelay)
                 retries -= 1
                 continue
+            finally:
+                self.busy = False
+        if self.stopping.is_set():
+            raise FailedRequestException(
+                "Failed to {} port {} on PDU {}, shutting down".format(request, port, self.hostname)
+            )
         raise FailedRequestException(
             "Failed to {} port {} on PDU {} after {} retries".format(request, port, self.hostname, self.retries)
         )

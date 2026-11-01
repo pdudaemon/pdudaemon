@@ -1,14 +1,16 @@
 #!/usr/bin/python3
 """Tests for PDURunner."""
 
+import asyncio
+import threading
+
 import pytest
 from pdudaemon.pdurunner import PDURunner
 from pdudaemon.drivers.driver import FailedRequestException, UnknownCommandException
 
 
 @pytest.fixture
-def runner(mocker):
-    mocker.patch("pdudaemon.pdurunner.time.sleep")
+def runner():
     return PDURunner({"driver": "localcmdline"}, "dummy", 5, 0)
 
 
@@ -40,6 +42,39 @@ def test_failure_is_retried(mocker, runner):
         runner.port_on(1)
 
     assert port_on.call_count == 5
+
+
+def test_failure_is_not_retried_after_shutdown(mocker, runner):
+    def fail(port):
+        asyncio.run(runner.shutdown())
+        raise OSError("nope")
+    port_on = mocker.patch.object(runner.driver, "port_on", side_effect=fail)
+
+    with pytest.raises(FailedRequestException, match="shutting down"):
+        runner.port_on(1)
+
+    port_on.assert_called_once_with("1")
+    assert not runner.busy
+
+
+def test_shutdown_does_not_wait_for_running_job(mocker, runner):
+    started = threading.Event()
+    finish = threading.Event()
+    mocker.patch.object(runner.driver, "port_on", side_effect=lambda port: (started.set(), finish.wait()))
+
+    async def run():
+        job = asyncio.ensure_future(runner.port_on_async(1))
+        queued = asyncio.ensure_future(runner.port_off_async(1))
+        await asyncio.get_running_loop().run_in_executor(None, started.wait)
+        await asyncio.wait_for(runner.shutdown(), timeout=1)
+        assert runner.busy
+        with pytest.raises(asyncio.CancelledError):
+            await queued
+        finish.set()
+        await job
+
+    asyncio.run(run())
+    assert not runner.busy
 
 
 @pytest.mark.parametrize("driver, supported", [
