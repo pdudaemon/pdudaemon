@@ -102,7 +102,7 @@ The optional `aliases` section names ports of the PDUs, so requests can use the 
       }
   }
 ```
-Each alias name must be unique, pdudaemon refuses to start if a name is used more than once.
+Each alias name must be unique, its `hostname` must be one of the PDUs in the `pdus` section, and its `port` must be one of the ports of that PDU if they are known (see `port_count` and `port_names` above), otherwise pdudaemon refuses to start.
 
 ## Making a power control request
 - **HTTP**

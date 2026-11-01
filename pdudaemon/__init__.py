@@ -30,7 +30,7 @@ import sys
 from pdudaemon.tcplistener import TCPListener
 from pdudaemon.httplistener import HTTPListener
 from pdudaemon.pdurunner import PDURunner
-from pdudaemon.drivers.driver import PDUDriver
+from pdudaemon.drivers.driver import FailedRequestException, PDUDriver
 
 assert PDUDriver, "Imported for user convenience." # type: ignore[truthy-function]
 
@@ -109,6 +109,20 @@ def check_config(settings):
     duplicates = getattr(aliases, "duplicate_keys", [])
     if duplicates:
         raise ValueError("Duplicate alias names: {}".format(", ".join(duplicates)))
+    for name, alias in aliases.items():
+        if alias.get("hostname") not in pdus:
+            raise ValueError("Alias {}: PDU {} is not in the config".format(name, alias.get("hostname")))
+
+
+def check_alias_ports(aliases, runners):
+    """Raise ValueError if the port of an alias isn't one of the ports of its
+    PDU. The port isn't checked if the ports of the PDU are unknown.
+    """
+    for name, alias in aliases.items():
+        try:
+            runners[alias["hostname"]].driver.check_port(alias.get("port"))
+        except FailedRequestException as e:
+            raise ValueError("Alias {}: {} of PDU {}".format(name, e, alias["hostname"]))
 
 
 class PDUDaemon:
@@ -126,6 +140,7 @@ class PDUDaemon:
             warning = self.runners[hostname].get_ports_warning()
             if warning:
                 logger.warning("PDU %s: %s", hostname, warning)
+        check_alias_ports(settings.get("aliases", {}), self.runners)
 
         # Start the listener
         logger.info("Starting the listener")
@@ -241,7 +256,11 @@ async def main_async():
 
     # Create daemon
     logger.info('PDUDaemon starting up')
-    daemon = PDUDaemon(options, settings)
+    try:
+        daemon = PDUDaemon(options, settings)
+    except ValueError as exc:
+        logger.error("Invalid configuration file '%s': %s", options.conf.name, exc)
+        sys.exit(1)
 
     # Setup signal handling
     def cleanup_handler():

@@ -20,7 +20,8 @@
 """Tests for loading and checking the configuration file."""
 
 import pytest
-from pdudaemon import load_config
+from pdudaemon import check_alias_ports, load_config
+from pdudaemon.pdurunner import PDURunner
 
 
 def test_load_config():
@@ -38,3 +39,33 @@ def test_duplicate_alias_names():
     with pytest.raises(ValueError, match="Duplicate alias names: board"):
         load_config('{"pdus": {"pdu1": {"driver": "a"}},'
                     ' "aliases": {"board": {"hostname": "pdu1", "port": 1}, "board": {"hostname": "pdu1", "port": 2}}}')
+
+
+@pytest.mark.parametrize("alias", ['{"hostname": "pdu2", "port": 1}', '{"port": 1}'])
+def test_alias_unknown_hostname(alias):
+    with pytest.raises(ValueError, match="Alias board: PDU .* is not in the config"):
+        load_config('{"pdus": {"pdu1": {"driver": "a"}}, "aliases": {"board": %s}}' % alias)
+
+
+@pytest.mark.parametrize("config, port", [
+    ({}, 9),
+    ({"port_count": 3}, 3),
+    ({"port_count": 3}, "03"),
+    ({"port_names": ["board"]}, "board"),
+])
+def test_alias_port(config, port):
+    runners = {"pdu1": PDURunner({"driver": "localcmdline", **config}, "pdu1", 1, 0)}
+
+    check_alias_ports({"board": {"hostname": "pdu1", "port": port}}, runners)
+
+
+@pytest.mark.parametrize("config, port", [
+    ({"port_count": 3}, 4),
+    ({"port_count": 3}, "x"),
+    ({"port_names": ["board"]}, "other"),
+])
+def test_alias_port_invalid(config, port):
+    runners = {"pdu1": PDURunner({"driver": "localcmdline", **config}, "pdu1", 1, 0)}
+
+    with pytest.raises(ValueError, match="Alias board: Port .* of PDU pdu1"):
+        check_alias_ports({"board": {"hostname": "pdu1", "port": port}}, runners)
