@@ -112,3 +112,56 @@ def test_get_cached_port_states(runner):
     # the returned dict is a copy, so callers can't change the cache
     states["1"] = False
     assert runner.get_cached_port_state(1) is True
+
+
+def test_get_ports_unknown(runner):
+    assert runner.driver.get_ports() == []
+
+
+def test_get_ports_port_count():
+    runner = PDURunner({"driver": "localcmdline", "port_count": "3"}, "dummy", 1, 0)
+
+    assert runner.driver.port_count == 3
+    assert runner.driver.get_ports() == [1, 2, 3]
+
+
+@pytest.mark.parametrize("first_port, ports", [(0, [0, 1, 2]), ("1", [1, 2, 3])])
+def test_get_ports_first_port(first_port, ports):
+    runner = PDURunner({"driver": "localcmdline", "port_count": 3, "first_port": first_port}, "dummy", 1, 0)
+
+    assert runner.driver.get_ports() == ports
+
+
+@pytest.mark.parametrize("first_port", [-1, 2])
+def test_first_port_invalid(first_port):
+    with pytest.raises(ValueError):
+        PDURunner({"driver": "localcmdline", "port_count": 3, "first_port": first_port}, "dummy", 1, 0)
+
+
+def test_port_count_does_not_override_driver():
+    runner = PDURunner({"driver": "devantech_USB-RLY04", "port_count": 8}, "dummy", 1, 0)
+
+    assert runner.driver.port_count == 4
+    assert runner.driver.get_ports() == [1, 2, 3, 4]
+
+
+def test_first_port_with_driver_port_count():
+    runner = PDURunner({"driver": "devantech_USB-RLY04", "first_port": 0}, "dummy", 1, 0)
+
+    assert runner.driver.get_ports() == [0, 1, 2, 3]
+
+
+def test_first_port_overrides_driver():
+    runner = PDURunner({"driver": "intellinet", "first_port": 1}, "dummy", 1, 0)
+
+    assert runner.driver.first_port == 1
+
+
+@pytest.mark.parametrize("port_count", [None, 2, 8])
+def test_get_ports_port_names(port_count):
+    config = {"driver": "localcmdline", "port_names": ["switch.board", 2]}
+    if port_count is not None:
+        config["port_count"] = port_count
+    runner = PDURunner(config, "dummy", 1, 0)
+
+    assert runner.driver.get_ports() == ["switch.board", "2"]
