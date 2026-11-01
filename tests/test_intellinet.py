@@ -28,3 +28,7 @@ def test_port_interaction_port_in_range(pdu):
 
     with pytest.raises(FailedRequestException):
         pdu.port_interaction("on", -1)
+
+
+def test_get_ports(pdu):
+    assert pdu.get_ports() == list(range(pdu.port_count))
