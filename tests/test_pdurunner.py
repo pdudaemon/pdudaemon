@@ -42,6 +42,12 @@ def test_failure_is_retried(mocker, runner):
     assert port_on.call_count == 5
 
 
+def test_get_port_state_returns_driver_result(mocker, runner):
+    mocker.patch.object(runner.driver, "get_port_state", return_value=True)
+
+    assert runner.get_port_state(1) is True
+
+
 def test_port_state_unknown(runner):
     assert runner.get_cached_port_state(1) is None
 
@@ -60,6 +66,14 @@ def test_port_state_cached(mocker, runner, request_, expected):
     assert runner.get_cached_port_state(2) is None
 
 
+@pytest.mark.parametrize("on", [True, False])
+def test_get_port_state_updates_cache(mocker, runner, on):
+    mocker.patch.object(runner.driver, "get_port_state", return_value=on)
+
+    assert runner.get_port_state(1) is on
+    assert runner.get_cached_port_state(1) is on
+
+
 def test_failed_request_keeps_cached_state(mocker, runner):
     mocker.patch.object(runner.driver, "port_on")
     runner.port_on(1)
@@ -72,11 +86,11 @@ def test_failed_request_keeps_cached_state(mocker, runner):
 
 
 def test_get_cached_port_state_does_not_query_driver(mocker, runner):
-    port_interaction = mocker.patch.object(runner.driver, "port_interaction")
+    get_port_state = mocker.patch.object(runner.driver, "get_port_state")
 
     runner.get_cached_port_state(1)
 
-    port_interaction.assert_not_called()
+    get_port_state.assert_not_called()
 
 
 def test_set_cached_port_state(runner):
