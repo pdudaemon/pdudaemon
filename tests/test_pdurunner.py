@@ -99,3 +99,16 @@ def test_set_cached_port_state(runner):
 
     runner._set_cached_port_state("1", False)
     assert runner.get_cached_port_state(1) is False
+
+
+def test_get_cached_port_states(runner):
+    assert runner.get_cached_port_states() == {}
+
+    runner._set_cached_port_state(1, True)
+    runner._set_cached_port_state("2", False)
+    states = runner.get_cached_port_states()
+    assert states == {"1": True, "2": False}
+
+    # the returned dict is a copy, so callers can't change the cache
+    states["1"] = False
+    assert runner.get_cached_port_state(1) is True
