@@ -96,12 +96,13 @@ class HTTPListener:
         alias_names = self.get_alias_names()
         for name, runner in runners.items():
             aliases = alias_names.get(name, {})
-            ports = {port: {"state": "unknown", "alias": alias} for port, alias in aliases.items()}
+            ports = {str(port): {"state": "unknown"} for port in runner.driver.get_ports()}
+            for port in aliases:
+                ports[port] = {"state": "unknown"}
             for port, on in runner.get_cached_port_states().items():
-                port_status = {"state": listener.PortStatus(on=on).state}
-                if port in aliases:
-                    port_status["alias"] = aliases[port]
-                ports[port] = port_status
+                ports[port] = {"state": listener.PortStatus(on=on).state}
+            for port, alias in aliases.items():
+                ports[port]["alias"] = alias
             status[name] = {"driver": runner.config["driver"], "ports": ports}
         if hostname:
             return {hostname: status[hostname]}
