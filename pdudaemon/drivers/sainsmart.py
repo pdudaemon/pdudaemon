@@ -47,7 +47,7 @@ class Sainsmart(LocalBase):
         return False
 
     def _port_interaction(self, command, port):
-
+        port = int(port)
         val = -1
         if command == "on":
             log.debug("Attempting control: {} port: {}".format(command, port))

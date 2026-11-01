@@ -13,6 +13,8 @@ from pdudaemon.drivers.localcmdline import LocalCmdline
         ("echo %s", "test", "echo test"),
         ("echo %d", 3, "echo 3"),
         ("echo %i", 3, "echo 3"),
+        ("echo %d", "3", "echo 3"),
+        ("echo %i", "3", "echo 3"),
         ("echo %03d", 3, "echo 003"),
         ("relay --pct 50%% --port %i", 3, "relay --pct 50% --port 3"),
     ],

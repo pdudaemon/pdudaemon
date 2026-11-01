@@ -75,4 +75,9 @@ class LocalCmdline(LocalBase):
         try:
             return cmd % ()
         except TypeError:
+            pass
+        try:
             return cmd % port
+        except TypeError:
+            # numeric placeholders such as %i need the port as a number
+            return cmd % int(port)

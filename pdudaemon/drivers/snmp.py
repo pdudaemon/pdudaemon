@@ -128,7 +128,7 @@ class SNMP(PDUDriver):
             if self.static_ending is not None:
                 indexed_object_list.append(int(self.static_ending))
         else:
-            indexed_object_list = [self.mib, self.controlpoint, port]
+            indexed_object_list = [self.mib, self.controlpoint, int(port)]
 
         objecttype = ObjectType(
             ObjectIdentity(*indexed_object_list).add_asn1_mib_source(

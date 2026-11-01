@@ -62,6 +62,7 @@ class ShellyGen2(PDUDriver):
         return r["output"]
 
     def port_interaction(self, command, port):
+        port = int(port)
         if not 0 <= port <= 3:
             raise ValueError("Invalid port number")
 
