@@ -146,10 +146,10 @@ An HTTP request URL has the following syntax:
 
   ***Port Status***
 
-  The cached state of each port (see the `Get cached port state` section below) is available as JSON from `/power/status` (or `/power/status/json`). Every PDU in the config file is listed with its driver and ports. Ports are listed if the driver knows the PDU has them, if they are in the `aliases` section of the config file, or if their state is known; they show as `unknown` until their state is known. Ports in the `aliases` section also include their alias name. A PDU whose ports aren't known from the driver, `port_count` or `port_names` also has a `warning`. Add `?hostname=<pdu-hostname>` to only show one PDU.
+  The cached state of each port (see the `Get cached port state` section below) is available as JSON from `/power/status` (or `/power/status/json`). Every PDU in the config file is listed with its driver and ports. Ports are listed if the driver knows the PDU has them, if they are in the `aliases` section of the config file, or if their state is known; they show as `unknown` until their state is known. Ports in the `aliases` section also include their alias name. `get_port_state` is `true` if the driver supports [`get-port-state`](#get-port-state) for the PDU. A PDU whose ports aren't known from the driver, `port_count` or `port_names` also has a `warning`. Add `?hostname=<pdu-hostname>` to only show one PDU.
   ```
   $ curl "http://localhost:16421/power/status"
-  {"192.168.10.2": {"driver": "tasmota", "ports": {"1": {"state": "on", "alias": "board1"}, "2": {"state": "off"}}}}
+  {"192.168.10.2": {"driver": "tasmota", "get_port_state": true, "ports": {"1": {"state": "on", "alias": "board1"}, "2": {"state": "off"}}}}
   ```
 
 - **TCP (legacy pduclient)**

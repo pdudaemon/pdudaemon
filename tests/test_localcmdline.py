@@ -107,6 +107,14 @@ def test_get_port_state_unsupported(mocker):
     check_output.assert_not_called()
 
 
+@pytest.mark.parametrize("settings, supported", [
+    ({"cmd_on": "echo on"}, False),
+    ({"cmd_state": "echo on"}, True),
+])
+def test_supports_get_port_state(settings, supported):
+    assert LocalCmdline("dummy", settings).supports_get_port_state() is supported
+
+
 def test_get_port_state_command(tmp_path):
     state = tmp_path / "state"
     state.write_text("on\n")

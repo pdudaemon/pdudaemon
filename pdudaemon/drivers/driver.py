@@ -99,6 +99,12 @@ class PDUDriver(object):
         """
         raise UnknownCommandException("Driver doesn't support get-port-state")
 
+    def supports_get_port_state(self) -> bool:
+        """Return True if the driver can retrieve the state of a port with
+        get_port_state().
+        """
+        return type(self).get_port_state is not PDUDriver.get_port_state
+
     def get_ports(self) -> list:
         """Return the port names or numbers of the PDU, or an empty list if the
         driver doesn't know which ports the PDU has.

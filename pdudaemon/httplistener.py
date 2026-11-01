@@ -103,7 +103,11 @@ class HTTPListener:
                 ports[port] = {"state": listener.PortStatus(on=on).state}
             for port, alias in aliases.items():
                 ports[port]["alias"] = alias
-            status[name] = {"driver": runner.config["driver"], "ports": ports}
+            status[name] = {
+                "driver": runner.config["driver"],
+                "get_port_state": runner.driver.supports_get_port_state(),
+                "ports": ports,
+            }
             warning = runner.get_ports_warning()
             if warning:
                 status[name]["warning"] = warning

@@ -69,6 +69,9 @@ class LocalCmdline(LocalBase):
             return False
         raise RuntimeError("cmd_state returned unexpected output: %r" % output)
 
+    def supports_get_port_state(self) -> bool:
+        return bool(self.cmd_state)
+
     def _format_cmd(self, cmd, port):
         if "%(" in cmd:
             return cmd % dict(self.settings, hostname=self.hostname, port=port)

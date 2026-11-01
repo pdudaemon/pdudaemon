@@ -42,6 +42,17 @@ def test_failure_is_retried(mocker, runner):
     assert port_on.call_count == 5
 
 
+@pytest.mark.parametrize("driver, supported", [
+    ("localcmdline", False),
+    ("devantech_USB-RLY04", True),
+    ("apc7952", False),
+])
+def test_supports_get_port_state(driver, supported):
+    runner = PDURunner({"driver": driver}, "dummy", 1, 0)
+
+    assert runner.driver.supports_get_port_state() is supported
+
+
 def test_get_port_state_returns_driver_result(mocker, runner):
     mocker.patch.object(runner.driver, "get_port_state", return_value=True)
 
