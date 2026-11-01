@@ -80,6 +80,21 @@ async def test_status_alias_with_known_state(client, daemon):
 
 
 @pytest.mark.asyncio
+async def test_status_driver_ports(client, daemon, mocker):
+    mocker.patch.object(daemon.runners["pdu2"].driver, "get_ports", return_value=[1, 4])
+    daemon.runners["pdu2"]._set_cached_port_state(1, False)
+
+    resp = await client.get("/power/status", params={"hostname": "pdu2"})
+
+    assert await resp.json() == {
+        "pdu2": {
+            "driver": "localcmdline",
+            "ports": {"1": {"state": "off"}, "4": {"state": "unknown", "alias": "board"}},
+        },
+    }
+
+
+@pytest.mark.asyncio
 async def test_status_hostname(client, daemon):
     daemon.runners["pdu1"]._set_cached_port_state(1, True)
 
