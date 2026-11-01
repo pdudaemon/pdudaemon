@@ -84,7 +84,7 @@ Named placeholders such as `%(serial)s` are replaced with the PDU setting of tha
 An optional `cmd_state` command, using the same placeholders, implements `get-port-state`: it must exit with status 0 and print `on` when the port is powered on, or `off` when it is powered off. Any other exit status or output is an error.
 Any PDU can have an optional `port_count` setting, the number of ports of the PDU, which is used if the driver doesn't already know how many ports the PDU has. The ports are numbered from 1, or from the driver's first port if it knows it; `"first_port"` (0 or 1) overrides this.
 An optional `port_names` setting lists the names of the ports of the PDU, for drivers which identify ports by name rather than number (e.g. `"port_names": ["switch.board1", "switch.board2"]`). It is independent of `port_count`.
-Both settings are used to list the ports in [Port Status](#making-a-power-control-request), and requests for a port the PDU doesn't have are rejected. If neither is set and the driver doesn't know the ports of the PDU, a warning is logged at startup and shown in Port Status, and requests can't be checked, so a warning is logged for every request.
+Both settings are used to list the ports in [Port Status](#making-a-power-control-request), and requests for a port the PDU doesn't have are rejected. If neither is set and the driver doesn't know the ports of the PDU, a warning is logged at startup and shown in Port Status and the Web UI, and requests can't be checked, so a warning is logged for every request.
 For some (or most) network connected devices, it needs to be the actual hostname or IP address the PDU responds to (see `query-string` in [next section](#making-a-power-control-request)).
 The correct value for `driver` is highly dependent on the used child class and the specific implementation.
 Check the imported [Python module](https://github.com/pdudaemon/pdudaemon/tree/main/pdudaemon/drivers) for that class and look for `drivername` to be sure.
@@ -151,6 +151,10 @@ An HTTP request URL has the following syntax:
   $ curl "http://localhost:16421/power/status"
   {"192.168.10.2": {"driver": "tasmota", "get_port_state": true, "ports": {"1": {"state": "on", "alias": "board1"}, "2": {"state": "off"}}}}
   ```
+
+  ***Web UI***
+
+  A web page showing the same status, with buttons to switch each port on or off, to reset it (off, then on again after 5 seconds), or to read its state from the PDU (disabled if the driver doesn't support `get-port-state`), is available from `/power/dashboard`, which `/` also redirects to. The result of each request is shown above the table, in red if it failed. It refreshes the status every 5 seconds, and also accepts `?hostname=<pdu-hostname>`. It is disabled by default; to enable it, set `"web_ui": true` in the 'daemon' section of the config file.
 
 - **TCP (legacy pduclient)**
 The bundled client is used when PDUDaemon is configured to listen to 'tcp' requests. TCP support is considered legacy but will remain functional.

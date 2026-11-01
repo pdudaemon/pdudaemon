@@ -55,6 +55,14 @@ async def client(daemon):
         yield client
 
 
+@pytest_asyncio.fixture
+async def ui_client(daemon):
+    config = {**CONFIG, "daemon": {**CONFIG["daemon"], "web_ui": True}}
+    listener = HTTPListener(config, daemon)
+    async with TestClient(TestServer(listener.app)) as client:
+        yield client
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize("path", ["/power/status", "/power/status/json"])
 async def test_status(client, daemon, path):
@@ -123,5 +131,46 @@ async def test_status_hostname_without_ports(client):
 @pytest.mark.asyncio
 async def test_status_unknown_hostname(client):
     resp = await client.get("/power/status", params={"hostname": "nopdu"})
+
+    assert resp.status == 404
+
+
+@pytest.mark.asyncio
+async def test_dashboard(ui_client):
+    resp = await ui_client.get("/power/dashboard")
+
+    assert resp.status == 200
+    assert resp.content_type == "text/html"
+    text = await resp.text()
+    assert '"/power/status/json"' in text
+    assert '"/power/control/"' in text
+
+
+@pytest.mark.asyncio
+async def test_dashboard_hostname(ui_client):
+    resp = await ui_client.get("/power/dashboard", params={"hostname": "pdu2"})
+
+    assert resp.status == 200
+
+
+@pytest.mark.asyncio
+async def test_dashboard_unknown_hostname(ui_client):
+    resp = await ui_client.get("/power/dashboard", params={"hostname": "nopdu"})
+
+    assert resp.status == 404
+
+
+@pytest.mark.asyncio
+async def test_index(ui_client):
+    resp = await ui_client.get("/", allow_redirects=False)
+
+    assert resp.status == 302
+    assert resp.headers["Location"] == "/power/dashboard"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("path", ["/", "/power/dashboard"])
+async def test_dashboard_disabled(client, path):
+    resp = await client.get(path)
 
     assert resp.status == 404

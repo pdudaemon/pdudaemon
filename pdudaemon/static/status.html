@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PDUDaemon status</title>
+<style>
+body { font-family: sans-serif; margin: 1em; padding-bottom: 2em; }
+/* fixed column widths, so every PDU's table lines up */
+table { border-collapse: collapse; table-layout: fixed; width: 61em; max-width: 100%; }
+col.port { width: 14em; }
+col.alias { width: 14em; }
+col.status { width: 7em; }
+col.control { width: 6.5em; }
+button { font-size: 0.85em; padding: 0.15em 0.4em; }
+th, td { padding: 0.3em 0.6em; border-bottom: 1px solid #ccc; text-align: left; }
+th { background: #eee; }
+#message { min-height: 1.2em; }
+#message.error { color: #a00; font-weight: bold; }
+.pdu { margin: 0 0 1em; padding: 0.5em 1em 1em; border: 1px solid #ccc; border-radius: 4px; }
+.pdu h2 { margin: 0.3em 0 0.5em; font-size: 1.2em; }
+.pdu .driver { color: #666; font-weight: normal; }
+.pdu .warning { color: #a60; }
+tr.state-on td:nth-child(3) { color: #080; font-weight: bold; }
+tr.state-off td:nth-child(3) { color: #a00; font-weight: bold; }
+tr.state-unknown td:nth-child(3) { color: #888; }
+#statusbar { position: fixed; left: 0; right: 0; bottom: 0; padding: 0.3em 1em; background: #eee; border-top: 1px solid #ccc; }
+#statusbar.error { background: #fdd; color: #a00; }
+</style>
+</head>
+<body>
+
+<h1>PDUDaemon status</h1>
+<p id="message"></p>
+<div id="status">Loading...</div>
+<div id="statusbar">Loading...</div>
+
+<script>
+// Fetch the status as JSON every few seconds and rebuild the table, so
+// the status stays up to date without reloading the whole page. Pass on
+// the query string so ?hostname= still only shows one PDU.
+const REFRESH_SECONDS = 5;
+const STATUS_URL = "/power/status/json" + window.location.search;
+
+function cell(text, colSpan = 1) {
+    const td = document.createElement("td");
+    td.textContent = text;
+    td.colSpan = colSpan;
+    return td;
+}
+
+function controlButton(label, request, hostname, port, extra = {}, disabledReason = "") {
+    const td = document.createElement("td");
+    const button = document.createElement("button");
+    button.textContent = label;
+    button.disabled = Boolean(disabledReason);
+    button.title = disabledReason;
+    button.addEventListener("click", () => sendRequest(button, request, hostname, port, extra));
+    td.append(button);
+    return td;
+}
+
+function element(tag, text, className = "") {
+    const el = document.createElement(tag);
+    el.textContent = text;
+    el.className = className;
+    return el;
+}
+
+// Build a box for one PDU, with its name and driver as the heading and a
+// table of its ports.
+function buildPdu(hostname, pdu) {
+    const section = element("section", "", "pdu");
+    const heading = element("h2", hostname + " ");
+    heading.append(element("span", "(" + pdu.driver + ")", "driver"));
+    section.append(heading);
+    if (pdu.warning) {
+        section.append(element("p", "Warning: " + pdu.warning, "warning"));
+    }
+    const ports = Object.entries(pdu.ports);
+    if (ports.length === 0) {
+        if (!pdu.warning) {
+            section.append(element("p", "No known ports"));
+        }
+        return section;
+    }
+    const colgroup = document.createElement("colgroup");
+    for (const className of ["port", "alias", "status", "control", "control", "control", "control"]) {
+        colgroup.append(element("col", "", className));
+    }
+    const header = document.createElement("tr");
+    header.append(element("th", "Port"), element("th", "Alias"), element("th", "Status"));
+    const control = element("th", "Control");
+    control.colSpan = 4;
+    header.append(control);
+    const thead = document.createElement("thead");
+    thead.append(header);
+    const tbody = document.createElement("tbody");
+    for (const [port, info] of ports) {
+        const tr = document.createElement("tr");
+        tr.className = "state-" + info.state;
+        tr.append(
+            cell(port),
+            cell(info.alias ?? ""),
+            cell(info.state),
+            controlButton("Switch On", "on", hostname, port),
+            controlButton("Switch Off", "off", hostname, port),
+            controlButton("Reset (5s)", "reboot", hostname, port, {delay: 5}),
+            controlButton("Get State", "get-port-state", hostname, port, {},
+                          pdu.get_port_state ? "" : "The driver doesn't support get-port-state"),
+        );
+        tbody.append(tr);
+    }
+    const table = document.createElement("table");
+    table.append(colgroup, thead, tbody);
+    section.append(table);
+    return section;
+}
+
+function buildTable(status) {
+    const pdus = Object.entries(status).map(([hostname, pdu]) => buildPdu(hostname, pdu));
+    if (pdus.length === 0) {
+        pdus.push(element("p", "No PDUs"));
+    }
+    document.getElementById("status").replaceChildren(...pdus);
+}
+
+function setStatusBar(text, error = false) {
+    const bar = document.getElementById("statusbar");
+    bar.textContent = text;
+    bar.classList.toggle("error", error);
+}
+
+let lastRefreshed = null;
+
+function setRefreshFailed(time, reason) {
+    const last = lastRefreshed ? "last refreshed at " + lastRefreshed : "never refreshed";
+    setStatusBar("Refresh failed at " + time + " (" + last + "): " + reason, true);
+}
+
+// On failure keep showing the last known status in the table, but say
+// so in the status bar along with how old it is.
+async function loadStatus() {
+    const time = new Date().toLocaleTimeString();
+    try {
+        const resp = await fetch(STATUS_URL, {cache: "no-store"});
+        if (resp.ok) {
+            buildTable(await resp.json());
+            lastRefreshed = time;
+            setStatusBar("Last refreshed at " + time);
+        } else {
+            setRefreshFailed(time, (await resp.text()).trim());
+        }
+    } catch (e) {
+        setRefreshFailed(time, e);
+    }
+}
+
+async function refreshStatus() {
+    await loadStatus();
+    setTimeout(refreshStatus, REFRESH_SECONDS * 1000);
+}
+
+function setMessage(text, error = false) {
+    const message = document.getElementById("message");
+    message.textContent = new Date().toLocaleTimeString() + " " + text;
+    message.classList.toggle("error", error);
+}
+
+// Send a control request in the background and show the result above
+// the table, highlighted if it failed, then reload the status to pick up
+// any change.
+async function sendRequest(button, request, hostname, port, extra = {}) {
+    const params = new URLSearchParams({hostname, port, ...extra});
+    const target = hostname + " port " + port + " " + request;
+    button.disabled = true;
+    setMessage(target + ": sending...");
+    try {
+        const resp = await fetch("/power/control/" + request + "?" + params, {cache: "no-store"});
+        if (!resp.ok) {
+            setMessage(target + " failed: " + (await resp.text()).trim(), true);
+        } else if (resp.headers.get("content-type")?.startsWith("application/json")) {
+            setMessage(target + ": " + (await resp.json()).state);
+        } else {
+            setMessage(target + ": " + (await resp.text()).trim());
+        }
+    } catch (e) {
+        setMessage(target + " failed: " + e, true);
+    }
+    button.disabled = false;
+    await loadStatus();
+}
+
+refreshStatus();
+</script>
+
+</body>
+</html>

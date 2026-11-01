@@ -22,8 +22,11 @@ import logging
 import pdudaemon.listener as listener
 
 from aiohttp import web
+from importlib.resources import files
 
 logger = logging.getLogger('pdud.http')
+
+STATUS_HTML = files("pdudaemon").joinpath("static/status.html").read_text()
 
 
 class HTTPListener:
@@ -43,6 +46,11 @@ class HTTPListener:
             web.get('/power/status', self.handle_status),
             web.get('/power/status/json', self.handle_status),
         ])
+        if self.settings.get("web_ui", False):
+            self.app.add_routes([
+                web.get('/', self.handle_index),
+                web.get('/power/dashboard', self.handle_dashboard),
+            ])
         self.apprunner = None
 
     async def start(self):
@@ -120,3 +128,11 @@ class HTTPListener:
         if status is None:
             return web.Response(status=404, text="PDU not found\n")
         return web.json_response(status)
+
+    async def handle_index(self, request):
+        raise web.HTTPFound('/power/dashboard')
+
+    async def handle_dashboard(self, request):
+        if self.get_status(request) is None:
+            return web.Response(status=404, text="PDU not found\n")
+        return web.Response(content_type="text/html", text=STATUS_HTML)
