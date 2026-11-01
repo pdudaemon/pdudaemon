@@ -91,6 +91,9 @@ class PDUDaemon:
             retries = config.get("retries", 5)
             retrydelay = config.get("retrydelay", 5)
             self.runners[hostname] = PDURunner(config, hostname, retries, retrydelay)
+            warning = self.runners[hostname].get_ports_warning()
+            if warning:
+                logger.warning("PDU %s: %s", hostname, warning)
 
         # Start the listener
         logger.info("Starting the listener")

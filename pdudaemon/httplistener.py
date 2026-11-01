@@ -104,6 +104,9 @@ class HTTPListener:
             for port, alias in aliases.items():
                 ports[port]["alias"] = alias
             status[name] = {"driver": runner.config["driver"], "ports": ports}
+            warning = runner.get_ports_warning()
+            if warning:
+                status[name]["warning"] = warning
         if hostname:
             return {hostname: status[hostname]}
         return status

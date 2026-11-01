@@ -55,6 +55,14 @@ class PDURunner:
         driver.configure_ports(self.config)
         return driver
 
+    def get_ports_warning(self) -> Optional[str]:
+        """Return a warning if the driver doesn't know which ports the PDU has,
+        or None if it does.
+        """
+        if self.driver.get_ports():
+            return None
+        return "Ports unknown, set port_count or port_names in the driver or config"
+
     def _run_with_retries(self, port, request, action):
         self.logger.info("Processing job for PDU %s: (%s %s)", self.hostname, request, port)
         retries = self.retries

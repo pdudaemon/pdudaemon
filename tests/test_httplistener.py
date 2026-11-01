@@ -39,6 +39,9 @@ CONFIG = {
 }
 
 
+WARNING = "Ports unknown, set port_count or port_names in the driver or config"
+
+
 @pytest.fixture
 def daemon():
     runners = {name: PDURunner(conf, name, 1, 0) for name, conf in CONFIG["pdus"].items()}
@@ -62,8 +65,8 @@ async def test_status(client, daemon, path):
 
     assert resp.status == 200
     assert await resp.json() == {
-        "pdu1": {"driver": "localcmdline", "ports": {"1": {"state": "on"}, "2": {"state": "off"}}},
-        "pdu2": {"driver": "localcmdline", "ports": {"4": {"state": "unknown", "alias": "board"}}},
+        "pdu1": {"driver": "localcmdline", "ports": {"1": {"state": "on"}, "2": {"state": "off"}}, "warning": WARNING},
+        "pdu2": {"driver": "localcmdline", "ports": {"4": {"state": "unknown", "alias": "board"}}, "warning": WARNING},
     }
 
 
@@ -74,8 +77,8 @@ async def test_status_alias_with_known_state(client, daemon):
     resp = await client.get("/power/status")
 
     assert await resp.json() == {
-        "pdu1": {"driver": "localcmdline", "ports": {}},
-        "pdu2": {"driver": "localcmdline", "ports": {"4": {"state": "on", "alias": "board"}}},
+        "pdu1": {"driver": "localcmdline", "ports": {}, "warning": WARNING},
+        "pdu2": {"driver": "localcmdline", "ports": {"4": {"state": "on", "alias": "board"}}, "warning": WARNING},
     }
 
 
@@ -100,11 +103,11 @@ async def test_status_hostname(client, daemon):
 
     resp = await client.get("/power/status", params={"hostname": "pdu1"})
     assert resp.status == 200
-    assert await resp.json() == {"pdu1": {"driver": "localcmdline", "ports": {"1": {"state": "on"}}}}
+    assert await resp.json() == {"pdu1": {"driver": "localcmdline", "ports": {"1": {"state": "on"}}, "warning": WARNING}}
 
     resp = await client.get("/power/status", params={"hostname": "pdu2"})
     assert await resp.json() == {
-        "pdu2": {"driver": "localcmdline", "ports": {"4": {"state": "unknown", "alias": "board"}}},
+        "pdu2": {"driver": "localcmdline", "ports": {"4": {"state": "unknown", "alias": "board"}}, "warning": WARNING},
     }
 
 
@@ -113,7 +116,7 @@ async def test_status_hostname_without_ports(client):
     resp = await client.get("/power/status", params={"hostname": "pdu1"})
 
     assert resp.status == 200
-    assert await resp.json() == {"pdu1": {"driver": "localcmdline", "ports": {}}}
+    assert await resp.json() == {"pdu1": {"driver": "localcmdline", "ports": {}, "warning": WARNING}}
 
 
 @pytest.mark.asyncio
