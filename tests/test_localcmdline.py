@@ -28,6 +28,9 @@ from pdudaemon.drivers.localcmdline import LocalCmdline
         ("echo %s", "3", "echo 3"),
         ("echo %s", "test", "echo test"),
         ("echo %d", 3, "echo 3"),
+        ("echo %i", 3, "echo 3"),
+        ("echo %03d", 3, "echo 003"),
+        ("relay --pct 50%% --port %i", 3, "relay --pct 50% --port 3"),
         ("echo on", 3, "echo on"),
         ("echo on", "3", "echo on"),
         ("echo on", "test", "echo on"),
@@ -39,11 +42,12 @@ from pdudaemon.drivers.localcmdline import LocalCmdline
         ("echo %(serial)s 50%%", 3, "echo 262305 50%"),
     ],
 )
-def test_port_interaction(mocker, command, port_number, expected):
+@pytest.mark.parametrize("request_name", ["on", "off"])
+def test_port_interaction(mocker, request_name, command, port_number, expected):
     call = mocker.patch("pdudaemon.drivers.localcmdline.call")
-    pdu = LocalCmdline("dummy", {"cmd_on": command, "serial": "262305"})
+    pdu = LocalCmdline("dummy", {"cmd_" + request_name: command, "serial": "262305"})
 
-    pdu.port_interaction("on", port_number)
+    pdu.port_interaction(request_name, port_number)
 
     call.assert_called_once_with(expected, shell=True)
 
