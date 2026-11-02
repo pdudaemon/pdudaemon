@@ -89,9 +89,8 @@ It is also worth checking out the [share](https://github.com/pdudaemon/pdudaemon
 
 ## Making a power control request
 - **HTTP**
-The daemon can accept requests over plain HTTP. The port is configurable, but defaults to 16421
+The daemon accepts requests over plain HTTP. The port is configurable, but defaults to 16421
 There is no encryption or authentication, consider yourself warned.
-To enable, change the 'listener' setting in the 'daemon' section of the config file to 'http'. This will break 'pduclient' requests.
 An HTTP request URL has the following syntax:
 
   ```http://<pdudaemon-hostname>:<pdudaemon-port>/power/control/<command>?<query-string>```
@@ -120,8 +119,8 @@ An HTTP request URL has the following syntax:
     - HTTP 200 - Request Accepted
     - HTTP 503 - Invalid Request, Request not accepted
 
-- **TCP (legacy pduclient)**
-The bundled client is used when PDUDaemon is configured to listen to 'tcp' requests. TCP support is considered legacy but will remain functional.
+- **pduclient**
+The bundled client sends requests to the HTTP API.
 ```
 Usage: pduclient --daemon deamonhostname --hostname pduhostname --port pduportnum --command pducommand
 
