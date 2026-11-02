@@ -147,10 +147,10 @@ async def main_async():
     drive.add_argument("--request", dest="driverequest", action="store", type=str,
                        choices=["on", "off", "reboot"], metavar="REQUEST",
                        help="request to send to the PDU (on, off or reboot)")
-    drive.add_argument("--retries", dest="driveretries", action="store", type=int, default=5,
-                       metavar="RETRIES", help="number of attempts [5]")
-    drive.add_argument("--retry-delay", dest="driveretrydelay", action="store", type=int, default=5,
-                       metavar="SECONDS", help="delay between attempts [5]")
+    drive.add_argument("--retries", dest="driveretries", action="store", type=int,
+                       metavar="RETRIES", help="number of attempts [PDU retries or 5]")
+    drive.add_argument("--retry-delay", dest="driveretrydelay", action="store", type=int,
+                       metavar="SECONDS", help="delay between attempts [PDU retrydelay or 5]")
     drive.add_argument("--delay", dest="drivedelay", action="store", type=int, default=5,
                        metavar="SECONDS", help="delay between power off and on for reboot [5]")
     drive.add_argument("--port", dest="driveport", action="store", type=str,
@@ -199,7 +199,13 @@ async def main_async():
             logger.error("No config section for hostname: {}".format(options.drivehostname))
             sys.exit(1)
 
-        runner = PDURunner(config, options.drivehostname, options.driveretries, options.driveretrydelay)
+        retries = options.driveretries
+        if retries is None:
+            retries = config.get("retries", 5)
+        retrydelay = options.driveretrydelay
+        if retrydelay is None:
+            retrydelay = config.get("retrydelay", 5)
+        runner = PDURunner(config, options.drivehostname, retries, retrydelay)
         if options.driverequest == "reboot":
             result = await runner.do_job_async(options.driveport, "off")
             if result:
