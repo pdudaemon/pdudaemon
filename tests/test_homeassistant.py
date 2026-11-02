@@ -34,6 +34,54 @@ def fixture_get_mock(mocker):
     return mocker.patch("pdudaemon.drivers.homeassistant.requests.get")
 
 
+@pytest.fixture(name="post_mock")
+def fixture_post_mock(mocker):
+    return mocker.patch("pdudaemon.drivers.homeassistant.requests.post")
+
+
+@pytest.mark.parametrize("command, action", [("on", "turn_on"), ("off", "turn_off")])
+def test_port_interaction(pdu, post_mock, command, action):
+    pdu.port_interaction(command, "relay1")
+
+    post_mock.assert_called_once_with(
+        "http://192.0.2.1:8123/api/services/switch/%s" % action,
+        headers={"Authorization": "Bearer secret"},
+        json={"entity_id": "switch.relay1"},
+    )
+    post_mock.return_value.raise_for_status.assert_called_once_with()
+
+
+def test_port_interaction_unknown_command(pdu, post_mock):
+    with pytest.raises(FailedRequestException):
+        pdu.port_interaction("reboot", "relay1")
+
+    post_mock.assert_not_called()
+
+
+def test_port_interaction_http_error(pdu, post_mock):
+    post_mock.return_value.raise_for_status.side_effect = requests.HTTPError("401")
+
+    with pytest.raises(requests.HTTPError):
+        pdu.port_interaction("on", "relay1")
+
+
+def test_default_hostname_and_port(post_mock):
+    pdu = HomeAssistantHTTP("192.0.2.2", {"api_key": "secret"})
+
+    pdu.port_interaction("on", "relay1")
+
+    post_mock.assert_called_once_with(
+        "http://192.0.2.2:80/api/services/switch/turn_on",
+        headers={"Authorization": "Bearer secret"},
+        json={"entity_id": "switch.relay1"},
+    )
+
+
+def test_accepts():
+    assert HomeAssistantHTTP.accepts("home-assistant-http")
+    assert not HomeAssistantHTTP.accepts("esphome-http")
+
+
 @pytest.mark.parametrize("state, expected", [("on", True), ("off", False)])
 def test_get_port_state(pdu, get_mock, state, expected):
     get_mock.return_value.json.return_value = {"entity_id": "switch.relay1",
