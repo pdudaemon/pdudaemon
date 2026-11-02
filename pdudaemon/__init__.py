@@ -41,6 +41,8 @@ logging_FORMAT = "%(asctime)s - %(shortname)-20.20s - %(levelname)s %(message)s"
 logging_FORMAT_STREAM = "%(shortname)-20.20s - %(levelname)s %(message)s"
 logging_FORMAT_JOURNAL = "%(shortname)s.%(levelname)s %(message)s"
 logging_FILE = "/var/log/pdudaemon.log"
+# Below DEBUG, to also get debug messages from libraries.
+logging_TRACE = 5
 
 ##################
 # Global logger
@@ -112,15 +114,30 @@ def setup_logging(options, settings):
         logging.error("Invalid logging format '%s': %s", options.logformat, exc)
         sys.exit(1)
 
-    logger.addHandler(handler)
+    # Attach the handler to the root logger so that messages from
+    # libraries such as aiohttp and pysnmp are formatted the same way.
+    root = logging.getLogger()
+    root.addHandler(handler)
     if not options.loglevel:
         options.loglevel = log_settings.get('logging_level', "INFO")
     options.loglevel = options.loglevel.upper()
+    logging.addLevelName(logging_TRACE, "TRACE")
     try:
         logger.setLevel(options.loglevel)
     except ValueError:
         logger.error("Unknown logging level: %s", options.loglevel)
         sys.exit(1)
+    # Libraries can be very verbose at the debug level, so only let them
+    # log at it with the trace level.
+    # aiohttp logs every request at the info level, which repeats the
+    # message logged when handling it, so treat it as debug output too.
+    access_logger = logging.getLogger("aiohttp.access")
+    if logger.level <= logging_TRACE:
+        root.setLevel(logging.DEBUG)
+        access_logger.setLevel(logging.NOTSET)
+    else:
+        root.setLevel(max(logger.level, logging.INFO))
+        access_logger.setLevel(logging.WARNING)
 
 
 class PDUDaemon:
@@ -176,7 +193,7 @@ async def main_async():
                      help="logging format, overrides the logging_format "
                      "configuration setting")
     log.add_argument("--loglevel", dest="loglevel", default=None,
-                     choices=["DEBUG", "ERROR", "INFO", "WARN", "WARNING"],
+                     choices=["DEBUG", "ERROR", "INFO", "TRACE", "WARN", "WARNING"],
                      type=str, help="logging level, overrides the "
                      "logging_level configuration setting [INFO]")
     parser.add_argument("--conf", "-c", type=argparse.FileType("r"),

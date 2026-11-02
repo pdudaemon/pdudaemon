@@ -18,8 +18,11 @@
 #  MA 02110-1301, USA.
 
 import logging
+from types import SimpleNamespace
 
-from pdudaemon import MultiLineFormatter
+import pytest
+
+from pdudaemon import MultiLineFormatter, setup_logging
 
 
 def make_record(msg, exc_info=None):
@@ -50,3 +53,44 @@ def test_exception():
     assert lines[0] == "WARNING failed"
     assert lines[1] == "WARNING Traceback (most recent call last):"
     assert lines[-1] == "WARNING ValueError: oops"
+
+
+@pytest.fixture
+def restore_logging():
+    root = logging.getLogger()
+    pdud = logging.getLogger("pdud")
+    handlers, root_level, pdud_level = root.handlers[:], root.level, pdud.level
+    yield
+    root.handlers[:] = handlers
+    root.setLevel(root_level)
+    pdud.setLevel(pdud_level)
+    logging.getLogger("aiohttp.access").setLevel(logging.NOTSET)
+
+
+@pytest.mark.parametrize("loglevel, library_level", [
+    ("WARNING", logging.WARNING),
+    ("INFO", logging.INFO),
+    ("DEBUG", logging.INFO),
+    ("TRACE", logging.DEBUG),
+])
+def test_library_level(restore_logging, loglevel, library_level):
+    options = SimpleNamespace(journal=False, logfile="-", logformat=None,
+                              loglevel=loglevel, drive=False)
+
+    setup_logging(options, {})
+
+    assert logging.getLogger("paramiko").getEffectiveLevel() == library_level
+
+
+@pytest.mark.parametrize("loglevel,access_level", [
+    ("INFO", logging.WARNING),
+    ("DEBUG", logging.WARNING),
+    ("TRACE", logging.DEBUG),
+])
+def test_access_log_level(restore_logging, loglevel, access_level):
+    options = SimpleNamespace(journal=False, logfile="-", logformat=None,
+                              loglevel=loglevel, drive=False)
+
+    setup_logging(options, {})
+
+    assert logging.getLogger("aiohttp.access").getEffectiveLevel() == access_level
