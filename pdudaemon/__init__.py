@@ -208,7 +208,6 @@ async def main_async():
         else:
             result = await runner.do_job_async(options.driveport, options.driverequest)
         await runner.shutdown()
-        loop.stop()
         return result
 
     # Create daemon
@@ -228,7 +227,10 @@ async def main_async():
 
 def main():
     loop = asyncio.new_event_loop()
-    loop.run_until_complete(main_async())
+    result = loop.run_until_complete(main_async())
+    if result is not None:
+        # Drive mode has finished, report whether the request succeeded
+        return 0 if result else 1
     try:
         loop.run_forever()
     except KeyboardInterrupt:
