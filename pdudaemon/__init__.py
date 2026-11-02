@@ -38,6 +38,7 @@ assert PDUDriver, "Imported for user convenience." # type: ignore[truthy-functio
 ###########
 CONFIGURATION_FILE = "/etc/pdudaemon/pdudaemon.conf"
 logging_FORMAT = "%(asctime)s - %(name)-30s - %(levelname)s %(message)s"
+logging_FORMAT_STREAM = "%(name)-30s - %(levelname)s %(message)s"
 logging_FORMAT_JOURNAL = "%(name)s.%(levelname)s %(message)s"
 logging_FILE = "/var/log/pdudaemon.log"
 
@@ -57,8 +58,10 @@ def setup_logging(options, settings):
         handler = JournalHandler(SYSLOG_IDENTIFIER="pdudaemon")
         log_format = logging_FORMAT_JOURNAL
     elif options.logfile == "-" or not options.logfile:
+        # Timestamps are left out as whatever collects the output, such
+        # as systemd, usually adds its own.
         handler = logging.StreamHandler(sys.stdout)
-        log_format = logging_FORMAT
+        log_format = logging_FORMAT_STREAM
     else:
         handler = WatchedFileHandler(options.logfile)
         log_format = logging_FORMAT
