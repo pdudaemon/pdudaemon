@@ -26,7 +26,6 @@ from logging.handlers import WatchedFileHandler
 import signal
 import sys
 
-from pdudaemon.tcplistener import TCPListener
 from pdudaemon.httplistener import HTTPListener
 from pdudaemon.pdurunner import PDURunner
 from pdudaemon.drivers.driver import PDUDriver
@@ -94,16 +93,10 @@ class PDUDaemon:
 
         # Start the listener
         logger.info("Starting the listener")
-        if options.listener:
-            listener = options.listener
-        else:
-            listener = settings['daemon'].get('listener', 'tcp')
-        if listener == 'tcp':
-            self.listener = TCPListener(settings, self)
-        elif listener == 'http':
-            self.listener = HTTPListener(settings, self)
-        else:
-            logging.error("Unknown listener configured")
+        listener = options.listener or settings['daemon'].get('listener', 'http')
+        if listener != 'http':
+            logger.warning("The %s listener is no longer supported, using http", listener)
+        self.listener = HTTPListener(settings, self)
 
     async def start(self):
         await self.listener.start()
