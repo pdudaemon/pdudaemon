@@ -28,7 +28,7 @@ import sys
 
 from pdudaemon.httplistener import HTTPListener
 from pdudaemon.pdurunner import PDURunner
-from pdudaemon.drivers.driver import PDUDriver
+from pdudaemon.drivers.driver import PDUDriver, UnknownCommandException
 
 assert PDUDriver, "Imported for user convenience." # type: ignore[truthy-function]
 
@@ -174,16 +174,21 @@ async def main_async():
             sys.exit(1)
 
         runner = PDURunner(config, options.drivehostname, options.driveretries, options.driveretrydelay)
-        if options.driverequest == "reboot":
-            result = await runner.do_job_async(options.driveport, "off")
-            if result:
+        result = False
+        try:
+            if options.driverequest == "reboot":
+                await runner.port_off_async(options.driveport)
                 await asyncio.sleep(int(options.drivedelay))
-                result = await runner.do_job_async(options.driveport, "on")
-        elif options.driverequest in ["on", "off"]:
-            result = await runner.do_job_async(options.driveport, options.driverequest)
-        else:
-            logging.error("Unknown request: {}".format(options.driverequest))
-            result = False
+                await runner.port_on_async(options.driveport)
+            elif options.driverequest == "on":
+                await runner.port_on_async(options.driveport)
+            elif options.driverequest == "off":
+                await runner.port_off_async(options.driveport)
+            else:
+                raise UnknownCommandException("Unknown request: %s" % options.driverequest)
+            result = True
+        except Exception as exc:  # pylint: disable=broad-except
+            logger.error("Request failed: %s", exc)
         await runner.shutdown()
         loop.stop()
         return result
