@@ -63,6 +63,8 @@ class HTTPListener:
         res = await self.insert_request(data, path)
         if isinstance(res, listener.CommandAccepted):
             return web.Response(status=200, text="OK - accepted request\n")
+        if isinstance(res, listener.RequestUnsupported):
+            return web.Response(status=501, text="Request not supported: %s\n" % res.message)
         if isinstance(res, listener.RequestError):
             return web.Response(status=500, text="Request failed: %s\n" % res.message)
         return web.Response(status=500, text="Invalid request\n")

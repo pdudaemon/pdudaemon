@@ -20,6 +20,7 @@
 import asyncio
 import logging
 from dataclasses import dataclass
+from pdudaemon.drivers.driver import UnknownCommandException
 
 logger = logging.getLogger('pdud.listener')
 
@@ -39,6 +40,12 @@ class CommandAccepted(RequestResult):
 class RequestError(RequestResult):
     """The request was rejected or failed."""
     message: str
+
+
+@dataclass
+class RequestUnsupported(RequestError):
+    """The driver does not support the request."""
+    pass
 
 
 class Args(object):
@@ -122,6 +129,9 @@ async def process_request(args, config, daemon) -> RequestResult:
         else:  # "off"
             await runner.port_off_async(args.port)
         return CommandAccepted()
+    except UnknownCommandException as exc:
+        logger.warning("Request not supported: %s", exc)
+        return RequestUnsupported(str(exc))
     except Exception as exc:  # pylint: disable=broad-except
         logger.warning("Request failed: %s", exc)
         return RequestError(str(exc))

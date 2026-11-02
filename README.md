@@ -117,6 +117,7 @@ An HTTP request URL has the following syntax:
   ***Return Codes***
 
     - HTTP 200 - Request Accepted
+    - HTTP 501 - Request not supported by the driver
     - HTTP 503 - Invalid Request, Request not accepted
 
 - **pduclient**
