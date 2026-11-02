@@ -50,6 +50,46 @@ def test_port_interaction(mocker, command, port_number, expected):
     call.assert_called_once_with(expected, shell=True)
 
 
+@pytest.mark.parametrize("command, expected", [("on", "echo on 1"), ("off", "echo off 1")])
+def test_port_interaction_on_off(mocker, command, expected):
+    call = mocker.patch("pdudaemon.drivers.localcmdline.call")
+    pdu = LocalCmdline("dummy", {"cmd_on": "echo on %s", "cmd_off": "echo off %s"})
+
+    pdu.port_interaction(command, 1)
+
+    call.assert_called_once_with(expected, shell=True)
+
+
+@pytest.mark.parametrize(
+    "command, settings", [("on", {"cmd_off": "echo off"}), ("off", {"cmd_on": "echo on"})]
+)
+def test_port_interaction_command_not_configured(mocker, command, settings):
+    call = mocker.patch("pdudaemon.drivers.localcmdline.call")
+    pdu = LocalCmdline("dummy", settings)
+
+    pdu.port_interaction(command, 1)
+
+    call.assert_not_called()
+
+
+def test_port_on_off(tmp_path):
+    state = tmp_path / "state"
+    pdu = LocalCmdline("dummy", {"cmd_on": "echo on > %s" % state,
+                                 "cmd_off": "echo off > %s" % state,
+                                 "cmd_state": "cat %s" % state})
+
+    pdu.port_on(1)
+    assert pdu.get_port_state(1) is True
+
+    pdu.port_off(1)
+    assert pdu.get_port_state(1) is False
+
+
+def test_accepts():
+    assert LocalCmdline.accepts("localcmdline")
+    assert not LocalCmdline.accepts("uhubctl")
+
+
 def test_port_interaction_unknown_command(mocker):
     call = mocker.patch("pdudaemon.drivers.localcmdline.call")
     pdu = LocalCmdline("dummy", {"cmd_on": "echo on"})
