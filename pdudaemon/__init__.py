@@ -188,7 +188,7 @@ async def main_async():
             # Using alias support, get all pdu info from alias
             alias_settings = settings.get("aliases", {}).get(options.alias, False)
             if not alias_settings:
-                logging.error("Alias requested but not found")
+                logger.error("Alias requested but not found")
                 sys.exit(1)
             options.drivehostname = alias_settings["hostname"]
             options.driveport = alias_settings["port"]
@@ -196,7 +196,7 @@ async def main_async():
         # Check that the requested PDU has config
         config = settings.get("pdus", {}).get(options.drivehostname, False)
         if not config:
-            logging.error("No config section for hostname: {}".format(options.drivehostname))
+            logger.error("No config section for hostname: {}".format(options.drivehostname))
             sys.exit(1)
 
         runner = PDURunner(config, options.drivehostname, options.driveretries, options.driveretrydelay)
