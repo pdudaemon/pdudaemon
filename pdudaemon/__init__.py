@@ -134,12 +134,13 @@ async def main_async():
     parser.add_argument("--conf", "-c", type=argparse.FileType("r"),
                         default=CONFIGURATION_FILE,
                         help="configuration file [%s]" % CONFIGURATION_FILE)
-    parser.add_argument("--listener", type=str, help="PDUDaemon listener setting")
-    conflict = parser.add_mutually_exclusive_group()
-    conflict.add_argument("--alias", dest="alias", action="store", type=str)
-    conflict.add_argument("--hostname", dest="drivehostname", action="store", type=str)
+    daemon_group = parser.add_argument_group("daemon")
+    daemon_group.add_argument("--listener", type=str, help="PDUDaemon listener setting")
     drive = parser.add_argument_group("drive")
     drive.add_argument("--drive", action="store_true", default=False)
+    conflict = drive.add_mutually_exclusive_group()
+    conflict.add_argument("--alias", dest="alias", action="store", type=str)
+    conflict.add_argument("--hostname", dest="drivehostname", action="store", type=str)
     drive.add_argument("--request", dest="driverequest", action="store", type=str,
                        choices=["on", "off", "reboot"])
     drive.add_argument("--retries", dest="driveretries", action="store", type=int, default=5)
