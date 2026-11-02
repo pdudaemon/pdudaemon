@@ -58,4 +58,4 @@ class LocalCmdline(LocalBase):
                 cmd = cmd % port_number
 
         if cmd:
-            run_command(log, cmd, shell=True, check=False)
+            run_command(log, cmd, shell=True)

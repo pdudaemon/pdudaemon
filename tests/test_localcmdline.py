@@ -20,6 +20,7 @@
 from unittest.mock import ANY
 
 import pytest
+from pdudaemon.drivers.driver import FailedRequestException
 from pdudaemon.drivers.localcmdline import LocalCmdline
 
 
@@ -47,7 +48,7 @@ def test_port_interaction(mocker, command, port_number, expected):
 
     pdu.port_interaction("on", port_number)
 
-    run_command.assert_called_once_with(ANY, expected, shell=True, check=False)
+    run_command.assert_called_once_with(ANY, expected, shell=True)
 
 
 def test_port_interaction_unknown_command(mocker):
@@ -67,3 +68,10 @@ def test_port_interaction_missing_setting(mocker):
         pdu.port_interaction("on", 1)
 
     run_command.assert_not_called()
+
+
+def test_port_interaction_failed_command():
+    pdu = LocalCmdline("dummy", {"cmd_on": "exit 3"})
+
+    with pytest.raises(FailedRequestException):
+        pdu.port_interaction("on", 1)

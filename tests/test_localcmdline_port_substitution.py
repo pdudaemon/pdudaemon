@@ -26,4 +26,4 @@ def test_port_substitution(mocker, request_name, command, port_number, expected)
 
     pdu.port_interaction(request_name, port_number)
 
-    run_command.assert_called_once_with(ANY, expected, shell=True, check=False)
+    run_command.assert_called_once_with(ANY, expected, shell=True)
