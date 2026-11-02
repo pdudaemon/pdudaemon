@@ -28,11 +28,10 @@
 #  MA 02110-1301, USA.
 
 import logging
-import os
 from pdudaemon.drivers.driver import PDUDriver
 import requests
 
-log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
+log = logging.getLogger("pdud.drivers." + __name__.split(".")[-1])
 
 class ShellyGen2(PDUDriver):
     def __init__(self, hostname, settings):

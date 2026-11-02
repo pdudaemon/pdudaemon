@@ -25,9 +25,8 @@
 import logging
 from pdudaemon.drivers.driver import PDUDriver
 from pdudaemon.drivers.hiddevice import HIDDevice
-import os
 
-log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
+log = logging.getLogger("pdud.drivers." + __name__.split(".")[-1])
 
 YKUSH_VID = 0x04d8
 YKUSH_PID = 0xf2f7

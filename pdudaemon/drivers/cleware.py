@@ -23,14 +23,13 @@
 #  MA 02110-1301, USA.
 
 import logging
-import os
 import time
 import hid
 from pdudaemon.drivers.driver import PDUDriver
 from pdudaemon.drivers.hiddevice import HIDDevice
 
 
-log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
+log = logging.getLogger("pdud.drivers." + __name__.split(".")[-1])
 
 CLEWARE_VID = 0x0d50
 CLEWARE_SWITCH1_PID = 0x0008

@@ -27,8 +27,7 @@ import logging
 from pdudaemon.drivers.localbase import LocalBase
 import requests
 
-import os
-log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
+log = logging.getLogger("pdud.drivers." + __name__.split(".")[-1])
 
 
 class Sainsmart(LocalBase):
