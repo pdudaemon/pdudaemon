@@ -44,6 +44,25 @@ def test_no_output(caplog):
     assert caplog.messages == ["Running command: true"]
 
 
+def test_failed_output(caplog):
+    caplog.set_level(logging.WARNING)
+
+    run_command(log, ["sh", "-c", "echo one; exit 3"], check=False)
+
+    assert caplog.messages == ["Output of failed command sh -c 'echo one; exit 3':\n"
+                               "| one"]
+
+
+def test_check_failed_output(caplog):
+    caplog.set_level(logging.WARNING)
+
+    with pytest.raises(FailedRequestException):
+        run_command(log, ["sh", "-c", "echo one; exit 3"])
+
+    assert caplog.messages == ["Output of failed command sh -c 'echo one; exit 3':\n"
+                               "| one"]
+
+
 def test_check_failed():
     with pytest.raises(FailedRequestException,
                        match="^sh -c 'exit 3' exited with status 3$"):
