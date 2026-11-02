@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 """Tests for port number substitution in the localcmdline driver."""
 
+from unittest.mock import ANY
+
 import pytest
 from pdudaemon.drivers.localcmdline import LocalCmdline
 
@@ -19,9 +21,9 @@ from pdudaemon.drivers.localcmdline import LocalCmdline
 )
 @pytest.mark.parametrize("request_name", ["on", "off"])
 def test_port_substitution(mocker, request_name, command, port_number, expected):
-    call = mocker.patch("pdudaemon.drivers.localcmdline.call")
+    run_command = mocker.patch("pdudaemon.drivers.localcmdline.run_command")
     pdu = LocalCmdline("dummy", {"cmd_" + request_name: command})
 
     pdu.port_interaction(request_name, port_number)
 
-    call.assert_called_once_with(expected, shell=True)
+    run_command.assert_called_once_with(ANY, expected, shell=True, check=False)

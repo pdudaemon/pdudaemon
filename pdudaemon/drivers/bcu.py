@@ -18,9 +18,8 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 
-from pdudaemon.drivers.driver import PDUDriver
+from pdudaemon.drivers.driver import PDUDriver, run_command
 import os
-import subprocess
 import logging
 log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 
@@ -64,8 +63,7 @@ class BCU(PDUDriver):
             cmd += ['-id=' + self.id]
         if self.board:
             cmd += ['-board=' + self.board]
-        log.info('RUN: %s', ' '.join(cmd))
-        return subprocess.run(cmd, check=True)
+        return run_command(log, cmd)
 
     def _init(self):
         return self._run(['init'] + [self.bootmode] if self.bootmode else [])
