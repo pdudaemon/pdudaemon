@@ -32,12 +32,29 @@ log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 
 
 class TasmotaBase(PDUDriver):
+    """Driver for power outlets running Tasmota firmware.
+
+    Supported settings:
+      ip          IP address or hostname of the device (default: PDU name)
+      port_count  number of controllable outlets (default depends on model)
+      timeout     HTTP timeout in seconds (default: 10)
+      username    web interface username (optional, firmware < 9.2)
+      password    web interface password (optional, firmware < 9.2)
+
+    The device is controlled via the legacy web command endpoint,
+    e.g. GET http://<ip>/cm?cmnd=Power1+On . Reply format depends on
+    the firmware version and number of outlets:
+      - firmware < 12, or multi outlet devices: {"POWER1": "ON"}
+      - single outlet devices (firmware >= 12):  {"POWER": "ON"}
+    Both variants are accepted.
+    """
     port_count = None  # type: int
 
     def __init__(self, hostname, settings):
         self.hostname = settings.get("ip", hostname)
         self.username = settings.get("username")
         self.password = settings.get("password")
+        self.timeout = int(settings.get("timeout", 10))
         super().__init__()
 
     def port_interaction(self, command, port_number):
@@ -56,17 +73,29 @@ class TasmotaBase(PDUDriver):
 
         url = "http://{}/cm".format(self.hostname)
         log.debug("HTTP GET: {}".format(url))
-        r = requests.get(url, params)
+        r = requests.get(url, params, timeout=self.timeout)
 
         # check response
         response = r.json()
         r.raise_for_status()
-        expected_response_key = "POWER{}".format(port_number)
-        try:
-            if response[expected_response_key] != command.upper():
-                log.error(response)
-                raise FailedRequestException(response)
-        except BaseException:
+        # Tasmota replies with "POWER<n>" for multi outlet devices and
+        # with "POWER" for single outlet devices (firmware >= 12).
+        response_value = None
+        for response_key in ("POWER{}".format(port_number), "POWER"):
+            if response_key in response:
+                response_value = response[response_key]
+                break
+        if response_value is None:
+            log.error(response)
+            raise FailedRequestException(response)
+        # "Power<n> Get" echoes "GET" on multi outlet devices but
+        # reports the outlet state on single outlet devices.
+        expected = command.upper()
+        if command.lower() == "get":
+            expected_values = ("GET", "ON", "OFF")
+        else:
+            expected_values = (expected,)
+        if response_value not in expected_values:
             log.error(response)
             raise FailedRequestException(response)
         log.debug('HTTP response: {}'.format(response))
