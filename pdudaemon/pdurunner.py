@@ -57,8 +57,8 @@ class PDURunner:
                 self.driver.handle(request, port)
                 return True
             except (OSError, pexpect.exceptions.EOF, Exception):  # pylint: disable=broad-except
-                self.logger.warn(traceback.format_exc())
-                self.logger.warn("Failed to execute job: {} {} (attempts left {})".format(port, request, retries - 1))
+                self.logger.warning(traceback.format_exc())
+                self.logger.warning("Failed to execute job: {} {} (attempts left {})".format(port, request, retries - 1))
                 if self.driver:
                     self.driver._bombout()  # pylint: disable=W0212,E1101
                 time.sleep(self.retrydelay)
