@@ -34,6 +34,50 @@ def fixture_get_mock(mocker):
     return mocker.patch("pdudaemon.drivers.esphome.requests.get")
 
 
+@pytest.fixture(name="post_mock")
+def fixture_post_mock(mocker):
+    return mocker.patch("pdudaemon.drivers.esphome.requests.post")
+
+
+@pytest.mark.parametrize("command, action", [("on", "turn_on"), ("off", "turn_off")])
+def test_port_interaction(pdu, post_mock, command, action):
+    pdu.port_interaction(command, "relay1")
+
+    post_mock.assert_called_once_with(
+        "http://192.0.2.1:8080/switch/relay1/%s" % action, auth=None
+    )
+    post_mock.return_value.raise_for_status.assert_called_once_with()
+
+
+def test_port_interaction_credentials(post_mock):
+    pdu = ESPHomeHTTP("192.0.2.1", {"username": "user", "password": "pass"})
+
+    pdu.port_interaction("on", "relay1")
+
+    post_mock.assert_called_once_with(
+        "http://192.0.2.1:80/switch/relay1/turn_on", auth=HTTPDigestAuth("user", "pass")
+    )
+
+
+def test_port_interaction_unknown_command(pdu, post_mock):
+    with pytest.raises(FailedRequestException):
+        pdu.port_interaction("reboot", "relay1")
+
+    post_mock.assert_not_called()
+
+
+def test_port_interaction_http_error(pdu, post_mock):
+    post_mock.return_value.raise_for_status.side_effect = requests.HTTPError("404")
+
+    with pytest.raises(requests.HTTPError):
+        pdu.port_interaction("on", "relay1")
+
+
+def test_accepts():
+    assert ESPHomeHTTP.accepts("esphome-http")
+    assert not ESPHomeHTTP.accepts("home-assistant-http")
+
+
 @pytest.mark.parametrize("state, expected", [("ON", True), ("OFF", False)])
 def test_get_port_state(pdu, get_mock, state, expected):
     get_mock.return_value.json.return_value = {"id": "switch-relay1", "state": state}
@@ -67,3 +111,12 @@ def test_get_port_state_http_error(pdu, get_mock):
 
     with pytest.raises(requests.HTTPError):
         pdu.get_port_state("relay1")
+
+
+def test_get_port_state_username_only(get_mock):
+    pdu = ESPHomeHTTP("192.0.2.1", {"username": "user"})
+    get_mock.return_value.json.return_value = {"state": "OFF"}
+
+    assert pdu.get_port_state("relay1") is False
+
+    get_mock.assert_called_once_with("http://192.0.2.1:80/switch/relay1", auth=None)
