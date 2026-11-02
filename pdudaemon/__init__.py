@@ -182,7 +182,7 @@ async def main_async():
     loop = asyncio.get_running_loop()
 
     if options.drive:
-        # Driving a PDU directly, dont start any Listeners
+        # Driving a PDU directly, don't start any listeners
 
         if options.alias:
             # Using alias support, get all pdu info from alias
