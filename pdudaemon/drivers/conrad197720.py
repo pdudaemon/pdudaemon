@@ -34,7 +34,7 @@ log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 # number of retries on communication error
 RETRY_COUNT = 1
 
-# timeout while receiving
+# timeout while sending or receiving
 SERIAL_TIMEOUT = .1
 
 # given by hardware
@@ -256,6 +256,7 @@ class Conrad197720(PDUDriver):
         self.com.parity = serial.PARITY_NONE
         self.com.stopbits = serial.STOPBITS_ONE
         self.com.timeout = SERIAL_TIMEOUT
+        self.com.write_timeout = SERIAL_TIMEOUT
         self.com.open()
 
     def __init(self):
