@@ -39,8 +39,9 @@ class CommandAccepted(RequestResult):
 
 @dataclass
 class PortStatus(RequestResult):
-    """Result of a get-cached-port-state request - True if the port is powered
-    on, None if the state is unknown."""
+    """Result of a get-cached-port-state or get-port-state request - True if the
+    port is powered on, None if the state is unknown.
+    """
     on: Optional[bool]
 
     @property
@@ -119,7 +120,7 @@ def _resolve_args(args, config):
     if args.hostname not in config['pdus']:
         logger.info("PDU was not found in config")
         return RequestError("PDU not found in config")
-    if args.request not in ["reboot", "on", "off", "get-cached-port-state"]:
+    if args.request not in ["reboot", "on", "off", "get-cached-port-state", "get-port-state"]:
         logger.info("Unknown request: %s", args.request)
         return RequestError("unknown request: %s" % args.request)
     return None
@@ -139,6 +140,9 @@ async def process_request(args, config, daemon) -> RequestResult:
             return CommandAccepted()
         if args.request == "get-cached-port-state":
             return PortStatus(on=runner.get_cached_port_state(args.port))
+        if args.request == "get-port-state":
+            on = await runner.get_port_state_async(args.port)
+            return PortStatus(on=on)
         await asyncio.sleep(int(args.delay))
         if args.request == "on":
             await runner.port_on_async(args.port)

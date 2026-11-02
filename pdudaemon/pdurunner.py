@@ -92,6 +92,14 @@ class PDURunner:
     def port_off(self, port):
         self._switch_port(port, "off", lambda: self.driver.port_off(port), False)
 
+    def get_port_state(self, port) -> bool:
+        """Query the PDU for the state of the port and cache the result.
+        Returns True if the port is powered on, False if powered off.
+        """
+        on = self._run_with_retries(port, "get-port-state", lambda: self.driver.get_port_state(port))
+        self._set_cached_port_state(port, on)
+        return on
+
     def get_cached_port_state(self, port) -> Optional[bool]:
         """Return the last known state of the port without querying the PDU,
         or None if it is unknown.
@@ -111,3 +119,6 @@ class PDURunner:
 
     async def port_off_async(self, port) -> None:
         await self._in_executor(self.port_off, port)
+
+    async def get_port_state_async(self, port) -> bool:
+        return await self._in_executor(self.get_port_state, port)
