@@ -18,6 +18,7 @@
 #  MA 02110-1301, USA.
 
 import pytest
+from subprocess import CalledProcessError
 from pdudaemon.drivers.driver import FailedRequestException
 from pdudaemon.drivers.uhubctl import UHubCtl
 
@@ -37,6 +38,59 @@ def pdu(mocker):
 @pytest.fixture(name="check_output_mock")
 def fixture_check_output_mock(mocker):
     return mocker.patch("pdudaemon.drivers.uhubctl.check_output", return_value=STATUS)
+
+
+@pytest.fixture(name="check_call_mock")
+def fixture_check_call_mock(mocker):
+    return mocker.patch("pdudaemon.drivers.uhubctl.check_call")
+
+
+@pytest.mark.parametrize("command, port", [("on", 1), ("off", 2), ("on", "3")])
+def test_port_interaction(pdu, check_call_mock, command, port):
+    pdu.port_interaction(command, port)
+
+    check_call_mock.assert_called_once_with(
+        ["/usr/sbin/uhubctl", "--location", "1-1", "--port", str(port), "--action", command]
+    )
+
+
+def test_port_interaction_unknown_command(pdu, check_call_mock):
+    pdu.port_interaction("reboot", 1)
+
+    check_call_mock.assert_not_called()
+
+
+def test_port_interaction_invalid_port(pdu, check_call_mock):
+    with pytest.raises(RuntimeError):
+        pdu.port_interaction("on", "usb1")
+
+    check_call_mock.assert_not_called()
+
+
+def test_port_interaction_command_fails(pdu, check_call_mock):
+    check_call_mock.side_effect = CalledProcessError(1, "uhubctl")
+
+    with pytest.raises(CalledProcessError):
+        pdu.port_interaction("on", 1)
+
+
+def test_missing_location(mocker):
+    mocker.patch("pdudaemon.drivers.uhubctl.which", return_value="/usr/sbin/uhubctl")
+
+    with pytest.raises(RuntimeError):
+        UHubCtl("dummy", {})
+
+
+def test_uhubctl_not_found(mocker):
+    mocker.patch("pdudaemon.drivers.uhubctl.which", return_value=None)
+
+    with pytest.raises(RuntimeError):
+        UHubCtl("dummy", {"location": "1-1"})
+
+
+def test_accepts():
+    assert UHubCtl.accepts("uhubctl")
+    assert not UHubCtl.accepts("localcmdline")
 
 
 @pytest.mark.parametrize("port, expected", [(1, True), (2, False), ("2", False)])
@@ -70,3 +124,10 @@ def test_get_port_state_invalid_port(pdu, check_output_mock):
         pdu.get_port_state("usb1")
 
     check_output_mock.assert_not_called()
+
+
+def test_get_port_state_command_fails(pdu, check_output_mock):
+    check_output_mock.side_effect = CalledProcessError(1, "uhubctl")
+
+    with pytest.raises(CalledProcessError):
+        pdu.get_port_state(1)
