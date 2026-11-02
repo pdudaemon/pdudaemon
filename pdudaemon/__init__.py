@@ -64,11 +64,9 @@ def setup_logging(options, settings):
         handler.setFormatter(logging.Formatter(logging_FORMAT))
 
     logger.addHandler(handler)
-    settings_level = settings.get('daemon', {}).get('logging_level', None)
-    if settings_level:
-        options.loglevel = settings_level.upper()
-    else:
-        options.loglevel = options.loglevel.upper()
+    if not options.loglevel:
+        options.loglevel = settings.get('daemon', {}).get('logging_level', "INFO")
+    options.loglevel = options.loglevel.upper()
     try:
         logger.setLevel(options.loglevel)
     except ValueError:
@@ -125,9 +123,10 @@ async def main_async():
                      help="Log to the journal")
     log.add_argument("--logfile", dest="logfile", action="store", type=str,
                      default="-", help="log file [%s]" % logging_FILE)
-    log.add_argument("--loglevel", dest="loglevel", default="INFO",
+    log.add_argument("--loglevel", dest="loglevel", default=None,
                      choices=["DEBUG", "ERROR", "INFO", "WARN", "WARNING"],
-                     type=str, help="logging level [INFO]")
+                     type=str, help="logging level, overrides the "
+                     "logging_level configuration setting [INFO]")
     parser.add_argument("--conf", "-c", type=argparse.FileType("r"),
                         default=CONFIGURATION_FILE,
                         help="configuration file [%s]" % CONFIGURATION_FILE)
