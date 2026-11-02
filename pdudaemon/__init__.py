@@ -137,16 +137,24 @@ async def main_async():
     daemon_group = parser.add_argument_group("daemon")
     daemon_group.add_argument("--listener", type=str, help="PDUDaemon listener setting")
     drive = parser.add_argument_group("drive")
-    drive.add_argument("--drive", action="store_true", default=False)
+    drive.add_argument("--drive", action="store_true", default=False,
+                       help="Drive a PDU directly instead of starting the daemon")
     conflict = drive.add_mutually_exclusive_group()
-    conflict.add_argument("--alias", dest="alias", action="store", type=str)
-    conflict.add_argument("--hostname", dest="drivehostname", action="store", type=str)
+    conflict.add_argument("--alias", dest="alias", action="store", type=str,
+                          help="alias of the PDU port to drive")
+    conflict.add_argument("--hostname", dest="drivehostname", action="store", type=str,
+                          metavar="HOSTNAME", help="hostname of the PDU to drive")
     drive.add_argument("--request", dest="driverequest", action="store", type=str,
-                       choices=["on", "off", "reboot"])
-    drive.add_argument("--retries", dest="driveretries", action="store", type=int, default=5)
-    drive.add_argument("--retry-delay", dest="driveretrydelay", action="store", type=int, default=5)
-    drive.add_argument("--delay", dest="drivedelay", action="store", type=int, default=5)
-    drive.add_argument("--port", dest="driveport", action="store", type=str)
+                       choices=["on", "off", "reboot"], metavar="REQUEST",
+                       help="request to send to the PDU (on, off or reboot)")
+    drive.add_argument("--retries", dest="driveretries", action="store", type=int, default=5,
+                       metavar="RETRIES", help="number of attempts [5]")
+    drive.add_argument("--retry-delay", dest="driveretrydelay", action="store", type=int, default=5,
+                       metavar="SECONDS", help="delay between attempts [5]")
+    drive.add_argument("--delay", dest="drivedelay", action="store", type=int, default=5,
+                       metavar="SECONDS", help="delay between power off and on for reboot [5]")
+    drive.add_argument("--port", dest="driveport", action="store", type=str,
+                       metavar="PORT", help="port of the PDU to drive")
 
     # Parse the command line
     options = parser.parse_args()
