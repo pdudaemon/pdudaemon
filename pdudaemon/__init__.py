@@ -179,8 +179,11 @@ async def main_async():
             if result:
                 await asyncio.sleep(int(options.drivedelay))
                 result = await runner.do_job_async(options.driveport, "on")
-        else:
+        elif options.driverequest in ["on", "off"]:
             result = await runner.do_job_async(options.driveport, options.driverequest)
+        else:
+            logging.error("Unknown request: {}".format(options.driverequest))
+            result = False
         await runner.shutdown()
         loop.stop()
         return result
