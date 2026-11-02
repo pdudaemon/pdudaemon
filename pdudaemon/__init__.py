@@ -69,14 +69,11 @@ def setup_logging(options, settings):
         options.loglevel = settings_level.upper()
     else:
         options.loglevel = options.loglevel.upper()
-    if options.loglevel == "DEBUG":
-        logger.setLevel(logging.DEBUG)
-    elif options.loglevel == "INFO":
-        logger.setLevel(logging.INFO)
-    elif options.loglevel == "WARNING":
-        logger.setLevel(logging.WARNING)
-    else:
-        logger.setLevel(logging.ERROR)
+    try:
+        logger.setLevel(options.loglevel)
+    except ValueError:
+        logger.error("Unknown logging level: %s", options.loglevel)
+        sys.exit(1)
 
 
 class PDUDaemon:
@@ -129,7 +126,7 @@ async def main_async():
     log.add_argument("--logfile", dest="logfile", action="store", type=str,
                      default="-", help="log file [%s]" % logging_FILE)
     log.add_argument("--loglevel", dest="loglevel", default="INFO",
-                     choices=["DEBUG", "ERROR", "INFO", "WARN"],
+                     choices=["DEBUG", "ERROR", "INFO", "WARN", "WARNING"],
                      type=str, help="logging level [INFO]")
     parser.add_argument("--conf", "-c", type=argparse.FileType("r"),
                         default=CONFIGURATION_FILE,
