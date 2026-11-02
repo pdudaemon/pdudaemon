@@ -140,7 +140,8 @@ async def main_async():
     conflict.add_argument("--hostname", dest="drivehostname", action="store", type=str)
     drive = parser.add_argument_group("drive")
     drive.add_argument("--drive", action="store_true", default=False)
-    drive.add_argument("--request", dest="driverequest", action="store", type=str)
+    drive.add_argument("--request", dest="driverequest", action="store", type=str,
+                       choices=["on", "off", "reboot"])
     drive.add_argument("--retries", dest="driveretries", action="store", type=int, default=5)
     drive.add_argument("--retry-delay", dest="driveretrydelay", action="store", type=int, default=5)
     drive.add_argument("--delay", dest="drivedelay", action="store", type=int, default=5)
