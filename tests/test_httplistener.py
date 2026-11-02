@@ -20,6 +20,7 @@
 from types import SimpleNamespace
 
 import pytest
+from pdudaemon.drivers.driver import UnknownCommandException
 from pdudaemon.httplistener import HTTPListener
 from pdudaemon.pdurunner import PDURunner
 
@@ -48,3 +49,14 @@ async def test_failed_request_returns_500(mocker, http_listener):
 
     assert resp.status == 500
     assert resp.text.startswith("Request failed: ")
+
+
+@pytest.mark.asyncio
+async def test_unsupported_request_returns_501(mocker, http_listener):
+    runner = http_listener.daemon.runners["dummy"]
+    mocker.patch.object(runner.driver, "port_on", side_effect=UnknownCommandException("nope"))
+
+    resp = await http_listener.handle(make_request("on"))
+
+    assert resp.status == 501
+    assert resp.text == "Request not supported: nope\n"
