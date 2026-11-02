@@ -24,7 +24,7 @@ import time
 import traceback
 import pexpect
 import concurrent.futures
-from pdudaemon.drivers.driver import FailedRequestException, PDUDriver
+from pdudaemon.drivers.driver import FailedRequestException, PDUDriver, UnknownCommandException
 import pdudaemon.drivers.strategies
 
 assert pdudaemon.drivers.strategies, "Subclasses are iterated to find all drivers"
@@ -57,6 +57,10 @@ class PDURunner:
                 result = action()
                 self.driver._cleanup()  # pylint: disable=W0212
                 return result
+            except UnknownCommandException:
+                # the driver can't handle the request, retrying won't help
+                self.logger.warning("Driver cannot execute job: {} {}".format(port, request))
+                raise
             except (OSError, pexpect.exceptions.EOF, Exception):  # pylint: disable=broad-except
                 self.logger.warn(traceback.format_exc())
                 self.logger.warn("Failed to execute job: {} {} (attempts left {})".format(port, request, retries - 1))
