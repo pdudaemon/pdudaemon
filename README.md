@@ -87,6 +87,11 @@ Some drivers require additional parameters (like a device ID).
 Which parameters are required can also be extracted from the associated python module and child class definition.
 It is also worth checking out the [share](https://github.com/pdudaemon/pdudaemon/tree/main/share) folder for some driver specific example configuration files and helpful scripts that can help prevent major headaches!
 
+### Logging
+By default the daemon logs to stdout; use `--journal` to log to the systemd journal or `--logfile` to log to a file.
+The logging level and format can be set with the `logging_level` and `logging_format` settings in the `daemon` section of the config file, or with the `--loglevel` and `--logformat` command line options, which take precedence.
+The format uses Python's [logging format attributes](https://docs.python.org/3/library/logging.html#logrecord-attributes), for example `"%(asctime)s %(name)s %(levelname)s %(message)s"`.
+
 ## Making a power control request
 - **HTTP**
 The daemon can accept requests over plain HTTP. The port is configurable, but defaults to 16421

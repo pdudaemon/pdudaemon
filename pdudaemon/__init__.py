@@ -55,13 +55,21 @@ def setup_logging(options, settings):
     if options.journal:
         from systemd.journal import JournalHandler
         handler = JournalHandler(SYSLOG_IDENTIFIER="pdudaemon")
-        handler.setFormatter(logging.Formatter(logging_FORMAT_JOURNAL))
+        log_format = logging_FORMAT_JOURNAL
     elif options.logfile == "-" or not options.logfile:
         handler = logging.StreamHandler(sys.stdout)
-        handler.setFormatter(logging.Formatter(logging_FORMAT))
+        log_format = logging_FORMAT
     else:
         handler = WatchedFileHandler(options.logfile)
-        handler.setFormatter(logging.Formatter(logging_FORMAT))
+        log_format = logging_FORMAT
+
+    if not options.logformat:
+        options.logformat = settings.get('daemon', {}).get('logging_format', log_format)
+    try:
+        handler.setFormatter(logging.Formatter(options.logformat))
+    except ValueError as exc:
+        logging.error("Invalid logging format '%s': %s", options.logformat, exc)
+        sys.exit(1)
 
     logger.addHandler(handler)
     if not options.loglevel:
@@ -123,6 +131,9 @@ async def main_async():
                      help="Log to the journal")
     log.add_argument("--logfile", dest="logfile", action="store", type=str,
                      default="-", help="log file [%s]" % logging_FILE)
+    log.add_argument("--logformat", dest="logformat", default=None, type=str,
+                     help="logging format, overrides the logging_format "
+                     "configuration setting")
     log.add_argument("--loglevel", dest="loglevel", default=None,
                      choices=["DEBUG", "ERROR", "INFO", "WARN", "WARNING"],
                      type=str, help="logging level, overrides the "
