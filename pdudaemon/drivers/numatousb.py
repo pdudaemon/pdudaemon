@@ -47,7 +47,7 @@ class NumatoUSB(PDUDriver):
         return msg[x + 2:-3]
 
     def _open(self):
-        self.serial_port = serial.serial_for_url(self.device, timeout=1)
+        self.serial_port = serial.serial_for_url(self.device, timeout=1, write_timeout=1)
         log.debug("open: %s for %s", self.serial_port.port, self.device)
         # resync prompt
         self.serial_port.reset_input_buffer()
