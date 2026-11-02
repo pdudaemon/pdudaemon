@@ -164,7 +164,7 @@ class PDUDaemon:
         elif listener == 'http':
             self.listener = HTTPListener(settings, self)
         else:
-            logging.error("Unknown listener configured")
+            logger.error("Unknown listener configured")
 
     async def start(self):
         await self.listener.start()
@@ -234,7 +234,7 @@ async def main_async():
             # Using alias support, get all pdu info from alias
             alias_settings = settings["aliases"].get(options.alias, False)
             if not alias_settings:
-                logging.error("Alias requested but not found")
+                logger.error("Alias requested but not found")
                 sys.exit(1)
             options.drivehostname = settings["aliases"][options.alias]["hostname"]
             options.driveport = settings["aliases"][options.alias]["port"]
@@ -242,7 +242,7 @@ async def main_async():
         # Check that the requested PDU has config
         config = settings["pdus"].get(options.drivehostname, False)
         if not config:
-            logging.error("No config section for hostname: {}".format(options.drivehostname))
+            logger.error("No config section for hostname: {}".format(options.drivehostname))
             sys.exit(1)
 
         runner = PDURunner(config, options.drivehostname, options.driveretries, options.driveretrydelay)
