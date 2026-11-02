@@ -57,7 +57,7 @@ class DevantechusbBase(PDUDriver):
             log.error("Unknown command %s." % (command))
             return
 
-        s = serial.serial_for_url(self.device, 9600)
+        s = serial.serial_for_url(self.device, 9600, timeout=1, write_timeout=1)
         s.write([byte])
         s.close()
 
