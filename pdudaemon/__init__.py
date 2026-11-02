@@ -158,6 +158,15 @@ async def main_async():
 
     # Parse the command line
     options = parser.parse_args()
+    if options.drive:
+        if not options.alias and not options.drivehostname:
+            parser.error("--drive requires --alias or --hostname")
+        if options.alias and options.driveport:
+            parser.error("--alias cannot be used with --port")
+        if options.drivehostname and not options.driveport:
+            parser.error("--hostname requires --port")
+        if not options.driverequest:
+            parser.error("--drive requires --request")
 
     # Read the configuration file
     try:
