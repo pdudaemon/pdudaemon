@@ -30,7 +30,6 @@ python3-wheel \
 rustc \
 supervisor \
 telnet \
-snmp \
 uhubctl
 
 RUN apt-get update && apt-get install -y \
