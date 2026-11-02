@@ -32,8 +32,9 @@ def do_http_request(options):
     try:
         urllib.request.urlopen(request)
     except urllib.error.HTTPError as reply:
-        print("Error sending command! %s replied: %s" %
-              (options.pdudaemonhostname, reply))
+        print("Error sending command! %s replied: %s %s" %
+              (options.pdudaemonhostname, reply.code,
+               reply.read().decode('utf-8', 'replace').strip()))
         exit(127)
     except Exception:
         print ("Error sending command, wrong daemon hostname?")
