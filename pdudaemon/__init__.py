@@ -176,8 +176,9 @@ async def main_async():
         runner = PDURunner(config, options.drivehostname, options.driveretries, options.driveretrydelay)
         if options.driverequest == "reboot":
             result = await runner.do_job_async(options.driveport, "off")
-            await asyncio.sleep(int(options.drivedelay))
-            result = await runner.do_job_async(options.driveport, "on")
+            if result:
+                await asyncio.sleep(int(options.drivedelay))
+                result = await runner.do_job_async(options.driveport, "on")
         else:
             result = await runner.do_job_async(options.driveport, options.driverequest)
         await runner.shutdown()
