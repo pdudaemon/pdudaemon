@@ -56,6 +56,25 @@ class ShortNameFilter(logging.Filter):
         return True
 
 
+class MultiLineFormatter(logging.Formatter):
+    """Repeat the start of the format on every line of a message."""
+
+    def format(self, record):
+        text = super().format(record)
+        if "\n" not in text:
+            return text
+        # super().format() filled in record.message and record.asctime,
+        # so formatting an empty message gives the prefix.
+        message = record.message
+        record.message = ""
+        try:
+            prefix = self.formatMessage(record)
+        finally:
+            record.message = message
+        first, *rest = text.split("\n")
+        return "\n".join([first] + [prefix + line for line in rest])
+
+
 def setup_logging(options, settings):
     logger = logging.getLogger("pdud")
     """
@@ -88,7 +107,7 @@ def setup_logging(options, settings):
     # about where a message came from.
     handler.addFilter(ShortNameFilter())
     try:
-        handler.setFormatter(logging.Formatter(options.logformat))
+        handler.setFormatter(MultiLineFormatter(options.logformat))
     except ValueError as exc:
         logging.error("Invalid logging format '%s': %s", options.logformat, exc)
         sys.exit(1)
