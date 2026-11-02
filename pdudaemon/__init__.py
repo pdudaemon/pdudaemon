@@ -37,15 +37,23 @@ assert PDUDriver, "Imported for user convenience." # type: ignore[truthy-functio
 # Constants
 ###########
 CONFIGURATION_FILE = "/etc/pdudaemon/pdudaemon.conf"
-logging_FORMAT = "%(asctime)s - %(name)-30s - %(levelname)s %(message)s"
-logging_FORMAT_STREAM = "%(name)-30s - %(levelname)s %(message)s"
-logging_FORMAT_JOURNAL = "%(name)s.%(levelname)s %(message)s"
+logging_FORMAT = "%(asctime)s - %(shortname)-20.20s - %(levelname)s %(message)s"
+logging_FORMAT_STREAM = "%(shortname)-20.20s - %(levelname)s %(message)s"
+logging_FORMAT_JOURNAL = "%(shortname)s.%(levelname)s %(message)s"
 logging_FILE = "/var/log/pdudaemon.log"
 
 ##################
 # Global logger
 ##################
 logger = logging.getLogger('pdud')
+
+
+class ShortNameFilter(logging.Filter):
+    """Add the logger name without the "pdud." prefix as shortname."""
+
+    def filter(self, record):
+        record.shortname = record.name.removeprefix("pdud.")
+        return True
 
 
 def setup_logging(options, settings):
@@ -76,6 +84,9 @@ def setup_logging(options, settings):
 
     if not options.logformat:
         options.logformat = log_settings.get('logging_format', log_format)
+    # The prefix is shared by every pdudaemon logger so it says nothing
+    # about where a message came from.
+    handler.addFilter(ShortNameFilter())
     try:
         handler.setFormatter(logging.Formatter(options.logformat))
     except ValueError as exc:

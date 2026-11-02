@@ -92,6 +92,7 @@ By default the daemon logs to stdout; use `--journal` to log to the systemd jour
 The logging level and format can be set with the `logging_level` and `logging_format` settings in the `daemon` section of the config file, or with the `--loglevel` and `--logformat` command line options, which take precedence.
 When driving a PDU directly with `--drive`, these settings are not read from the config file and only the command line options apply.
 The format uses Python's [logging format attributes](https://docs.python.org/3/library/logging.html#logrecord-attributes), for example `"%(asctime)s %(name)s %(levelname)s %(message)s"`.
+In addition, `%(shortname)s` is the logger name without the `pdud.` prefix shared by all of PDUDaemon's loggers, which is what the default formats use.
 Timestamps are only included by default when logging to a file, as the journal and most service managers add their own.
 
 ## Making a power control request
