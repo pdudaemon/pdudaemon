@@ -66,8 +66,16 @@ def setup_logging(options, settings):
         handler = WatchedFileHandler(options.logfile)
         log_format = logging_FORMAT
 
+    # The logging settings in the configuration file are meant for the
+    # daemon, so when driving a PDU directly only the command line is
+    # used.
+    if options.drive:
+        log_settings = {}
+    else:
+        log_settings = settings.get('daemon', {})
+
     if not options.logformat:
-        options.logformat = settings.get('daemon', {}).get('logging_format', log_format)
+        options.logformat = log_settings.get('logging_format', log_format)
     try:
         handler.setFormatter(logging.Formatter(options.logformat))
     except ValueError as exc:
@@ -76,7 +84,7 @@ def setup_logging(options, settings):
 
     logger.addHandler(handler)
     if not options.loglevel:
-        options.loglevel = settings.get('daemon', {}).get('logging_level', "INFO")
+        options.loglevel = log_settings.get('logging_level', "INFO")
     options.loglevel = options.loglevel.upper()
     try:
         logger.setLevel(options.loglevel)
