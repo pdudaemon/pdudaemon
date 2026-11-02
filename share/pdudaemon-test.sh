@@ -39,12 +39,10 @@ sleep 10
 ./pduclient --daemon localhost --hostname pduclient --port 3 --command reboot --delay 1
 sleep 10
 
-if [ $LOCAL ]
-then
-  # kill the running daemon after first test, helpful if running locally
-  kill $PDU_PID
-  sleep 5
-fi
+# the listener tests are done, and leaving it running would hold the port
+# and make the next run of this script fail
+kill $PDU_PID
+sleep 5
 
 # Test drive feature
 $PDUD_BINARY --loglevel=DEBUG --conf=share/pdudaemon.conf --drive --hostname drive --port 4 --request reboot

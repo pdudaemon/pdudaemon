@@ -117,7 +117,7 @@ An HTTP request URL has the following syntax:
   ***Return Codes***
 
     - HTTP 200 - Request Accepted
-    - HTTP 503 - Invalid Request, Request not accepted
+    - HTTP 500 - Invalid Request, Request not accepted
 
 - **pduclient**
 The bundled client sends requests to the HTTP API.
@@ -130,6 +130,8 @@ Options:
   -h, --help            show this help message and exit
   --daemon=PDUDAEMONHOSTNAME
                         PDUDaemon listener hostname (ex: localhost)
+  --daemon-port=PDUDAEMONPORT
+                        PDUDaemon listener port (ex: 16421)
   --hostname=PDUHOSTNAME
                         PDU Hostname (ex: pdu05)
   --port=PDUPORTNUM     PDU Portnumber (ex: 04)

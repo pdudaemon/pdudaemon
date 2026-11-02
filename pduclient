@@ -23,9 +23,9 @@ import optparse
 def do_http_request(options):
     import urllib.error
     import urllib.request
-    request = "http://%s:16421/power/control/%s?hostname=%s&port=%s" % (
-                options.pdudaemonhostname, options.pducommand,
-                options.pduhostname, options.pduportnum)
+    request = "http://%s:%s/power/control/%s?hostname=%s&port=%s" % (
+                options.pdudaemonhostname, options.pdudaemonport,
+                options.pducommand, options.pduhostname, options.pduportnum)
 
     if options.pdudelay:
         request += "&delay=%s" % options.pdudelay
@@ -35,8 +35,9 @@ def do_http_request(options):
         print("Error sending command! %s replied: %s" %
               (options.pdudaemonhostname, reply))
         exit(127)
-    except Exception:
-        print ("Error sending command, wrong daemon hostname?")
+    except Exception as error:
+        print("Error sending command to %s:%s: %s" %
+              (options.pdudaemonhostname, options.pdudaemonport, error))
         exit(1)
     print("Command sent successfully.")
     exit(0)
@@ -53,6 +54,9 @@ if __name__ == '__main__':
     parser.add_option("--daemon", dest="pdudaemonhostname", action="store",
                       type="string",
                       help="PDUDaemon listener hostname (ex: localhost)")
+    parser.add_option("--daemon-port", dest="pdudaemonport", action="store",
+                      type="int", default=16421,
+                      help="PDUDaemon listener port (ex: 16421)")
     parser.add_option("--hostname", dest="pduhostname", action="store",
                       type="string", help="PDU Hostname (ex: pdu05)")
     parser.add_option("--port", dest="pduportnum", action="store",
