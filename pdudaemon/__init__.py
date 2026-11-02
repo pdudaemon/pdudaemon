@@ -119,6 +119,45 @@ class PDUDaemon:
         loop.stop()
 
 
+async def drive_pdu(options, settings):
+    """Send a single request to a PDU and return whether it succeeded.
+
+    This runs standalone: it does not start the listener or the daemon,
+    and only creates a runner for the requested PDU.
+    """
+    if options.alias:
+        # Using alias support, get all pdu info from alias
+        alias_settings = settings.get("aliases", {}).get(options.alias, False)
+        if not alias_settings:
+            logger.error("Alias requested but not found")
+            return False
+        options.drivehostname = alias_settings["hostname"]
+        options.driveport = alias_settings["port"]
+
+    # Check that the requested PDU has config
+    config = settings.get("pdus", {}).get(options.drivehostname, False)
+    if not config:
+        logger.error("No config section for hostname: {}".format(options.drivehostname))
+        return False
+
+    retries = options.driveretries
+    if retries is None:
+        retries = config.get("retries", 5)
+    retrydelay = options.driveretrydelay
+    if retrydelay is None:
+        retrydelay = config.get("retrydelay", 5)
+    runner = PDURunner(config, options.drivehostname, retries, retrydelay)
+    if options.driverequest == "reboot":
+        result = await runner.do_job_async(options.driveport, "off")
+        if result:
+            await asyncio.sleep(int(options.drivedelay))
+            result = await runner.do_job_async(options.driveport, "on")
+    else:
+        result = await runner.do_job_async(options.driveport, options.driverequest)
+    await runner.shutdown()
+    return result
+
+
 async def main_async():
     # Setup the parser
     parser = argparse.ArgumentParser()
@@ -183,38 +222,7 @@ async def main_async():
 
     if options.drive:
         # Driving a PDU directly, don't start any listeners
-
-        if options.alias:
-            # Using alias support, get all pdu info from alias
-            alias_settings = settings.get("aliases", {}).get(options.alias, False)
-            if not alias_settings:
-                logger.error("Alias requested but not found")
-                sys.exit(1)
-            options.drivehostname = alias_settings["hostname"]
-            options.driveport = alias_settings["port"]
-
-        # Check that the requested PDU has config
-        config = settings.get("pdus", {}).get(options.drivehostname, False)
-        if not config:
-            logger.error("No config section for hostname: {}".format(options.drivehostname))
-            sys.exit(1)
-
-        retries = options.driveretries
-        if retries is None:
-            retries = config.get("retries", 5)
-        retrydelay = options.driveretrydelay
-        if retrydelay is None:
-            retrydelay = config.get("retrydelay", 5)
-        runner = PDURunner(config, options.drivehostname, retries, retrydelay)
-        if options.driverequest == "reboot":
-            result = await runner.do_job_async(options.driveport, "off")
-            if result:
-                await asyncio.sleep(int(options.drivedelay))
-                result = await runner.do_job_async(options.driveport, "on")
-        else:
-            result = await runner.do_job_async(options.driveport, options.driverequest)
-        await runner.shutdown()
-        return result
+        return await drive_pdu(options, settings)
 
     # Create daemon
     logger.info('PDUDaemon starting up')
