@@ -11,15 +11,11 @@ ENV PIPX_DEFAULT_PYTHON=${PYTHON}
 
 RUN apt-get update && apt-get install -y \
 curl \
-cython3 \
+gcc \
 git \
 ipmitool \
-libffi-dev \
-libhidapi-dev \
-libssl-dev \
 libsystemd-dev \
-libudev-dev \
-libusb-1.0-0-dev \
+libusb-1.0-0 \
 pkg-config \
 psmisc \
 pipx \
@@ -27,7 +23,6 @@ python3-pycodestyle \
 python3-setuptools \
 python3-usb \
 python3-wheel \
-rustc \
 supervisor \
 telnet \
 snmp \
