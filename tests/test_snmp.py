@@ -116,6 +116,7 @@ class TestPortInteractionAsync:
     def mock_engine(self):
         with patch("pdudaemon.drivers.snmp.SnmpEngine") as m:
             engine_instance = MagicMock()
+            engine_instance.__enter__.return_value = engine_instance
             m.return_value = engine_instance
             yield engine_instance
 
@@ -124,6 +125,9 @@ class TestPortInteractionAsync:
         result = await snmpv1_pdu._port_interaction_async("1", 1)
         assert result is True
         mock_set_cmd.assert_awaited_once()
+        assert mock_set_cmd.await_args.args[0] is mock_engine
+        mock_engine.__enter__.assert_called_once()
+        mock_engine.__exit__.assert_called_once_with(None, None, None)
 
     @pytest.mark.asyncio
     async def test_snmpv3_set_cmd_called(self, snmpv3_pdu, mock_set_cmd, mock_transport, mock_engine):
@@ -169,9 +173,15 @@ class TestPortInteractionAsync:
 
     @pytest.mark.asyncio
     async def test_engine_closed_on_error(self, snmpv1_pdu, mock_set_cmd, mock_transport, mock_engine):
-        mock_set_cmd.side_effect = RuntimeError("connection failed")
+        error = RuntimeError("connection failed")
+        mock_set_cmd.side_effect = error
         with pytest.raises(RuntimeError):
             await snmpv1_pdu._port_interaction_async("1", 1)
+        # Engine must still be cleaned up, and see the exception
+        mock_engine.__exit__.assert_called_once()
+        exc_type, exc_value, _ = mock_engine.__exit__.call_args.args
+        assert exc_type is RuntimeError
+        assert exc_value is error
 
     @pytest.mark.asyncio
     async def test_inside_number_controlpoint(self, mock_set_cmd, mock_transport, mock_engine):
