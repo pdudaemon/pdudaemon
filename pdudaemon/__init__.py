@@ -90,7 +90,11 @@ class PDUDaemon:
             config = settings["pdus"][hostname]
             retries = config.get("retries", 5)
             retrydelay = config.get("retrydelay", 5)
-            self.runners[hostname] = PDURunner(config, hostname, retries, retrydelay)
+            try:
+                self.runners[hostname] = PDURunner(config, hostname, retries, retrydelay)
+            except Exception as exc:
+                logger.error("Unable to set up the driver for %s: %s", hostname, exc)
+                sys.exit(1)
 
         # Start the listener
         logger.info("Starting the listener")
@@ -119,6 +123,49 @@ class PDUDaemon:
         loop.stop()
 
 
+async def drive_pdu(options, settings):
+    """Send a single request to a PDU and return whether it succeeded.
+
+    This runs standalone: it does not start the listener or the daemon,
+    and only creates a runner for the requested PDU.
+    """
+    if options.alias:
+        # Using alias support, get all pdu info from alias
+        alias_settings = settings.get("aliases", {}).get(options.alias, False)
+        if not alias_settings:
+            logger.error("Alias requested but not found")
+            return False
+        options.drivehostname = alias_settings["hostname"]
+        options.driveport = alias_settings["port"]
+
+    # Check that the requested PDU has config
+    config = settings.get("pdus", {}).get(options.drivehostname, False)
+    if not config:
+        logger.error("No config section for hostname: {}".format(options.drivehostname))
+        return False
+
+    retries = options.driveretries
+    if retries is None:
+        retries = config.get("retries", 5)
+    retrydelay = options.driveretrydelay
+    if retrydelay is None:
+        retrydelay = config.get("retrydelay", 5)
+    try:
+        runner = PDURunner(config, options.drivehostname, retries, retrydelay)
+    except Exception as exc:
+        logger.error("Unable to set up the driver for %s: %s", options.drivehostname, exc)
+        return False
+    if options.driverequest == "reboot":
+        result = await runner.do_job_async(options.driveport, "off")
+        if result:
+            await asyncio.sleep(int(options.drivedelay))
+            result = await runner.do_job_async(options.driveport, "on")
+    else:
+        result = await runner.do_job_async(options.driveport, options.driverequest)
+    await runner.shutdown()
+    return result
+
+
 async def main_async():
     # Setup the parser
     parser = argparse.ArgumentParser()
@@ -134,20 +181,48 @@ async def main_async():
     parser.add_argument("--conf", "-c", type=argparse.FileType("r"),
                         default=CONFIGURATION_FILE,
                         help="configuration file [%s]" % CONFIGURATION_FILE)
-    parser.add_argument("--listener", type=str, help="PDUDaemon listener setting")
-    conflict = parser.add_mutually_exclusive_group()
-    conflict.add_argument("--alias", dest="alias", action="store", type=str)
-    conflict.add_argument("--hostname", dest="drivehostname", action="store", type=str)
+    daemon_group = parser.add_argument_group("daemon")
+    daemon_group.add_argument("--listener", type=str, help="PDUDaemon listener setting")
     drive = parser.add_argument_group("drive")
-    drive.add_argument("--drive", action="store_true", default=False)
-    drive.add_argument("--request", dest="driverequest", action="store", type=str)
-    drive.add_argument("--retries", dest="driveretries", action="store", type=int, default=5)
-    drive.add_argument("--retry-delay", dest="driveretrydelay", action="store", type=int, default=5)
-    drive.add_argument("--delay", dest="drivedelay", action="store", type=int, default=5)
-    drive.add_argument("--port", dest="driveport", action="store", type=str)
+    drive.add_argument("--drive", action="store_true", default=False,
+                       help="Drive a PDU directly instead of starting the daemon")
+    conflict = drive.add_mutually_exclusive_group()
+    conflict.add_argument("--alias", dest="alias", action="store", type=str,
+                          help="alias of the PDU port to drive")
+    conflict.add_argument("--hostname", dest="drivehostname", action="store", type=str,
+                          metavar="HOSTNAME", help="hostname of the PDU to drive")
+    drive.add_argument("request", nargs="?", type=str,
+                       choices=["on", "off", "reboot"], metavar="REQUEST",
+                       help="request to send to the PDU (on, off or reboot)")
+    drive.add_argument("--request", dest="driverequest", action="store", type=str,
+                       choices=["on", "off", "reboot"], metavar="REQUEST",
+                       help="same as the REQUEST argument")
+    drive.add_argument("--retries", dest="driveretries", action="store", type=int,
+                       metavar="RETRIES", help="number of attempts [PDU retries or 5]")
+    drive.add_argument("--retry-delay", dest="driveretrydelay", action="store", type=int,
+                       metavar="SECONDS", help="delay between attempts [PDU retrydelay or 5]")
+    drive.add_argument("--delay", dest="drivedelay", action="store", type=int, default=5,
+                       metavar="SECONDS", help="delay between power off and on for reboot [5]")
+    drive.add_argument("--port", dest="driveport", action="store", type=str,
+                       metavar="PORT", help="port of the PDU to drive")
 
     # Parse the command line
     options = parser.parse_args()
+    if options.request:
+        if not options.drive:
+            parser.error("REQUEST requires --drive")
+        if options.driverequest:
+            parser.error("REQUEST cannot be used with --request")
+        options.driverequest = options.request
+    if options.drive:
+        if not options.alias and not options.drivehostname:
+            parser.error("--drive requires --alias or --hostname")
+        if options.alias and options.driveport:
+            parser.error("--alias cannot be used with --port")
+        if options.drivehostname and not options.driveport:
+            parser.error("--hostname requires --port")
+        if not options.driverequest:
+            parser.error("--drive requires a request")
 
     # Read the configuration file
     try:
@@ -163,33 +238,8 @@ async def main_async():
     loop = asyncio.get_running_loop()
 
     if options.drive:
-        # Driving a PDU directly, dont start any Listeners
-
-        if options.alias:
-            # Using alias support, get all pdu info from alias
-            alias_settings = settings["aliases"].get(options.alias, False)
-            if not alias_settings:
-                logging.error("Alias requested but not found")
-                sys.exit(1)
-            options.drivehostname = settings["aliases"][options.alias]["hostname"]
-            options.driveport = settings["aliases"][options.alias]["port"]
-
-        # Check that the requested PDU has config
-        config = settings["pdus"].get(options.drivehostname, False)
-        if not config:
-            logging.error("No config section for hostname: {}".format(options.drivehostname))
-            sys.exit(1)
-
-        runner = PDURunner(config, options.drivehostname, options.driveretries, options.driveretrydelay)
-        if options.driverequest == "reboot":
-            result = await runner.do_job_async(options.driveport, "off")
-            await asyncio.sleep(int(options.drivedelay))
-            result = await runner.do_job_async(options.driveport, "on")
-        else:
-            result = await runner.do_job_async(options.driveport, options.driverequest)
-        await runner.shutdown()
-        loop.stop()
-        return result
+        # Driving a PDU directly, don't start any listeners
+        return await drive_pdu(options, settings)
 
     # Create daemon
     logger.info('PDUDaemon starting up')
@@ -208,7 +258,10 @@ async def main_async():
 
 def main():
     loop = asyncio.new_event_loop()
-    loop.run_until_complete(main_async())
+    result = loop.run_until_complete(main_async())
+    if result is not None:
+        # Drive mode has finished, report whether the request succeeded
+        return 0 if result else 1
     try:
         loop.run_forever()
     except KeyboardInterrupt:

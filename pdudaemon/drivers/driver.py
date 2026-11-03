@@ -19,7 +19,6 @@
 #  MA 02110-1301, USA.
 
 import logging
-import os
 from importlib import metadata
 
 log = logging.getLogger("pdud.drivers")
@@ -59,8 +58,7 @@ class PDUDriver(object):
                 candidates = candidates + (subsubc.__subclasses__())
         willing = [c for c in candidates if c.accepts(drivername)]
         if len(willing) == 0:
-            log.error("No driver accepted the configuration '%s'", drivername)
-            os._exit(1)
+            raise RuntimeError("No driver accepted the configuration '{}'".format(drivername))
         log.debug("%s accepted the request", willing[0])
         return willing[0]
 
