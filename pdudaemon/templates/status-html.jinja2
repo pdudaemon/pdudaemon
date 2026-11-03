@@ -1,0 +1,43 @@
+<html>
+<title>PDUDaemon status info</title>
+<body>
+
+
+PDUDaemon status<br/>
+<hr>
+<table>
+<tr>
+<th>PDU Hostname</th>
+<th>PDU Port</th>
+<th>Alias</th>
+<th>Status</th>
+</tr>
+
+{% for hostname in status_data.keys() %}
+{% for port in status_data[hostname] %}
+<tr>
+<td>{{ hostname }}</td>
+<td>{{ port }}</td>
+<td>{{ alias_names.get(hostname, {}).get(port, "") }}</td>
+<td>{{ status_data[hostname][port] }}</td>
+<td>
+<form action="/power/control/on" method="get">
+    <input type="hidden" name="hostname" value="{{ hostname }}">
+    <input type="hidden" name="port" value="{{ port }}">
+    <button type="submit" name="switchon">Switch On</button>
+</form>
+</td>
+<td>
+<form action="/power/control/off" method="get">
+    <input type="hidden" name="hostname" value="{{ hostname }}">
+    <input type="hidden" name="port" value="{{ port }}">
+    <button type="submit" name="switchoff">Switch Off</button>
+</form>
+</td>
+</tr>
+{% endfor %}
+{% endfor %}
+</table>
+
+</body>
+</html>

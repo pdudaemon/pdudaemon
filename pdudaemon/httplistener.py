@@ -22,8 +22,11 @@ import logging
 import pdudaemon.listener as listener
 
 from aiohttp import web
+from jinja2 import Environment, PackageLoader
 
 logger = logging.getLogger('pdud.http')
+
+templates = Environment(loader=PackageLoader("pdudaemon", "templates"), autoescape=True)
 
 
 class HTTPListener:
@@ -38,6 +41,9 @@ class HTTPListener:
             web.get('/power/control/on', self.handle),
             web.get('/power/control/off', self.handle),
             web.get('/power/control/reboot', self.handle),
+            web.get('/power/status', self.handle_status),
+            web.get('/power/status/json', self.handle_status),
+            web.get('/power/status/html', self.handle_status_html),
         ])
         self.apprunner = None
 
@@ -70,3 +76,39 @@ class HTTPListener:
         args = listener.parse_http(data, path)
         if args:
             return await listener.process_request(args, self.config, self.daemon)
+
+    def get_alias_names(self):
+        alias_names = {}
+        for name, alias in self.config.get('aliases', {}).items():
+            if alias.get('hostname') in self.daemon.runners:
+                alias_names.setdefault(alias['hostname'], {})[str(alias.get('port'))] = name
+        return alias_names
+
+    def get_status(self, request):
+        hostname = request.query.get('hostname')
+        runners = self.daemon.runners
+        if hostname and hostname not in runners:
+            return None
+        status = {}
+        for name, ports in self.get_alias_names().items():
+            status[name] = {port: "unknown" for port in ports}
+        for name, runner in runners.items():
+            if runner.port_status:
+                status.setdefault(name, {}).update(runner.port_status)
+        if hostname:
+            return {hostname: status.get(hostname, {})}
+        return status
+
+    async def handle_status(self, request):
+        status = self.get_status(request)
+        if status is None:
+            return web.Response(status=404, text="PDU not found\n")
+        return web.json_response(status)
+
+    async def handle_status_html(self, request):
+        status = self.get_status(request)
+        if status is None:
+            return web.Response(status=404, text="PDU not found\n")
+        template = templates.get_template("status-html.jinja2")
+        text = template.render(status_data=status, alias_names=self.get_alias_names())
+        return web.Response(content_type="text/html", text=text)
