@@ -18,8 +18,6 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 
-import logging
-import os
 from pdudaemon.drivers.acme import ACME
 from pdudaemon.drivers.anelnetpwrctrl import AnelNETPwrCtrlHOME
 from pdudaemon.drivers.anelnetpwrctrl import AnelNETPwrCtrlADV
@@ -82,6 +80,7 @@ from pdudaemon.drivers.homeassistant import HomeAssistantHTTP
 from pdudaemon.drivers.ubus import Ubus
 from pdudaemon.drivers.shelly_gen2 import ShellyGen2
 from pdudaemon.drivers.uhubctl import UHubCtl
+from pdudaemon.drivers.snmp import SNMP
 
 __all__ = [
     ACME.__name__,
@@ -146,11 +145,5 @@ __all__ = [
     Ubus.__name__,
     ShellyGen2.__name__,
     UHubCtl.__name__,
+    SNMP.__name__,
 ]
-
-log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
-try:
-    from pdudaemon.drivers.snmp import SNMP
-    __all__.append(SNMP.__name__)
-except ModuleNotFoundError:
-    log.warning("disabling snmp drivers due to missing modules")
