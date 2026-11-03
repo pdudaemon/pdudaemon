@@ -19,7 +19,7 @@
 #  MA 02110-1301, USA.
 
 import logging
-from subprocess import call
+from pdudaemon.drivers.driver import run_command
 from pdudaemon.drivers.localbase import LocalBase
 import os
 log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
@@ -58,5 +58,4 @@ class LocalCmdline(LocalBase):
                 cmd = cmd % port_number
 
         if cmd:
-            log.debug("running %s" % cmd)
-            call(cmd, shell=True)
+            run_command(log, cmd, shell=True)

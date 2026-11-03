@@ -21,7 +21,7 @@
 import logging
 import os
 from shutil import which
-from subprocess import check_call
+from pdudaemon.drivers.driver import run_command
 from pdudaemon.drivers.localbase import LocalBase
 
 log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
@@ -74,5 +74,4 @@ class UHubCtl(LocalBase):
             "--port", str(port_number),
             "--action", str(action)
         ]
-        log.debug("running %r" % cmd)
-        check_call(cmd)
+        run_command(log, cmd)

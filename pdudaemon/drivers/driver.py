@@ -20,6 +20,8 @@
 
 import logging
 import os
+import shlex
+import subprocess
 from importlib import metadata
 
 log = logging.getLogger("pdud.drivers")
@@ -33,6 +35,30 @@ def get_named_entry_point(group, name):
         raise RuntimeError(f"Multiple entry points for {group} under {name}")
 
     return matches[0] if matches else None
+
+
+def run_command(logger, cmd, shell=False, check=True):
+    """Run a command, logging it and its output to logger.
+
+    The output is captured rather than left to go to stdout, so that it
+    ends up wherever the log goes and is formatted like the rest of it.
+    It is only logged at debug level, unless the command fails, when it
+    is needed to tell why.
+    """
+    name = cmd if isinstance(cmd, str) else shlex.join(cmd)
+    logger.debug("Running command: %s", name)
+    result = subprocess.run(cmd, shell=shell, stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT, text=True, errors="replace")
+    if result.stdout:
+        output = "\n".join("| " + line for line in result.stdout.splitlines())
+        if result.returncode != 0:
+            logger.warning("Output of failed command %s:\n%s", name, output)
+        else:
+            logger.debug("Output of command %s:\n%s", name, output)
+    if check and result.returncode != 0:
+        raise FailedRequestException("%s exited with status %d"
+                                     % (name, result.returncode))
+    return result
 
 
 class PDUDriver(object):

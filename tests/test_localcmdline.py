@@ -17,7 +17,10 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 
+from unittest.mock import ANY
+
 import pytest
+from pdudaemon.drivers.driver import FailedRequestException
 from pdudaemon.drivers.localcmdline import LocalCmdline
 
 
@@ -40,28 +43,35 @@ from pdudaemon.drivers.localcmdline import LocalCmdline
     ],
 )
 def test_port_interaction(mocker, command, port_number, expected):
-    call = mocker.patch("pdudaemon.drivers.localcmdline.call")
+    run_command = mocker.patch("pdudaemon.drivers.localcmdline.run_command")
     pdu = LocalCmdline("dummy", {"cmd_on": command, "serial": "262305"})
 
     pdu.port_interaction("on", port_number)
 
-    call.assert_called_once_with(expected, shell=True)
+    run_command.assert_called_once_with(ANY, expected, shell=True)
 
 
 def test_port_interaction_unknown_command(mocker):
-    call = mocker.patch("pdudaemon.drivers.localcmdline.call")
+    run_command = mocker.patch("pdudaemon.drivers.localcmdline.run_command")
     pdu = LocalCmdline("dummy", {"cmd_on": "echo on"})
 
     pdu.port_interaction("reboot", 1)
 
-    call.assert_not_called()
+    run_command.assert_not_called()
 
 
 def test_port_interaction_missing_setting(mocker):
-    call = mocker.patch("pdudaemon.drivers.localcmdline.call")
+    run_command = mocker.patch("pdudaemon.drivers.localcmdline.run_command")
     pdu = LocalCmdline("dummy", {"cmd_on": "echo %(serial)s"})
 
     with pytest.raises(KeyError):
         pdu.port_interaction("on", 1)
 
-    call.assert_not_called()
+    run_command.assert_not_called()
+
+
+def test_port_interaction_failed_command():
+    pdu = LocalCmdline("dummy", {"cmd_on": "exit 3"})
+
+    with pytest.raises(FailedRequestException):
+        pdu.port_interaction("on", 1)
