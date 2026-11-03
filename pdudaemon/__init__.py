@@ -146,7 +146,11 @@ async def drive_pdu(options, settings):
     retrydelay = options.driveretrydelay
     if retrydelay is None:
         retrydelay = config.get("retrydelay", 5)
-    runner = PDURunner(config, options.drivehostname, retries, retrydelay)
+    try:
+        runner = PDURunner(config, options.drivehostname, retries, retrydelay)
+    except Exception as exc:
+        logger.error("Unable to set up the driver for %s: %s", options.drivehostname, exc)
+        return False
     if options.driverequest == "reboot":
         result = await runner.do_job_async(options.driveport, "off")
         if result:
