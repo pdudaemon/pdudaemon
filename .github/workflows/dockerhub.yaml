@@ -3,6 +3,7 @@ name: Publish Docker image
 on:
   push:
     branches: ["main"]
+    tags: ["*"]
 
 env:
   DOCKER_TARGET_PLATFORMS: linux/amd64,linux/arm64
@@ -14,6 +15,18 @@ jobs:
     steps:
       - name: Check out the repo
         uses: actions/checkout@v7
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: pdudaemon/pdudaemon
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=branch
+            type=ref,suffix=-{{sha}},event=branch
+            type=ref,suffix=-{{date 'YYYYMMDD'}},event=branch
+            type=ref,event=tag
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v4
@@ -34,4 +47,5 @@ jobs:
           file: ./Dockerfile
           platforms: ${{ env.DOCKER_TARGET_PLATFORMS }}
           push: true
-          tags: pdudaemon/pdudaemon:latest
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
