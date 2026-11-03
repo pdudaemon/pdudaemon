@@ -66,3 +66,8 @@ COPY --from=build-test /opt/pdudaemon /opt/pdudaemon
 
 FROM runtime
 COPY --from=build /opt/pdudaemon /opt/pdudaemon
+
+RUN useradd --system --create-home --home-dir /var/lib/pdudaemon \
+--shell /usr/sbin/nologin pdudaemon
+USER pdudaemon
+WORKDIR /var/lib/pdudaemon
