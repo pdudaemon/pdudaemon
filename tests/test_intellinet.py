@@ -24,7 +24,11 @@ def test_port_interaction_port_in_range(pdu):
     pdu = Intellinet("dummy", {})
 
     with pytest.raises(FailedRequestException):
-        pdu.port_interaction("on", pdu.port_count)
+        pdu.check_port(pdu.port_count)
 
     with pytest.raises(FailedRequestException):
-        pdu.port_interaction("on", -1)
+        pdu.check_port(-1)
+
+
+def test_get_ports(pdu):
+    assert pdu.get_ports() == list(range(pdu.port_count))

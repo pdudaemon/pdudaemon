@@ -32,7 +32,7 @@ class APC7932(APC7952):
             return True
         return False
 
-    def _port_interaction(self, command, port_number):
+    def _port_interaction(self, command, port):
         # make sure in main menu here
         self._back_to_main()
         self.connection.send("\r")
@@ -45,7 +45,7 @@ class APC7932(APC7952):
         self.connection.expect("1- Outlet Control/Configuration")
         self.connection.expect("> ")
         self.connection.send("1\r")
-        self._enter_outlet(port_number, False)
+        self._enter_outlet(port, False)
         self.connection.expect("> ")
         if command == "on":
             self.connection.send("1\r")

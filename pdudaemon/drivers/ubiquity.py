@@ -67,18 +67,15 @@ class UbiquityBase(PDUDriver):
         self.client.connect(hostname=self.hostname, port=self.sshport,
                             username=self.username, password=self.password)
 
-    def port_interaction(self, command, port_number):
-        port_number = int(port_number)
+    def port_interaction(self, command, port):
+        port = int(port)
         log.debug("Running port_interaction from UbiquityBase")
         self.connect()
-        if port_number > self.port_count:
-            raise RuntimeError("We only have ports 1 - %d. %d > maxPorts (%d)"
-                               % self.port_count, port_number, self.port_count)
 
         if command == "on":
-            command = "sh -c 'echo 1 > /proc/power/relay%d'" % port_number
+            command = "sh -c 'echo 1 > /proc/power/relay%d'" % port
         elif command == "off":
-            command = "sh -c 'echo 0 > /proc/power/relay%d'" % port_number
+            command = "sh -c 'echo 0 > /proc/power/relay%d'" % port
 
         try:
             stdin, stdout, stderr = self.client.exec_command(command,

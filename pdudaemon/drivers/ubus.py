@@ -47,28 +47,29 @@ class Ubus(PDUDriver):
                 "method": "call",
                 "params": [ "00000000000000000000000000000000", path, method, message ],
             },
+            timeout=self.timeout,
         )
 
         r.raise_for_status()
         return r.json()["result"]
 
-    def port_get(self, port_number):
+    def port_get(self, port):
         poe_info = self.jsonrpc_call("poe", "info", { })
 
-        if f"lan{port_number}" not in poe_info["ports"]:
-            raise RuntimeError(f"Port lan{port_number} not found in {poe_info['ports']}")
+        if f"lan{port}" not in poe_info["ports"]:
+            raise RuntimeError(f"Port lan{port} not found in {poe_info['ports']}")
 
-        return poe_info["ports"][f"lan{port_number}"] != "Disabled"
+        return poe_info["ports"][f"lan{port}"] != "Disabled"
 
-    def port_interaction(self, command, port_number):
+    def port_interaction(self, command, port):
         if command == "get":
-            return self.port_get(port_number)
+            return self.port_get(port)
 
         self.jsonrpc_call(
             "poe",
             "manage",
             {
-                "port": f"lan{port_number}",
+                "port": f"lan{port}",
                 "enable": True if command == "on" else False
             }
         )

@@ -43,35 +43,35 @@ class NetioJson(PDUDriver):
     def accepts(cls, drivername):
         return drivername == 'netiojson'
 
-    def port_interaction(self, command, port_number):
+    def port_interaction(self, command, port):
 
-        if not 1 <= int(port_number) <= int(self.number_of_outputs):
-            raise RuntimeError(f'Requested port no. {port_number} is out of range.')
+        if not 1 <= int(port) <= int(self.number_of_outputs):
+            raise RuntimeError(f'Requested port no. {port} is out of range.')
 
         url = f'http://{self.username}:{self.password}@{self.ip}:{self.port}/netio.json'
         log.debug(f'Calling API URL: {url}')
 
         if command == 'on':
-            self._do_request(url, port_number, action=1)
+            self._do_request(url, port, action=1)
         elif command == 'off':
-            self._do_request(url, port_number, action=0)
+            self._do_request(url, port, action=0)
         else:
             raise UnknownCommandException(f'Unknown command: {command}')
 
-    def _do_request(self, url, port_number, action):
-        response = requests.post(url, json=self._get_request_json(port_number, action))
+    def _do_request(self, url, port, action):
+        response = requests.post(url, json=self._get_request_json(port, action), timeout=self.timeout)
 
-        if not self._is_request_successful(response, port_number, action):
+        if not self._is_request_successful(response, port, action):
             raise FailedRequestException(f'Request failed. Received following response:\n{response.text}')
 
-    def _get_request_json(self, port_number, action):
-        data = f'{{"Outputs":[{{"ID":{port_number},"Action":{action}}}]}}'
+    def _get_request_json(self, port, action):
+        data = f'{{"Outputs":[{{"ID":{port},"Action":{action}}}]}}'
         return json.loads(data)
 
-    def _is_request_successful(self, response, port_number, action):
+    def _is_request_successful(self, response, port, action):
         if response.ok:
             output_states = response.json()['Outputs']
             for output_state in output_states:
-                if int(output_state['ID']) == int(port_number):
+                if int(output_state['ID']) == int(port):
                     return action == output_state['State']
         return False

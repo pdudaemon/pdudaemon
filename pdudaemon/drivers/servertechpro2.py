@@ -59,12 +59,12 @@ class ServerTechPro2(LocalBase):
             return True
         return False
 
-    def _port_interaction(self, command, port_number):
-        log.debug("Attempting command: '{}' port: '{}'".format(command, port_number))
+    def _port_interaction(self, command, port):
+        log.debug("Attempting command: '{}' port: '{}'".format(command, port))
         if command in ("on", "off"):
             if self.insecure:
                 requests.packages.urllib3.disable_warnings()
-            url = "{}{}".format(self.url_base, port_number)
+            url = "{}{}".format(self.url_base, port)
             data = {"control_action": command}
             r = requests.patch(
                 url=url,
@@ -75,8 +75,8 @@ class ServerTechPro2(LocalBase):
                 timeout=self.timeout,
             )
             r.raise_for_status()
-            log.debug("Done with command: '{}' port: '{}'".format(command, port_number))
+            log.debug("Done with command: '{}' port: '{}'".format(command, port))
         else:
             log.debug(
-                "Unknown command for: '{}' port: '{}'".format(command, port_number)
+                "Unknown command for: '{}' port: '{}'".format(command, port)
             )

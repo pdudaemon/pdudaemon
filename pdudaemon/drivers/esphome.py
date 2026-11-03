@@ -63,7 +63,7 @@ class ESPHomeHTTP(PDUDriver):
         auth = None
         if self.username and self.password:
             auth = HTTPDigestAuth(self.username, self.password)
-        response = requests.post(url, auth=auth)
+        response = requests.post(url, auth=auth, timeout=self.timeout)
 
         log.debug(
             "Response code for request to {}: {}".format(
@@ -71,6 +71,25 @@ class ESPHomeHTTP(PDUDriver):
             )
         )
         response.raise_for_status()
+
+    def get_port_state(self, esphome_entity_id) -> bool:
+        url = "http://{}:{}/switch/{}".format(self.hostname, self.port, esphome_entity_id)
+        log.debug("HTTP GET: {}".format(url))
+
+        auth = None
+        if self.username and self.password:
+            auth = HTTPDigestAuth(self.username, self.password)
+
+        response = requests.get(url, auth=auth, timeout=self.timeout)
+        response.raise_for_status()
+        data = response.json()
+
+        log.debug(
+            "Response for request to {}: code: {}, data: {}".format(
+                self.hostname, response.status_code, data
+            )
+        )
+        return data.get("state") == "ON"
 
     @classmethod
     def accepts(cls, drivername):

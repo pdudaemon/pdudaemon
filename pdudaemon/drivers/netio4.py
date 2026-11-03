@@ -45,14 +45,14 @@ class Netio4(PDUDriver):
             return True
         return False
 
-    def port_interaction(self, command, port_number):
+    def port_interaction(self, command, port):
         log.debug("Running port_interaction")
         self.get_connection()
-        log.debug("Attempting command: {} port: {}".format(command, port_number))
+        log.debug("Attempting command: {} port: {}".format(command, port))
         if command == "on":
-            self.connection.send("port %s 1\r" % port_number)
+            self.connection.send("port %s 1\r" % port)
         elif command == "off":
-            self.connection.send("port %s 0\r" % port_number)
+            self.connection.send("port %s 0\r" % port)
         else:
             log.error("Unknown command")
 

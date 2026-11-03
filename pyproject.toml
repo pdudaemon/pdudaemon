@@ -50,6 +50,9 @@ packages = [
     "pdudaemon.drivers",
 ]
 
+[tool.setuptools.package-data]
+pdudaemon = ["static/*"]
+
 [tool.setuptools_scm]
 local_scheme = "no-local-version"
 

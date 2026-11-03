@@ -18,12 +18,24 @@
 #  MA 02110-1301, USA.
 
 import urllib.parse as urlparse
+import datetime
 import logging
+import socket
+import time
 import pdudaemon.listener as listener
 
 from aiohttp import web
+from importlib.metadata import PackageNotFoundError, version
+from importlib.resources import files
 
 logger = logging.getLogger('pdud.http')
+
+try:
+    VERSION = version("pdudaemon")
+except PackageNotFoundError:
+    VERSION = "unknown"
+
+STATUS_HTML = files("pdudaemon").joinpath("static/status.html").read_text()
 
 
 class HTTPListener:
@@ -32,13 +44,25 @@ class HTTPListener:
         self.config = config
         self.daemon = daemon
         self.settings = config["daemon"]
+        # the listener is created when the daemon starts
+        self.start_time = time.monotonic()
 
         self.app = web.Application()
         self.app.add_routes([
             web.get('/power/control/on', self.handle),
             web.get('/power/control/off', self.handle),
             web.get('/power/control/reboot', self.handle),
+            web.get('/power/control/get-cached-port-state', self.handle),
+            web.get('/power/control/get-port-state', self.handle),
+            web.get('/power/status', self.handle_status),
+            web.get('/power/status/json', self.handle_status),
+            web.get('/power/info', self.handle_info),
         ])
+        if self.settings.get("web_ui", False):
+            self.app.add_routes([
+                web.get('/', self.handle_index),
+                web.get('/power/dashboard', self.handle_dashboard),
+            ])
         self.apprunner = None
 
     async def start(self):
@@ -61,12 +85,80 @@ class HTTPListener:
         data = urlparse.parse_qs(urlparse.urlparse(request.path_qs).query)
         path = urlparse.urlparse(request.path_qs).path
         res = await self.insert_request(data, path)
-        if res:
+        if isinstance(res, listener.PortStatus):
+            return web.Response(status=200, content_type="application/json",
+                                text='{"state": "%s"}\n' % res.state)
+        if isinstance(res, listener.CommandAccepted):
             return web.Response(status=200, text="OK - accepted request\n")
-        else:
-            return web.Response(status=500, text="Invalid request\n")
+        if isinstance(res, listener.RequestError):
+            return web.Response(status=500, text="Invalid request: %s\n" % res.message)
+        return web.Response(status=500, text="Invalid request\n")
 
     async def insert_request(self, data, path):
         args = listener.parse_http(data, path)
-        if args:
-            return await listener.process_request(args, self.config, self.daemon)
+        if not args:
+            return listener.RequestError("could not parse request")
+        return await listener.process_request(args, self.config, self.daemon)
+
+    def get_alias_names(self):
+        alias_names = {}
+        for name, alias in self.config.get('aliases', {}).items():
+            if alias.get('hostname') in self.daemon.runners:
+                alias_names.setdefault(alias['hostname'], {})[str(alias.get('port'))] = name
+        return alias_names
+
+    def get_status(self, request):
+        hostname = request.query.get('hostname')
+        runners = self.daemon.runners
+        if hostname and hostname not in runners:
+            return None
+        status = {}
+        alias_names = self.get_alias_names()
+        for name, runner in runners.items():
+            aliases = alias_names.get(name, {})
+            ports = {str(port): {"state": "unknown"} for port in runner.driver.get_ports()}
+            for port in aliases:
+                ports[port] = {"state": "unknown"}
+            for port, on in runner.get_cached_port_states().items():
+                ports[port] = {"state": listener.PortStatus(on=on).state}
+            for port, changed in runner.get_port_state_change_times().items():
+                changed = datetime.datetime.fromtimestamp(changed, datetime.timezone.utc)
+                ports[port]["changed"] = changed.isoformat(timespec="seconds")
+            for port, alias in aliases.items():
+                ports[port]["alias"] = alias
+            status[name] = {
+                "driver": runner.config["driver"],
+                "get_port_state": runner.driver.supports_get_port_state(),
+                "busy": runner.busy,
+                "ports": ports,
+            }
+            warning = runner.get_ports_warning()
+            if warning:
+                status[name]["warning"] = warning
+        if hostname:
+            return {hostname: status[hostname]}
+        return status
+
+    async def handle_status(self, request):
+        status = self.get_status(request)
+        if status is None:
+            return web.Response(status=404, text="PDU not found\n")
+        return web.json_response(status)
+
+    def get_info(self):
+        return {
+            "hostname": socket.gethostname(),
+            "version": VERSION,
+            "uptime": int(time.monotonic() - self.start_time),
+        }
+
+    async def handle_info(self, request):
+        return web.json_response(self.get_info())
+
+    async def handle_index(self, request):
+        raise web.HTTPFound('/power/dashboard')
+
+    async def handle_dashboard(self, request):
+        if self.get_status(request) is None:
+            return web.Response(status=404, text="PDU not found\n")
+        return web.Response(content_type="text/html", text=STATUS_HTML)

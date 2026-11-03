@@ -38,9 +38,36 @@ def get_named_entry_point(group, name):
 class PDUDriver(object):
     connection = None
     hostname = ""
+    # number of ports of the PDU, numbered from first_port; 0 if the driver
+    # doesn't know how many ports the PDU has
+    port_count = 0
+    # number of the first port of the PDU, 0 or 1
+    first_port = 1
+    # names of the ports of the PDU, or None to number the ports instead
+    port_names = None
+    # seconds to wait for the PDU to connect or respond, for drivers which
+    # talk to the PDU over the network
+    timeout = 10
 
     def __init__(self):
         super(PDUDriver, self).__init__()
+
+    def configure_ports(self, settings):
+        """Apply the port_count, first_port, port_names and timeout PDU
+        settings. port_count is only used if the driver doesn't know how many
+        ports the PDU has; first_port and timeout override the driver's.
+        """
+        if "timeout" in settings:
+            self.timeout = float(settings["timeout"])
+        if not self.port_count and "port_count" in settings:
+            self.port_count = int(settings["port_count"])
+        if "first_port" in settings:
+            first_port = int(settings["first_port"])
+            if first_port not in (0, 1):
+                raise ValueError("first_port must be 0 or 1, not {}".format(first_port))
+            self.first_port = first_port
+        if "port_names" in settings:
+            self.port_names = [str(name) for name in settings["port_names"]]
 
     @classmethod
     def select(cls, drivername):
@@ -64,28 +91,57 @@ class PDUDriver(object):
         log.debug("%s accepted the request", willing[0])
         return willing[0]
 
-    def handle(self, request, port_number):
-        log.debug("Driving PDU hostname: %s "
-                  "PORT: %s REQUEST: %s",
-                  self.hostname, port_number, request)
-        if request == "on":
-            self.port_on(port_number)
-        elif request == "off":
-            self.port_off(port_number)
-        else:
-            log.debug("Unknown request to handle - oops")
-            raise UnknownCommandException(
-                "Driver doesn't know how to %s " % request
-            )
-        self._cleanup()
+    def port_on(self, port):
+        self.port_interaction("on", port)
 
-    def port_on(self, port_number):
-        self.port_interaction("on", port_number)
+    def port_off(self, port):
+        self.port_interaction("off", port)
 
-    def port_off(self, port_number):
-        self.port_interaction("off", port_number)
+    def get_port_state(self, port) -> bool:
+        """Return True if the port is powered on, False if powered off. Raises
+        UnknownCommandException if retrieving the port status is unsupported by
+        the driver.
+        """
+        raise UnknownCommandException("Driver doesn't support get-port-state")
 
-    def port_interaction(self, command, port_number):
+    def supports_get_port_state(self) -> bool:
+        """Return True if the driver can retrieve the state of a port with
+        get_port_state().
+        """
+        return type(self).get_port_state is not PDUDriver.get_port_state
+
+    def get_ports(self) -> list:
+        """Return the port names or numbers of the PDU, or an empty list if the
+        driver doesn't know which ports the PDU has.
+        """
+        if self.port_names is not None:
+            return list(self.port_names)
+        return list(range(self.first_port, self.first_port + (self.port_count or 0)))
+
+    def check_port(self, port) -> str:
+        """Return the port as a string to pass to the driver. Raises
+        FailedRequestException if the port isn't one of the ports of the PDU.
+        The port isn't checked if the driver doesn't know which ports the PDU
+        has.
+        """
+        if self.port_names is not None:
+            if str(port) not in self.port_names:
+                raise FailedRequestException("Port {} is not one of the ports {}".format(
+                    port, ", ".join(self.port_names)))
+            return str(port)
+        if self.port_count:
+            last_port = self.first_port + self.port_count - 1
+            try:
+                number = int(port)
+            except ValueError:
+                number = None
+            if number is None or not self.first_port <= number <= last_port:
+                raise FailedRequestException("Port {} is not one of the ports {}..{}".format(
+                    port, self.first_port, last_port))
+            return str(number)
+        return str(port)
+
+    def port_interaction(self, command, port):
         pass
 
     def _bombout(self):

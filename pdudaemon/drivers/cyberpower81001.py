@@ -57,10 +57,10 @@ class Cyberpower81001(LocalBase):
             return True
         return False
 
-    def _port_interaction(self, command, port_number):
+    def _port_interaction(self, command, port):
 
-        port_number = int(port_number)
-        power_oid = f"SNMPv2-SMI::enterprises.3808.1.1.3.3.3.1.1.4.{port_number}"
+        port = int(port)
+        power_oid = f"SNMPv2-SMI::enterprises.3808.1.1.3.3.3.1.1.4.{port}"
         cmd_base = f"/usr/bin/snmpset -v 1 -c {self.community} {self.hostname} {power_oid} integer"
 
         if command not in self._actions:

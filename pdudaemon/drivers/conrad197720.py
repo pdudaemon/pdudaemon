@@ -88,15 +88,15 @@ class Conrad197720(PDUDriver):
     def accepts(cls, drivername):
         return drivername == "conrad197720"
 
-    def port_interaction(self, command, port_number):
+    def port_interaction(self, command, port):
         """Pdudaemon method for port interaction.
 
         :param self: The object itself
         :param command: The command string
-        :param port_number: The port number 0...n
+        :param port: The port number 0...n
         """
-        port_number = int(port_number)
-        self.__updateSingle(command, port_number)
+        port = int(port)
+        self.__updateSingle(command, port)
 
     def getNumPorts(self):
         """Return amount of ports available.

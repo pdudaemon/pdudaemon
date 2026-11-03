@@ -39,6 +39,7 @@ class Intellinet(PDUDriver):
     """
 
     port_count = 8
+    first_port = 0
     endpoints = {
         "outlet": "control_outlet.htm",
     }
@@ -60,7 +61,7 @@ class Intellinet(PDUDriver):
         url = "http://{}:{}/{}".format(self.hostname, self.port, page)
 
         log.debug("HTTP GET: {}".format(url))
-        r = requests.get(url, params, auth=self.auth)
+        r = requests.get(url, params, auth=self.auth, timeout=self.timeout)
 
         r.raise_for_status()
         if r.text.find("401") != -1:
@@ -68,22 +69,18 @@ class Intellinet(PDUDriver):
             raise FailedRequestException(r.text)
         log.debug("HTTP response: {}".format(r.text))
 
-    def port_interaction(self, command, port_number):
-        port_number = int(port_number)
-
-        if port_number >= self.port_count or port_number < 0:
-            err = "Port number must be in range 0 - {}".format(self.port_count - 1)
-            log.error(err)
-            raise FailedRequestException(err)
+    def port_interaction(self, command, port):
+        port = int(port)
 
         command_map = {"on": 0, "off": 1, "reboot": 2}
 
         if command not in command_map:
-            log.error("Unknown command %s." % (command))
+            err = "Unknown command %s." % (command)
+            log.error(err)
             raise FailedRequestException(err)
 
         endpoint = self.endpoints['outlet']
-        params = {"outlet{}".format(port_number): 1}
+        params = {"outlet{}".format(port): 1}
         params["op"] = command_map[command]
         params["submit"] = "Anwenden"
         self._api(endpoint, params)

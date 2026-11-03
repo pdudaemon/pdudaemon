@@ -45,9 +45,9 @@ class IP9258(LocalBase):
             return True
         return False
 
-    def _port_interaction(self, command, port_number):
-        port_number = int(port_number)
-        power_oid = '1.3.6.1.4.1.92.58.2.%d.0' % (port_number)
+    def _port_interaction(self, command, port):
+        port = int(port)
+        power_oid = '1.3.6.1.4.1.92.58.2.%d.0' % (port)
         cmd_base = '/usr/bin/snmpset -v 1 -c public %s %s integer' \
                    % (self.hostname, power_oid)
         cmd = None

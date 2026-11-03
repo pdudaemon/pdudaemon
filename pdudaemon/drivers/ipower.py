@@ -57,7 +57,7 @@ class LindyIPowerClassic8(PDUDriver):
 
         super().__init__()
 
-    def port_interaction(self, command, port_number):
+    def port_interaction(self, command, port):
         script = ""
         if command == "on":
             script = "ons.cgi"
@@ -66,13 +66,8 @@ class LindyIPowerClassic8(PDUDriver):
         else:
             raise FailedRequestException("Unknown command %s" % (command))
 
-        if int(port_number) > self.port_count or int(port_number) < 1:
-            err = "Port number must be in range 1 - {}".format(self.port_count)
-            log.error(err)
-            raise FailedRequestException(err)
-
         # Pad the value to 24 bits and set a single bit
-        port_value = 1 << (24 - int(port_number))
+        port_value = 1 << (24 - int(port))
         port_value = "{0:024b}".format(port_value)
         params = {'led': port_value}
 
@@ -83,7 +78,7 @@ class LindyIPowerClassic8(PDUDriver):
         if self.username and self.password:
             auth = HTTPBasicAuth(self.username, self.password)
 
-        response = requests.get(url, params=params, auth=auth)
+        response = requests.get(url, params=params, auth=auth, timeout=self.timeout)
         log.debug(
             "Response code for request to {}: {}".format(
                 self.hostname, response.status_code

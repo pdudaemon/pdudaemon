@@ -72,7 +72,7 @@ class EgPMS(PDUDriver):
             log.debug("on: %d (raw: %x)" % (s >> 4 == 1, s))
 
     def connect(self):
-        self.socket = socket.create_connection((self.ip, 5000))
+        self.socket = socket.create_connection((self.ip, 5000), timeout=self.timeout)
         self.socket.send(b'\x11')
         self.challenge = array('B', self.socket.recv(4))
 
@@ -93,15 +93,11 @@ class EgPMS(PDUDriver):
         self.socket.send(b'\x11')
         self.socket.close()
 
-    def port_interaction(self, command, port_number):
+    def port_interaction(self, command, port):
         SWITCH_ON = 0x1
         SWITCH_OFF = 0x2
         DONT_SWITCH = 0x4
-        port_number = int(port_number)
-        if port_number > self.port_count or port_number < 1:
-            err = "Port should be in the range 1 - %d" % (self.port_count)
-            log.error(err)
-            raise RuntimeError(err)
+        port = int(port)
 
         if command == "on":
             on = True
@@ -112,10 +108,10 @@ class EgPMS(PDUDriver):
             return
 
         self.connect()
-        log.debug("Attempting control: {} port: {} hostname: {}.".format(command, port_number, self.hostname))
+        log.debug("Attempting control: {} port: {} hostname: {}.".format(command, port, self.hostname))
         update = array('B')
         for s in range(1, self.port_count + 1):
-            if s != port_number:
+            if s != port:
                 update.append(self.encode_state(DONT_SWITCH))
             else:
                 update.append(

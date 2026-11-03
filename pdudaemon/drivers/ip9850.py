@@ -38,12 +38,8 @@ class ip9850(PDUDriver):
         self.password = settings.get("password")
         super().__init__()
 
-    def port_interaction(self, command, port_number):
-        port_number = int(port_number)
-        if port_number > self.port_count or port_number < 1:
-            err = "Port number must be in range 1 - {}".format(self.port_count)
-            log.error(err)
-            raise FailedRequestException(err)
+    def port_interaction(self, command, port):
+        port = int(port)
         if command == "on":
             pwr = "1"
         elif command == "off":
@@ -56,11 +52,11 @@ class ip9850(PDUDriver):
             "user": self.username,
             "pass": self.password,
             "cmd": "setpower",
-            "p6{}".format(port_number): "{}".format(pwr)
+            "p6{}".format(port): "{}".format(pwr)
         }
         url = "http://{}/set.cmd".format(self.hostname)
         log.debug("HTTP GET: {}".format(url))
-        r = requests.get(url, params)
+        r = requests.get(url, params, timeout=self.timeout)
 
         r.raise_for_status()
         if r.text.find("401") != -1:

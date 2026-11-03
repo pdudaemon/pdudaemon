@@ -95,14 +95,10 @@ class ClewareBase(PDUDriver):
 class ClewareSwitch1Base(ClewareBase):
     switch_pid = CLEWARE_SWITCH1_PID
 
-    def port_interaction(self, command, port_number):
-        port_number = int(port_number)
-        if port_number > self.port_count or port_number < 1:
-            err = f"Port should be in the range 1 - {self.port_count}"
-            log.error(err)
-            raise RuntimeError(err)
+    def port_interaction(self, command, port):
+        port = int(port)
 
-        port = 0x10 + port_number - 1
+        relay = 0x10 + port - 1
         if command == "on":
             on = 1
         elif command == "off":
@@ -112,7 +108,7 @@ class ClewareSwitch1Base(ClewareBase):
             return
 
         with HIDDevice(path=self.device_path()) as dev:
-            dev.write([0, 0, port, on])
+            dev.write([0, 0, relay, on])
 
 
 class ClewareUsbSwitch4(ClewareSwitch1Base):
@@ -122,16 +118,12 @@ class ClewareUsbSwitch4(ClewareSwitch1Base):
 class ClewareContact00Base(ClewareBase):
     switch_pid = CLEWARE_CONTACT00_PID
 
-    def port_interaction(self, command, port_number):
-        port_number = int(port_number)
-        if port_number > self.port_count or port_number < 1:
-            err = f"Port should be in the range 1 - {self.port_count}"
-            log.error(err)
-            raise RuntimeError(err)
+    def port_interaction(self, command, port):
+        port = int(port)
 
-        port = 1 << (port_number - 1)
+        mask = 1 << (port - 1)
         if command == "on":
-            on = port
+            on = mask
         elif command == "off":
             on = 0
         else:
@@ -139,7 +131,7 @@ class ClewareContact00Base(ClewareBase):
             return
 
         with HIDDevice(path=self.device_path()) as dev:
-            dev.write([0, 3, on >> 8, on & 0xff, port >> 8, port & 0xff])
+            dev.write([0, 3, on >> 8, on & 0xff, mask >> 8, mask & 0xff])
 
 
 class ClewareUsbSwitch8(ClewareContact00Base):

@@ -38,16 +38,13 @@ class AnelNETPwrCtrlBase(PDUDriver):
         self.password = settings.get("password", "anel")
         super().__init__()
 
-    def port_interaction(self, command, port_number):
-        if port_number > self.port_count or port_number < 1:
-            err = "Port number must be in range 1 - {}".format(self.port_count)
-            log.error(err)
-            raise FailedRequestException(err)
+    def port_interaction(self, command, port):
+        port = int(port)
 
         url = "http://{}?Sw_{}={},{}{}".format(
-            self.hostname, command, port_number, self.username, self.password)
+            self.hostname, command, port, self.username, self.password)
         log.debug("HTTP GET: {}".format(url))
-        r = requests.get(url)
+        r = requests.get(url, timeout=self.timeout)
 
         r.raise_for_status()
         if r.text == "User or password error.":

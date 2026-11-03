@@ -59,7 +59,7 @@ class SNMP(PDUDriver):
     def validate(self):
         pass
 
-    def port_interaction(self, command, port_number):
+    def port_interaction(self, command, port):
         if command == "on":
             set_bit = self.onsetting
         elif command == "off":
@@ -68,15 +68,15 @@ class SNMP(PDUDriver):
             raise UnknownCommandException("Unknown command %s." % (command))
         set_bit = int(set_bit)
 
-        asyncio.run(self._port_interaction_async(set_bit, port_number))
+        asyncio.run(self._port_interaction_async(set_bit, port))
 
-    async def _port_interaction_async(self, set_bit, port_number):
+    async def _port_interaction_async(self, set_bit, port):
         transport = await UdpTransportTarget.create((self.hostname, 161))
 
         if self.mib is not None and self.oid is None:
-            objecttype = self._get_objecttype_mib(set_bit, port_number)
+            objecttype = self._get_objecttype_mib(set_bit, port)
         elif self.oid is not None and self.mib is None:
-            objecttype = self._get_objecttype_oid(set_bit, port_number)
+            objecttype = self._get_objecttype_oid(set_bit, port)
         else:
             raise FailedRequestException("Either 'mib' or 'oid' setting must be configured")
 
@@ -119,16 +119,16 @@ class SNMP(PDUDriver):
                 log.debug(' = '.join([x.prettyPrint() for x in varBind]))
             return True
 
-    def _get_objecttype_mib(self, set_bit, port_number):
+    def _get_objecttype_mib(self, set_bit, port):
         if self.inside_number:
             # It is possible to pass 2 or 3 snmp argument values
-            filled_controlpoint = self.controlpoint.replace('*', str(port_number))
+            filled_controlpoint = self.controlpoint.replace('*', str(port))
             indexed_object_list = [self.mib, filled_controlpoint]
             # If there is a key static_ending available, add a static ending value
             if self.static_ending is not None:
                 indexed_object_list.append(int(self.static_ending))
         else:
-            indexed_object_list = [self.mib, self.controlpoint, port_number]
+            indexed_object_list = [self.mib, self.controlpoint, int(port)]
 
         objecttype = ObjectType(
             ObjectIdentity(*indexed_object_list).add_asn1_mib_source(
@@ -136,8 +136,8 @@ class SNMP(PDUDriver):
 
         return objecttype
 
-    def _get_objecttype_oid(self, set_bit, port_number):
-        oid = self.oid.replace('*', str(port_number))
+    def _get_objecttype_oid(self, set_bit, port):
+        oid = self.oid.replace('*', str(port))
 
         objecttype = ObjectType(ObjectIdentity(oid), Integer32(set_bit))
 

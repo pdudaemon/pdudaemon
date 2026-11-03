@@ -20,8 +20,10 @@
 
 import argparse
 import asyncio
+import collections
 import json
 import logging
+import os
 from logging.handlers import WatchedFileHandler
 import signal
 import sys
@@ -29,7 +31,7 @@ import sys
 from pdudaemon.tcplistener import TCPListener
 from pdudaemon.httplistener import HTTPListener
 from pdudaemon.pdurunner import PDURunner
-from pdudaemon.drivers.driver import PDUDriver
+from pdudaemon.drivers.driver import FailedRequestException, PDUDriver
 
 assert PDUDriver, "Imported for user convenience." # type: ignore[truthy-function]
 
@@ -79,6 +81,56 @@ def setup_logging(options, settings):
         logger.setLevel(logging.ERROR)
 
 
+class _ConfigObject(dict):
+    """A JSON object of the configuration file, which remembers the keys
+    used more than once, as json silently keeps only the last of them.
+    """
+    def __init__(self, pairs):
+        super().__init__(pairs)
+        counts = collections.Counter(key for key, _ in pairs)
+        self.duplicate_keys = sorted(key for key, count in counts.items() if count > 1)
+
+
+def load_config(text):
+    """Parse and check the configuration file. Raises ValueError if it is
+    invalid.
+    """
+    settings = json.loads(text, object_pairs_hook=_ConfigObject)
+    check_config(settings)
+    return settings
+
+
+def check_config(settings):
+    """Raise ValueError if the configuration is invalid."""
+    pdus = settings.get("pdus", {})
+    duplicates = getattr(pdus, "duplicate_keys", [])
+    if duplicates:
+        raise ValueError("Duplicate PDU names: {}".format(", ".join(duplicates)))
+    aliases = settings.get("aliases", {})
+    duplicates = getattr(aliases, "duplicate_keys", [])
+    if duplicates:
+        raise ValueError("Duplicate alias names: {}".format(", ".join(duplicates)))
+    for name, alias in aliases.items():
+        if alias.get("hostname") not in pdus:
+            raise ValueError("Alias {}: PDU {} is not in the config".format(name, alias.get("hostname")))
+        port = alias.get("port")
+        if isinstance(port, bool) or not isinstance(port, (int, str)) or port == "":
+            raise ValueError("Alias {}: port must be a port number or name, not {!r}".format(name, port))
+
+
+def check_alias_ports(aliases, runners):
+    """Raise ValueError if the port of an alias isn't one of the ports of its
+    PDU. The port isn't checked if the ports of the PDU are unknown. Each port
+    is replaced with the string passed to the driver, so it matches the port
+    of cached states, e.g. "03" becomes "3".
+    """
+    for name, alias in aliases.items():
+        try:
+            alias["port"] = runners[alias["hostname"]].driver.check_port(alias["port"])
+        except FailedRequestException as e:
+            raise ValueError("Alias {}: {} of PDU {}".format(name, e, alias["hostname"]))
+
+
 class PDUDaemon:
     def __init__(self, options, settings):
         # Context
@@ -91,6 +143,10 @@ class PDUDaemon:
             retries = config.get("retries", 5)
             retrydelay = config.get("retrydelay", 5)
             self.runners[hostname] = PDURunner(config, hostname, retries, retrydelay)
+            warning = self.runners[hostname].get_ports_warning()
+            if warning:
+                logger.warning("PDU %s: %s", hostname, warning)
+        check_alias_ports(settings.get("aliases", {}), self.runners)
 
         # Start the listener
         logger.info("Starting the listener")
@@ -109,11 +165,18 @@ class PDUDaemon:
         await self.listener.start()
 
     async def shutdown(self):
-        logger.info("Shutting down listener...")
-        await self.listener.shutdown()
         logger.info("Shutting down runners...")
         for runner in self.runners.values():
             await runner.shutdown()
+        busy = [hostname for hostname, runner in self.runners.items() if runner.busy]
+        if busy:
+            # the listener and the interpreter would wait for the running
+            # jobs to finish, which can take a long time
+            logger.warning("Not waiting for the running jobs of PDUs %s", ", ".join(busy))
+            logging.shutdown()
+            os._exit(0)
+        logger.info("Shutting down listener...")
+        await self.listener.shutdown()
         logger.info("Stopping loop...")
         loop = asyncio.get_running_loop()
         loop.stop()
@@ -151,7 +214,7 @@ async def main_async():
 
     # Read the configuration file
     try:
-        settings = json.loads(options.conf.read())
+        settings = load_config(options.conf.read())
     except Exception as exc:
         logging.error("Unable to read configuration file '%s': %s", options.conf.name, exc)
         sys.exit(1)
@@ -181,19 +244,36 @@ async def main_async():
             sys.exit(1)
 
         runner = PDURunner(config, options.drivehostname, options.driveretries, options.driveretrydelay)
-        if options.driverequest == "reboot":
-            result = await runner.do_job_async(options.driveport, "off")
-            await asyncio.sleep(int(options.drivedelay))
-            result = await runner.do_job_async(options.driveport, "on")
-        else:
-            result = await runner.do_job_async(options.driveport, options.driverequest)
+        result = True
+        try:
+            if options.driverequest == "reboot":
+                await runner.port_off_async(options.driveport)
+                await asyncio.sleep(int(options.drivedelay))
+                await runner.port_on_async(options.driveport)
+            elif options.driverequest == "on":
+                await runner.port_on_async(options.driveport)
+            elif options.driverequest == "off":
+                await runner.port_off_async(options.driveport)
+            elif options.driverequest == "get-port-state":
+                result = await runner.get_port_state_async(options.driveport)
+                logger.info("Port %s state: %s", options.driveport, "on" if result else "off")
+            else:
+                logger.error("Unknown request: %s", options.driverequest)
+                result = False
+        except Exception as exc:  # pylint: disable=broad-except
+            logger.error("Request failed: %s", exc)
+            result = False
         await runner.shutdown()
         loop.stop()
         return result
 
     # Create daemon
     logger.info('PDUDaemon starting up')
-    daemon = PDUDaemon(options, settings)
+    try:
+        daemon = PDUDaemon(options, settings)
+    except ValueError as exc:
+        logger.error("Invalid configuration file '%s': %s", options.conf.name, exc)
+        sys.exit(1)
 
     # Setup signal handling
     def cleanup_handler():

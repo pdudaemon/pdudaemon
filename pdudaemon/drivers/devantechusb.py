@@ -42,17 +42,13 @@ class DevantechusbBase(PDUDriver):
 
         super(DevantechusbBase, self).__init__()
 
-    def port_interaction(self, command, port_number):
-        port_number = int(port_number)
-        if port_number > self.port_count or port_number < 1:
-            err = "Port should be in the range 1 - %d" % (self.port_count)
-            log.error(err)
-            raise RuntimeError(err)
+    def port_interaction(self, command, port):
+        port = int(port)
 
         if command == "on":
-            byte = 0x64 + port_number
+            byte = 0x64 + port
         elif command == "off":
-            byte = 0x6e + port_number
+            byte = 0x6e + port
         else:
             log.error("Unknown command %s." % (command))
             return
@@ -60,6 +56,16 @@ class DevantechusbBase(PDUDriver):
         s = serial.serial_for_url(self.device, 9600, timeout=1, write_timeout=1)
         s.write([byte])
         s.close()
+
+    def get_port_state(self, port) -> bool:
+        port = int(port)
+
+        s = serial.serial_for_url(self.device, 9600)
+        s.write([0x5B])
+        relay_states = ord(s.read(1))
+        s.close()
+
+        return bool(relay_states & (1 << (port - 1)))
 
     @classmethod
     def accepts(cls, drivername):

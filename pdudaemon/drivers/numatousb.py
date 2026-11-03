@@ -59,16 +59,13 @@ class NumatoUSB(PDUDriver):
         self.serial_port.write(b'id get\r')
         log.info("id: %s", self._read_reply())
 
-    def port_interaction(self, command, port_number):
-        port_number = int(port_number)
-        if port_number > self.port_count or port_number < 1:
-            err = "Port should be in the range 1 - %d" % (self.port_count)
-            raise RuntimeError(err)
+    def port_interaction(self, command, port):
+        port = int(port)
 
         if command == "on":
-            msg = 'relay on %s\r' % (self.format_portid(port_number - 1),)
+            msg = 'relay on %s\r' % (self.format_portid(port - 1),)
         elif command == "off":
-            msg = 'relay off %s\r' % (self.format_portid(port_number - 1),)
+            msg = 'relay off %s\r' % (self.format_portid(port - 1),)
         else:
             raise RuntimeError("Unknown command %s" % (command))
 

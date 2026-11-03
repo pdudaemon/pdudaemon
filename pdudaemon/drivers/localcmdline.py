@@ -19,7 +19,7 @@
 #  MA 02110-1301, USA.
 
 import logging
-from subprocess import call
+from subprocess import call, check_output
 from pdudaemon.drivers.localbase import LocalBase
 import os
 log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
@@ -32,6 +32,7 @@ class LocalCmdline(LocalBase):
         self.settings = settings
         self.cmd_on = settings.get("cmd_on", None)
         self.cmd_off = settings.get("cmd_off", None)
+        self.cmd_state = settings.get("cmd_state", None)
 
     @classmethod
     def accepts(cls, drivername):
@@ -39,7 +40,7 @@ class LocalCmdline(LocalBase):
             return True
         return False
 
-    def _port_interaction(self, command, port_number):
+    def _port_interaction(self, command, port):
         cmd = None
         if command == "on" and self.cmd_on:
             cmd = self.cmd_on
@@ -49,14 +50,37 @@ class LocalCmdline(LocalBase):
             log.debug("Unknown command!")
             return
 
-        if "%(" in cmd:
-            cmd = cmd % dict(self.settings, hostname=self.hostname, port=port_number)
-        else:
-            try:
-                cmd = cmd % ()
-            except TypeError:
-                cmd = cmd % port_number
-
+        cmd = self._format_cmd(cmd, port)
         if cmd:
             log.debug("running %s" % cmd)
             call(cmd, shell=True)
+
+    def get_port_state(self, port) -> bool:
+        if not self.cmd_state:
+            return super().get_port_state(port)
+
+        cmd = self._format_cmd(self.cmd_state, port)
+        log.debug("running %s" % cmd)
+        # check_output raises CalledProcessError if cmd_state exits non-zero
+        output = check_output(cmd, shell=True, text=True).strip()
+        if output == "on":
+            return True
+        if output == "off":
+            return False
+        raise RuntimeError("cmd_state returned unexpected output: %r" % output)
+
+    def supports_get_port_state(self) -> bool:
+        return bool(self.cmd_state)
+
+    def _format_cmd(self, cmd, port):
+        if "%(" in cmd:
+            return cmd % dict(self.settings, hostname=self.hostname, port=port)
+        try:
+            return cmd % ()
+        except TypeError:
+            pass
+        try:
+            return cmd % port
+        except TypeError:
+            # numeric placeholders such as %i need the port as a number
+            return cmd % int(port)

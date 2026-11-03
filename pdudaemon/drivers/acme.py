@@ -50,11 +50,11 @@ class ACME(ACMEBase):
     def _enter_outlet(self, outlet, enter_needed=True):
         log.debug("Finished entering outlet (nop)")
 
-    def _port_interaction(self, command, port_number):
+    def _port_interaction(self, command, port):
         if command not in self.cmd:
             acme_command = 'echo "unknown command {}"'.format(command)
         else:
-            acme_command = '{} {}'.format(self.cmd[command], port_number)
+            acme_command = '{} {}'.format(self.cmd[command], port)
         log.debug("Attempting command: %s", acme_command)
         self.connection.send(acme_command)
         self._do_it()
