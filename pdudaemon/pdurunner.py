@@ -46,7 +46,7 @@ class PDURunner:
 
     def driver_from_hostname(self, hostname):
         drivername = self.config['driver']
-        driver = PDUDriver.select(drivername)(hostname, self.config)
+        driver = PDUDriver.select(drivername)(self.config.get('address', hostname), self.config)
         return driver
 
     def do_job(self, port, request):

@@ -70,7 +70,7 @@ def do_http_request(options):
 
 
 if __name__ == '__main__':
-    usage = "Usage: %prog --daemon deamonhostname --hostname pduhostname " \
+    usage = "Usage: %prog --daemon deamonhostname --name pduname " \
             "--port pduportnum --command pducommand"
     description = "PDUDaemon client"
     commands = ["reboot", "on", "off"]
@@ -80,8 +80,8 @@ if __name__ == '__main__':
     parser.add_option("--daemon", dest="pdudaemonhostname", action="store",
                       type="string",
                       help="PDUDaemon listener hostname (ex: localhost)")
-    parser.add_option("--hostname", dest="pduhostname", action="store",
-                      type="string", help="PDU Hostname (ex: pdu05)")
+    parser.add_option("--name", "--hostname", dest="pduhostname", action="store",
+                      type="string", help="PDU name (ex: pdu05)")
     parser.add_option("--port", dest="pduportnum", action="store",
                       type="string", help="PDU Portnumber (ex: 04)")
     parser.add_option("--command", dest="pducommand", action="store",
