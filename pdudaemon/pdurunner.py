@@ -24,7 +24,8 @@ import time
 import traceback
 import pexpect
 import concurrent.futures
-from pdudaemon.drivers.driver import PDUDriver
+from typing import Optional
+from pdudaemon.drivers.driver import FailedRequestException, PDUDriver, UnknownCommandException
 import pdudaemon.drivers.strategies
 
 assert pdudaemon.drivers.strategies, "Subclasses are iterated to find all drivers"
@@ -38,6 +39,9 @@ class PDURunner:
         self.retrydelay = retrydelay
         self.logger = logging.getLogger("pdud.pdu.%s" % hostname)
         self.driver = self.driver_from_hostname(hostname)
+        # last known state of each port on this PDU, keyed by str(port);
+        # only access through get_cached_port_state() and _set_cached_port_state()
+        self.port_state_cache = {}
         # use single-worker ThreadPoolExecutor to serialize execution
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=1, thread_name_prefix=hostname)
 
@@ -49,13 +53,18 @@ class PDURunner:
         driver = PDUDriver.select(drivername)(hostname, self.config)
         return driver
 
-    def do_job(self, port, request):
+    def _run_with_retries(self, port, request, action):
         self.logger.info("Processing job for PDU %s: (%s %s)", self.hostname, request, port)
         retries = self.retries
         while retries > 0:
             try:
-                self.driver.handle(request, port)
-                return True
+                result = action()
+                self.driver._cleanup()  # pylint: disable=W0212
+                return result
+            except UnknownCommandException:
+                # the driver can't handle the request, retrying won't help
+                self.logger.warning("Driver cannot execute job: {} {}".format(port, request))
+                raise
             except (OSError, pexpect.exceptions.EOF, Exception):  # pylint: disable=broad-except
                 self.logger.warn(traceback.format_exc())
                 self.logger.warn("Failed to execute job: {} {} (attempts left {})".format(port, request, retries - 1))
@@ -64,8 +73,52 @@ class PDURunner:
                 time.sleep(self.retrydelay)
                 retries -= 1
                 continue
-        return False
+        raise FailedRequestException(
+            "Failed to {} port {} on PDU {} after {} retries".format(request, port, self.hostname, self.retries)
+        )
 
-    async def do_job_async(self, port, request):
+    def _switch_port(self, port, request, action, on: bool):
+        try:
+            self._run_with_retries(port, request, action)
+        except Exception:
+            # the port may or may not have switched, so its state is unknown
+            self._set_cached_port_state(port, None)
+            raise
+        self._set_cached_port_state(port, on)
+
+    def port_on(self, port):
+        self._switch_port(port, "on", lambda: self.driver.port_on(port), True)
+
+    def port_off(self, port):
+        self._switch_port(port, "off", lambda: self.driver.port_off(port), False)
+
+    def get_port_state(self, port) -> bool:
+        """Query the PDU for the state of the port and cache the result.
+        Returns True if the port is powered on, False if powered off.
+        """
+        on = self._run_with_retries(port, "get-port-state", lambda: self.driver.get_port_state(port))
+        self._set_cached_port_state(port, on)
+        return on
+
+    def get_cached_port_state(self, port) -> Optional[bool]:
+        """Return the last known state of the port without querying the PDU,
+        or None if it is unknown.
+        """
+        return self.port_state_cache.get(str(port))
+
+    def _set_cached_port_state(self, port, on: Optional[bool]):
+        """Cache the new state of a port."""
+        self.port_state_cache[str(port)] = on
+
+    async def _in_executor(self, fn, *args):
         loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(self.executor, self.do_job, port, request)
+        return await loop.run_in_executor(self.executor, fn, *args)
+
+    async def port_on_async(self, port) -> None:
+        await self._in_executor(self.port_on, port)
+
+    async def port_off_async(self, port) -> None:
+        await self._in_executor(self.port_off, port)
+
+    async def get_port_state_async(self, port) -> bool:
+        return await self._in_executor(self.get_port_state, port)

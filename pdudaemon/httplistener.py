@@ -38,6 +38,8 @@ class HTTPListener:
             web.get('/power/control/on', self.handle),
             web.get('/power/control/off', self.handle),
             web.get('/power/control/reboot', self.handle),
+            web.get('/power/control/get-cached-port-state', self.handle),
+            web.get('/power/control/get-port-state', self.handle),
         ])
         self.apprunner = None
 
@@ -61,12 +63,19 @@ class HTTPListener:
         data = urlparse.parse_qs(urlparse.urlparse(request.path_qs).query)
         path = urlparse.urlparse(request.path_qs).path
         res = await self.insert_request(data, path)
-        if res:
+        if isinstance(res, listener.PortStatus):
+            return web.Response(status=200, content_type="application/json",
+                                text='{"state": "%s"}\n' % res.state)
+        if isinstance(res, listener.CommandAccepted):
             return web.Response(status=200, text="OK - accepted request\n")
-        else:
-            return web.Response(status=500, text="Invalid request\n")
+        if isinstance(res, listener.RequestUnsupported):
+            return web.Response(status=501, text="Request not supported: %s\n" % res.message)
+        if isinstance(res, listener.RequestError):
+            return web.Response(status=500, text="Request failed: %s\n" % res.message)
+        return web.Response(status=500, text="Invalid request\n")
 
     async def insert_request(self, data, path):
         args = listener.parse_http(data, path)
-        if args:
-            return await listener.process_request(args, self.config, self.daemon)
+        if not args:
+            return listener.RequestError("could not parse request")
+        return await listener.process_request(args, self.config, self.daemon)
