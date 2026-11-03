@@ -46,9 +46,9 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v7
       - name: Build container
-        run: docker build -t pdudaemon-ci -f Dockerfile .
+        run: docker build --target test -t pdudaemon-ci -f Dockerfile .
       - name: Run pytest
-        run: docker run -v $(pwd):/p -w /p pdudaemon-ci /root/.local/share/pipx/venvs/pdudaemon/bin/pytest
+        run: docker run -v $(pwd):/p -w /p pdudaemon-ci pytest
       - name: Run functional tests
         run: docker run -v $(pwd):/p -w /p pdudaemon-ci sh -c "./share/pdudaemon-test.sh"
 
