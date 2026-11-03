@@ -22,13 +22,15 @@ import optparse
 
 def do_http_request(options):
     import urllib.error
+    import urllib.parse
     import urllib.request
-    request = "http://%s:%s/power/control/%s?hostname=%s&port=%s" % (
-                options.pdudaemonhostname, options.pdudaemonport,
-                options.pducommand, options.pduhostname, options.pduportnum)
-
+    query = {"hostname": options.pduhostname, "port": options.pduportnum}
     if options.pdudelay:
-        request += "&delay=%s" % options.pdudelay
+        query["delay"] = options.pdudelay
+    # encode the query, a PDU name can contain characters such as + or &
+    request = "http://%s:%s/power/control/%s?%s" % (
+                options.pdudaemonhostname, options.pdudaemonport,
+                options.pducommand, urllib.parse.urlencode(query))
     try:
         urllib.request.urlopen(request)
     except urllib.error.HTTPError as reply:
@@ -49,6 +51,8 @@ if __name__ == '__main__':
     description = "PDUDaemon client"
     commands = ["reboot", "on", "off"]
     parser = optparse.OptionParser(usage=usage, description=description)
+    # HTTP is the only protocol now, -H is accepted so existing callers
+    # and scripts keep working, but it does nothing
     parser.add_option("-H", "--http", dest="use_http", action="store_true",
                       help=optparse.SUPPRESS_HELP)
     parser.add_option("--daemon", dest="pdudaemonhostname", action="store",
