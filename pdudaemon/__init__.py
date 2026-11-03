@@ -90,7 +90,11 @@ class PDUDaemon:
             config = settings["pdus"][hostname]
             retries = config.get("retries", 5)
             retrydelay = config.get("retrydelay", 5)
-            self.runners[hostname] = PDURunner(config, hostname, retries, retrydelay)
+            try:
+                self.runners[hostname] = PDURunner(config, hostname, retries, retrydelay)
+            except Exception as exc:
+                logger.error("Unable to set up the driver for %s: %s", hostname, exc)
+                sys.exit(1)
 
         # Start the listener
         logger.info("Starting the listener")
