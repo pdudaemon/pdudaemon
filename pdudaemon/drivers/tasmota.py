@@ -40,14 +40,20 @@ class TasmotaBase(PDUDriver):
         self.password = settings.get("password")
         super().__init__()
 
-    def port_interaction(self, command, port_number):
+    def _power(self, port_number, command=None):
+        """Send a Power command for the port and return the reported state,
+        e.g. "ON" or "OFF". Without a command, the current state is queried.
+        """
         if int(port_number) > self.port_count or int(port_number) < 1:
             err = "Port number must be in range 1 - {}".format(self.port_count)
             log.error(err)
             raise FailedRequestException(err)
 
+        cmnd = "Power{}".format(port_number)
+        if command is not None:
+            cmnd += " {}".format(command)
         params = {
-            "cmnd": "Power{} {}".format(port_number, command),
+            "cmnd": cmnd,
         }
 
         if self.username is not None and self.password is not None:
@@ -63,13 +69,22 @@ class TasmotaBase(PDUDriver):
         r.raise_for_status()
         expected_response_key = "POWER{}".format(port_number)
         try:
-            if response[expected_response_key] != command.upper():
-                log.error(response)
-                raise FailedRequestException(response)
+            state = response[expected_response_key]
         except BaseException:
             log.error(response)
             raise FailedRequestException(response)
         log.debug('HTTP response: {}'.format(response))
+        return state
+
+    def port_interaction(self, command, port_number):
+        if self._power(port_number, command) != command.upper():
+            raise FailedRequestException("Failed to turn port {} {}".format(port_number, command))
+
+    def get_port_state(self, port_number) -> bool:
+        state = self._power(port_number)
+        if state not in ("ON", "OFF"):
+            raise FailedRequestException("Unexpected state for port {}: {}".format(port_number, state))
+        return state == "ON"
 
     @classmethod
     def accepts(cls, drivername):
