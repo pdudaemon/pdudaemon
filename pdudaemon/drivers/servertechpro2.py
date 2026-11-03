@@ -20,13 +20,12 @@
 
 import json
 import logging
-import os
 
 import requests
 
 from pdudaemon.drivers.localbase import LocalBase
 
-log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
+log = logging.getLogger("pdud.drivers." + __name__.split(".")[-1])
 
 
 class ServerTechPro2(LocalBase):

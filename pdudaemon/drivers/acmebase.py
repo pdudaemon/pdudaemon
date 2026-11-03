@@ -25,8 +25,7 @@
 import logging
 import pexpect
 from pdudaemon.drivers.driver import PDUDriver
-import os
-log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
+log = logging.getLogger("pdud.drivers." + __name__.split(".")[-1])
 
 # SSH connection, assuming the id_rsa.pub key for the owner of pdudaemon-runner
 # i.e. root, was added to the authorized_keys on the ACME device.

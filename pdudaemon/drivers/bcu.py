@@ -19,10 +19,9 @@
 #  MA 02110-1301, USA.
 
 from pdudaemon.drivers.driver import PDUDriver
-import os
 import subprocess
 import logging
-log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
+log = logging.getLogger("pdud.drivers." + __name__.split(".")[-1])
 
 
 class BCU(PDUDriver):

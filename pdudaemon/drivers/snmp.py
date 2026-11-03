@@ -26,8 +26,7 @@ from pysnmp.hlapi.v3arch.asyncio import (
 )
 import pysnmp.hlapi.v3arch.asyncio as pysnmp_api
 from pdudaemon.drivers.driver import PDUDriver, FailedRequestException, UnknownCommandException
-import os
-log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
+log = logging.getLogger("pdud.drivers." + __name__.split(".")[-1])
 
 
 class SNMP(PDUDriver):

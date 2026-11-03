@@ -20,8 +20,7 @@
 
 import logging
 from pdudaemon.drivers.apc7952 import APC7952
-import os
-log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
+log = logging.getLogger("pdud.drivers." + __name__.split(".")[-1])
 
 
 class APC7920(APC7952):
