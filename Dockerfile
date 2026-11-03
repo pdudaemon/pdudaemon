@@ -30,7 +30,7 @@ uhubctl \
 
 RUN git config --global --add safe.directory '*'
 
-ADD share/pdudaemon.conf /config/
+COPY share/pdudaemon.conf /config/
 WORKDIR /pdudaemon
 COPY . .
 RUN pipx install .[test]
