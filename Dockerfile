@@ -9,11 +9,15 @@ ARG PYTHON=python3
 ENV PIPX_BIN_DIR=/usr/local/bin
 ENV PIPX_DEFAULT_PYTHON=${PYTHON}
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+${PYTHON}-dev \
+${PYTHON}-venv \
+ca-certificates \
 curl \
 gcc \
 git \
 ipmitool \
+libc6-dev \
 libsystemd-dev \
 libusb-1.0-0 \
 openssh-client \
@@ -23,10 +27,8 @@ pipx \
 supervisor \
 telnet \
 snmp \
-uhubctl
-
-RUN apt-get update && apt-get install -y \
-  ${PYTHON}-venv ${PYTHON}-dev
+uhubctl \
+&& rm -rf /var/lib/apt/lists/*
 
 RUN git config --global --add safe.directory '*'
 
