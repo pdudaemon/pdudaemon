@@ -4,6 +4,9 @@ on:
   push:
     branches: ["main"]
 
+env:
+  DOCKER_TARGET_PLATFORMS: linux/amd64,linux/arm64
+
 jobs:
   push_to_registry:
     name: Push Docker image to Docker Hub
@@ -18,10 +21,17 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v7
         with:
           context: .
           file: ./Dockerfile
+          platforms: ${{ env.DOCKER_TARGET_PLATFORMS }}
           push: true
           tags: pdudaemon/pdudaemon:latest
