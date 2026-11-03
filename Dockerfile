@@ -2,8 +2,8 @@ ARG DEBIAN_VERSION=trixie
 FROM debian:$DEBIAN_VERSION
 
 ARG HTTP_PROXY
-ENV http_proxy=${HTTP_PROXY}
-ENV https_proxy=${HTTP_PROXY}
+ARG http_proxy=${HTTP_PROXY}
+ARG https_proxy=${HTTP_PROXY}
 
 ARG PYTHON=python3
 ENV PIPX_BIN_DIR=/usr/local/bin
