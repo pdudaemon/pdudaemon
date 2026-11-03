@@ -43,6 +43,33 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
+      - name: Build Docker image for testing
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ./Dockerfile
+          load: true
+          tags: pdudaemon-test
+          cache-from: type=gha
+
+      - name: Test Docker image
+        run: |
+          docker run -d --name pdudaemon-test -p 16421:16421 pdudaemon-test
+          trap 'docker logs pdudaemon-test' EXIT
+          for i in $(seq 30); do
+            if curl -sf "http://localhost:16421/power/control/on?hostname=test&port=1"; then
+              break
+            fi
+            sleep 1
+          done
+          for i in $(seq 30); do
+            if docker exec pdudaemon-test grep -qx '1 on' /tmp/pdu; then
+              exit 0
+            fi
+            sleep 1
+          done
+          exit 1
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v7
         with:
