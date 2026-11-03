@@ -16,13 +16,11 @@ ca-certificates \
 curl \
 gcc \
 git \
-ipmitool \
 libc6-dev \
 libsystemd-dev \
 libusb-1.0-0 \
 openssh-client \
 pkg-config \
-psmisc \
 pipx \
 supervisor \
 telnet \
