@@ -191,9 +191,12 @@ async def main_async():
                           help="alias of the PDU port to drive")
     conflict.add_argument("--hostname", dest="drivehostname", action="store", type=str,
                           metavar="HOSTNAME", help="hostname of the PDU to drive")
-    drive.add_argument("--request", dest="driverequest", action="store", type=str,
+    drive.add_argument("request", nargs="?", type=str,
                        choices=["on", "off", "reboot"], metavar="REQUEST",
                        help="request to send to the PDU (on, off or reboot)")
+    drive.add_argument("--request", dest="driverequest", action="store", type=str,
+                       choices=["on", "off", "reboot"], metavar="REQUEST",
+                       help="same as the REQUEST argument")
     drive.add_argument("--retries", dest="driveretries", action="store", type=int,
                        metavar="RETRIES", help="number of attempts [PDU retries or 5]")
     drive.add_argument("--retry-delay", dest="driveretrydelay", action="store", type=int,
@@ -205,6 +208,12 @@ async def main_async():
 
     # Parse the command line
     options = parser.parse_args()
+    if options.request:
+        if not options.drive:
+            parser.error("REQUEST requires --drive")
+        if options.driverequest:
+            parser.error("REQUEST cannot be used with --request")
+        options.driverequest = options.request
     if options.drive:
         if not options.alias and not options.drivehostname:
             parser.error("--drive requires --alias or --hostname")
@@ -213,7 +222,7 @@ async def main_async():
         if options.drivehostname and not options.driveport:
             parser.error("--hostname requires --port")
         if not options.driverequest:
-            parser.error("--drive requires --request")
+            parser.error("--drive requires a request")
 
     # Read the configuration file
     try:
