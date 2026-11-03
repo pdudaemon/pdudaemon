@@ -19,10 +19,6 @@ libusb-1.0-0 \
 pkg-config \
 psmisc \
 pipx \
-python3-pycodestyle \
-python3-setuptools \
-python3-usb \
-python3-wheel \
 supervisor \
 telnet \
 snmp \
