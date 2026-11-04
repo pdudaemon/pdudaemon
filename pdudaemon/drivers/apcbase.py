@@ -33,10 +33,28 @@ class APCBase(PDUDriver):
         self.settings = settings
         self.username = settings.get("username", "apc")
         self.password = settings.get("password", "apc")
+        self.firmware_version = self.parse_firmware_version(
+            settings.get("firmware_version"))
         telnetport = settings.get('telnetport', 23)
 
         self.exec_string = "/usr/bin/telnet %s %d" % (hostname, telnetport)
         super(APCBase, self).__init__()
+
+    @staticmethod
+    def parse_firmware_version(version):
+        """Return the firmware_version setting as a tuple of ints.
+
+        APC versions are dotted numbers which don't follow PEP 440, so compare
+        them as tuples. An unset or unparsable version gives (0,), which is
+        lower than any real version, so the oldest handling is used.
+        """
+        if not version:
+            return (0,)
+        try:
+            return tuple(int(part) for part in str(version).split("."))
+        except ValueError:
+            log.warning("Ignoring unparsable firmware_version '%s'", version)
+            return (0,)
 
     @classmethod
     def accepts(cls, drivername):
