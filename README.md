@@ -85,6 +85,9 @@ The correct value for `driver` is highly dependent on the used child class and t
 Check the imported [Python module](https://github.com/pdudaemon/pdudaemon/tree/main/pdudaemon/drivers) for that class and look for `drivername` to be sure.
 Some drivers require additional parameters (like a device ID).
 Which parameters are required can also be extracted from the associated python module and child class definition.
+
+The APC drivers accept an optional `firmware_version`, such as `"3.7.3"`, because the telnet menus differ between firmware versions of the same model.
+Leave it unset for the older menus, which is what the drivers have always assumed.
 It is also worth checking out the [share](https://github.com/pdudaemon/pdudaemon/tree/main/share) folder for some driver specific example configuration files and helpful scripts that can help prevent major headaches!
 
 ## Making a power control request
