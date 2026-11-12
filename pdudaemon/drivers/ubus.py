@@ -3,8 +3,10 @@
 #  ubus jsonrpc interface for PoE management on OpenWrt devices. This comes in
 #  handy if devices are connected to a PoE switch running OpenWrt.
 #
-#  The host must accept unauthenticated ubus calls for the two poe calls 'info'
-#  and 'manage'.
+#  Before every action the driver logs in (rpcd session.login) as 'username'
+#  (default 'root') with 'password' (default empty), whose ACLs must allow the
+#  two poe calls 'info' and 'manage'. With 'login' set to false it uses the
+#  unauthenticated session instead, which then needs these ACLs.
 #
 #  Copyright 2025 Paul Spooren <mail@aparcar.org>
 #  Copyright 2025 Jonas Jelonek <jelonek.jonas@gmail.com>
@@ -35,25 +37,43 @@ class Ubus(PDUDriver):
     def __init__(self, hostname, settings):
         self.hostname = hostname
         self.settings = settings
+        self.login = settings.get("login", True)
+        self.username = settings.get("username", "root")
+        self.password = settings.get("password", "")
 
         super(Ubus, self).__init__()
 
-    def jsonrpc_call(self, path, method, message):
+    def jsonrpc_call(self, session, path, method, message):
         r = requests.post(
             f"http://{self.hostname}/ubus",
             json = {
                 "jsonrpc": "2.0",
                 "id": 1,
                 "method": "call",
-                "params": [ "00000000000000000000000000000000", path, method, message ],
+                "params": [ session, path, method, message ],
             },
         )
 
         r.raise_for_status()
-        return r.json()["result"]
+        result = r.json()["result"]
+        if result[0] != 0:
+            raise RuntimeError(f"ubus {path} {method} failed with status {result[0]}")
+        return result[1] if len(result) > 1 else None
+
+    def session(self):
+        if not self.login:
+            return "00000000000000000000000000000000"
+
+        # rpcd drops the session by itself after the timeout
+        return self.jsonrpc_call(
+            "00000000000000000000000000000000",
+            "session",
+            "login",
+            { "username": self.username, "password": self.password, "timeout": 60 }
+        )["ubus_rpc_session"]
 
     def port_get(self, port_number):
-        poe_info = self.jsonrpc_call("poe", "info", { })
+        poe_info = self.jsonrpc_call(self.session(), "poe", "info", { })
 
         if f"lan{port_number}" not in poe_info["ports"]:
             raise RuntimeError(f"Port lan{port_number} not found in {poe_info['ports']}")
@@ -65,6 +85,7 @@ class Ubus(PDUDriver):
             return self.port_get(port_number)
 
         self.jsonrpc_call(
+            self.session(),
             "poe",
             "manage",
             {
