@@ -80,6 +80,7 @@ all managed PDUs are listed and configured. For example:
 It is important to mention, that `hostname` can be an arbitrary name for a locally connected device (like `energenie` in this example).
 For the `localcmdline` driver, a `%` placeholder such as `%s` or `%i` in `cmd_on`/`cmd_off` is replaced with the requested port number; it can be left out entirely for devices which only have a single port.
 Named placeholders such as `%(serial)s` are replaced with the PDU setting of that name, and `%(port)s` and `%(hostname)s` with the requested port and the PDU name.
+For the `sysfsgpio` driver, set `chip` to the label of a gpiochip (`cat /sys/class/gpio/gpiochip*/label`, e.g. `pinctrl-rp1` on a Raspberry Pi 5), and the port is the line on that chip (the BCM number on a Raspberry Pi). Without `chip`, the port is the global GPIO number in `/sys/class/gpio`, which the kernel assigns at boot and can change between kernel versions. The line is exported if needed. `on` drives the line high and `off` drives it low; set `"invert": true` for active low lines.
 For some (or most) network connected devices, it needs to be the actual hostname or IP address the PDU responds to (see `query-string` in [next section](#making-a-power-control-request)).
 The correct value for `driver` is highly dependent on the used child class and the specific implementation.
 Check the imported [Python module](https://github.com/pdudaemon/pdudaemon/tree/main/pdudaemon/drivers) for that class and look for `drivername` to be sure.

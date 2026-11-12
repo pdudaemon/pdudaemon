@@ -82,6 +82,7 @@ from pdudaemon.drivers.homeassistant import HomeAssistantHTTP
 from pdudaemon.drivers.ubus import Ubus
 from pdudaemon.drivers.shelly_gen2 import ShellyGen2
 from pdudaemon.drivers.uhubctl import UHubCtl
+from pdudaemon.drivers.sysfsgpio import SysfsGPIO
 
 __all__ = [
     ACME.__name__,
@@ -146,6 +147,7 @@ __all__ = [
     Ubus.__name__,
     ShellyGen2.__name__,
     UHubCtl.__name__,
+    SysfsGPIO.__name__,
 ]
 
 log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
