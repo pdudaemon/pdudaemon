@@ -36,7 +36,9 @@ class TPLink(PDUDriver):
     connection = None
 
     def __init__(self, hostname, settings):
-        self.hostname = hostname
+        # the device's address: the 'ip' setting, else the PDU's name (as
+        # netiojson, sainsmart, servertechpro2)
+        self.hostname = settings.get("ip", hostname)
         self.settings = settings
         self.childinfo = {}
         self.getinfo()
