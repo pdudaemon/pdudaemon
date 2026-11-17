@@ -27,6 +27,8 @@ class Args(object):
     alias = None
     request = None
     port = None
+    delay = None
+    group = None
     pass
 
 
@@ -58,13 +60,48 @@ def parse_http(data, path):
     # everything comes back from the http library in a 1 sized list
     args.alias = data.get('alias', [None])[0]
     args.hostname = data.get('hostname', [None])[0]
+    args.group = data.get('group', [None])[0]
     args.port = data.get('port', [None])[0]
     args.request = entry[2]
     args.delay = data.get('delay', [None])[0]
     return args
 
 
+def group_member_target(member, config):
+    if not isinstance(member, dict):
+        member = config.get('aliases', {}).get(member, {})
+    return member.get('hostname'), member.get('port')
+
+
+async def process_group_request(args, config, daemon):
+    if args.hostname or args.port or args.alias:
+        logger.error("Ignoring group request which also included an alias, hostname or port")
+        return False
+    members = config.get('groups', {}).get(args.group)
+    if not members:
+        logger.error("Group requested but not found: %s", args.group)
+        return False
+    member_args = []
+    for member in members:
+        hostname, port = group_member_target(member, config)
+        if hostname not in config['pdus'] or not port:
+            logger.error("Group %s has an invalid member: %s", args.group, member)
+            return False
+        margs = Args()
+        margs.hostname = hostname
+        margs.port = port
+        margs.request = args.request
+        margs.delay = args.delay
+        member_args.append(margs)
+    results = await asyncio.gather(
+        *(process_request(margs, config, daemon) for margs in member_args)
+    )
+    return all(results)
+
+
 async def process_request(args, config, daemon):
+    if args.group:
+        return await process_group_request(args, config, daemon)
     if args.request in ["on", "off"] and args.delay is not None:
         logger.warn("delay parameter is deprecated for on/off commands")
     if args.delay is not None:
