@@ -32,18 +32,34 @@ class APC7900(APC7952):
             return True
         return False
 
+    # firmware 3.7.3 and later put Outlet Control/Configuration behind an
+    # extra Outlet Management menu
+    OUTLET_MANAGEMENT_FIRMWARE = (3, 7, 3)
+
     def _port_interaction(self, command, port_number):
         # make sure in main menu here
         self._back_to_main()
+        log.debug("Firmware version to use: %s",
+                  ".".join(str(part) for part in self.firmware_version))
         self.connection.send("\r")
         self.connection.expect("1- Device Manager")
         self.connection.expect("> ")
         log.debug("Entering Device Manager")
         self.connection.send("1\r")
         self.connection.expect("------- Device Manager")
-        self.connection.send("3\r")
-        self.connection.expect("3- Outlet Control/Configuration")
-        self.connection.expect("> ")
+        if self.firmware_version >= self.OUTLET_MANAGEMENT_FIRMWARE:
+            log.debug("Entering Outlet Management")
+            self.connection.send("2\r")
+            self.connection.expect("------- Outlet Management")
+            self.connection.expect("> ")
+            log.debug("Entering Outlet Control/Configuration")
+            self.connection.send("1\r")
+            self.connection.expect("------- Outlet Control/Configuration")
+            self.connection.expect("> ")
+        else:
+            self.connection.send("3\r")
+            self.connection.expect("3- Outlet Control/Configuration")
+            self.connection.expect("> ")
         self._enter_outlet(port_number, False)
         self.connection.expect("1- Control Outlet")
         self.connection.send("1\r")
