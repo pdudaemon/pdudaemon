@@ -27,7 +27,7 @@ import logging
 import json
 import socket
 from pdudaemon.drivers.driver import PDUDriver
-from struct import pack
+from struct import pack, unpack
 import os
 log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 
@@ -86,7 +86,15 @@ class TPLink(PDUDriver):
             sock_tcp.settimeout(10)
             sock_tcp.connect((self.hostname, 9999))
             sock_tcp.send(self.encrypt(json_string))
-            data = sock_tcp.recv(2048)
+            # the reply: a 4-byte big-endian length, then that many bytes,
+            # which can take several reads (an HS300's get_sysinfo is
+            # longer than one segment)
+            data = b""
+            while len(data) < 4 or len(data) - 4 < unpack(">I", data[:4])[0]:
+                chunk = sock_tcp.recv(4096)
+                if not chunk:
+                    break
+                data += chunk
             sock_tcp.close()
             decrypted = self.decrypt(data[4:])
             return (decrypted)
