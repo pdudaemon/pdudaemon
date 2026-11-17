@@ -143,8 +143,10 @@ Options:
 If you would just like to use pdudaemon as an executable to drive a PDU without needing to run a daemon, you can use the --drive option.
 Configure the PDU in the config file as usual, then launch pdudaemon with the following options
 ```
-$ pdudaemon --conf=share/pdudaemon.conf --drive --hostname pdu01 --port 1 --request reboot
+$ pdudaemon --conf=share/pdudaemon.conf --drive --hostname pdu01 --port 1 reboot
 ```
+
+The request can also be given with `--request`.
 
 If requesting reboot, the delay between turning the port off and on can be modified with `--delay`
 and is by default 5 seconds.
