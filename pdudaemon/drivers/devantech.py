@@ -35,7 +35,7 @@ class DevantechBase(PDUDriver):
     def __init__(self, hostname, settings):
         self.hostname = hostname
         self.settings = settings
-        self.ip = settings["ip"]
+        self.ip = settings.get("ip", hostname)
         self.port = settings.get("port", 17494)
         self.password = settings.get("password")
         self.logic = settings.get("logic", "NO")

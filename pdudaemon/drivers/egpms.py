@@ -36,7 +36,7 @@ class EgPMS(PDUDriver):
     def __init__(self, hostname, settings):
         self.hostname = hostname
         self.settings = settings
-        self.ip = settings["ip"]
+        self.ip = settings.get("ip", hostname)
         self.password = array('B', settings["password"].encode("utf-8") + 8 * b' ')[:8]
         self.challenge = None
 
