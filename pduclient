@@ -20,53 +20,29 @@
 
 import optparse
 
-def do_tcp_request(options):
-    import socket
-    if options.pdudelay:
-        string = ("%s %s %s %s" % (options.pduhostname, options.pduportnum,
-                                   options.pducommand, options.pdudelay))
-    else:
-        string = ("%s %s %s" % (options.pduhostname, options.pduportnum,
-                                options.pducommand))
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    reply = ""
-    try:
-        sock.connect((options.pdudaemonhostname, 16421))
-        sock.send(string.encode('utf-8'))
-        reply = sock.recv(16384).strip()  # limit reply to 16K
-        reply = reply.decode('utf-8')
-        sock.close()
-    except Exception:
-        print ("Error sending command, wrong daemon hostname?")
-        exit(1)
-    if reply == "ack":
-        print("Command sent successfully.")
-        exit(0)
-    else:
-        print("Error sending command! %s replied: %s" %
-              (options.pdudaemonhostname, reply))
-        exit(127)
-
 def do_http_request(options):
-    import requests
-    request = "http://%s:16421/power/control/%s?hostname=%s&port=%s" % (
-                options.pdudaemonhostname, options.pducommand,
-                options.pduhostname, options.pduportnum)
-
+    import urllib.error
+    import urllib.parse
+    import urllib.request
+    query = {"hostname": options.pduhostname, "port": options.pduportnum}
     if options.pdudelay:
-        request += "&delay=%s" % options.pdudelay
+        query["delay"] = options.pdudelay
+    # encode the query, a PDU name can contain characters such as + or &
+    request = "http://%s:%s/power/control/%s?%s" % (
+                options.pdudaemonhostname, options.pdudaemonport,
+                options.pducommand, urllib.parse.urlencode(query))
     try:
-        reply = requests.get(request)
-    except Exception:
-        print ("Error sending command, wrong daemon hostname?")
-        exit(1)
-    if reply.ok:
-        print("Command sent successfully.")
-        exit(0)
-    else:
+        urllib.request.urlopen(request)
+    except urllib.error.HTTPError as reply:
         print("Error sending command! %s replied: %s" %
               (options.pdudaemonhostname, reply))
         exit(127)
+    except Exception as error:
+        print("Error sending command to %s:%s: %s" %
+              (options.pdudaemonhostname, options.pdudaemonport, error))
+        exit(1)
+    print("Command sent successfully.")
+    exit(0)
 
 
 if __name__ == '__main__':
@@ -75,11 +51,16 @@ if __name__ == '__main__':
     description = "PDUDaemon client"
     commands = ["reboot", "on", "off"]
     parser = optparse.OptionParser(usage=usage, description=description)
+    # HTTP is the only protocol now, -H is accepted so existing callers
+    # and scripts keep working, but it does nothing
     parser.add_option("-H", "--http", dest="use_http", action="store_true",
-                      help="Use HTTP protocol")
+                      help=optparse.SUPPRESS_HELP)
     parser.add_option("--daemon", dest="pdudaemonhostname", action="store",
                       type="string",
                       help="PDUDaemon listener hostname (ex: localhost)")
+    parser.add_option("--daemon-port", dest="pdudaemonport", action="store",
+                      type="int", default=16421,
+                      help="PDUDaemon listener port (ex: 16421)")
     parser.add_option("--hostname", dest="pduhostname", action="store",
                       type="string", help="PDU Hostname (ex: pdu05)")
     parser.add_option("--port", dest="pduportnum", action="store",
@@ -100,7 +81,4 @@ if __name__ == '__main__':
         print("Unknown pdu command: %s" % options.pducommand)
         exit(1)
 
-    if options.use_http:
-        do_http_request (options)
-    else:
-        do_tcp_request (options)
+    do_http_request(options)

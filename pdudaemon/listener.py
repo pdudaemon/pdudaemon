@@ -30,22 +30,6 @@ class Args(object):
     pass
 
 
-def parse_tcp(data):
-    args = Args()
-    delay = None
-    array = data.split(" ")
-    if (len(array) < 3) or (len(array) > 4):
-        logger.info("Wrong data size")
-        raise Exception("Unexpected data")
-    if len(array) == 4:
-        delay = int(array[3])
-    args.hostname = array[0]
-    args.port = int(array[1])
-    args.request = array[2]
-    args.delay = delay
-    return args
-
-
 def parse_http(data, path):
     args = Args()
     entry = path.lstrip('/').split('/')

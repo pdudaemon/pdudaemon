@@ -28,6 +28,10 @@ from pdudaemon.drivers.localcmdline import LocalCmdline
         ("echo %s", "3", "echo 3"),
         ("echo %s", "test", "echo test"),
         ("echo %d", 3, "echo 3"),
+        # requests carry the port as a string, number placeholders still work
+        ("echo %d", "3", "echo 3"),
+        ("echo %03d", "3", "echo 003"),
+        ("echo %(port)02d", "3", "echo 03"),
         ("echo on", 3, "echo on"),
         ("echo on", "3", "echo on"),
         ("echo on", "test", "echo on"),

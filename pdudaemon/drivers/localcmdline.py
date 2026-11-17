@@ -49,6 +49,11 @@ class LocalCmdline(LocalBase):
             log.debug("Unknown command!")
             return
 
+        # requests carry the port as a string, so turn a numeric one back into
+        # an int for commands using a number placeholder such as %d or %03d
+        if isinstance(port_number, str) and port_number.isdigit():
+            port_number = int(port_number)
+
         if "%(" in cmd:
             cmd = cmd % dict(self.settings, hostname=self.hostname, port=port_number)
         else:
