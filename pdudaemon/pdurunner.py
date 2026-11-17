@@ -25,9 +25,6 @@ import traceback
 import pexpect
 import concurrent.futures
 from pdudaemon.drivers.driver import PDUDriver
-import pdudaemon.drivers.strategies
-
-assert pdudaemon.drivers.strategies, "Subclasses are iterated to find all drivers"
 
 class PDURunner:
 
@@ -45,6 +42,10 @@ class PDURunner:
         self.executor.shutdown(wait=True, cancel_futures=True)
 
     def driver_from_hostname(self, hostname):
+        # Subclasses are iterated to find all drivers. Import them here
+        # rather than at module load so that any warnings raised while
+        # importing drivers are emitted after logging has been set up.
+        import pdudaemon.drivers.strategies  # noqa: F401
         drivername = self.config['driver']
         driver = PDUDriver.select(drivername)(hostname, self.config)
         return driver

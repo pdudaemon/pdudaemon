@@ -3,8 +3,10 @@
 # pylint: disable=redefined-outer-name
 
 import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 from pdudaemon.drivers.cyberpower81001 import Cyberpower81001
+from pdudaemon.drivers.driver import UnknownCommandException
+from pdudaemon.drivers.snmp import SNMP
 
 
 @pytest.fixture
@@ -20,6 +22,26 @@ def test_pdu_default_community():
     return Cyberpower81001("test.example.com", {})
 
 
+@pytest.fixture
+def mock_set_cmd():
+    with patch("pdudaemon.drivers.snmp.set_cmd", new_callable=AsyncMock) as m:
+        m.return_value = (None, 0, 0, [])
+        with patch("pdudaemon.drivers.snmp.UdpTransportTarget") as transport:
+            transport.create = AsyncMock(return_value=MagicMock())
+            with patch("pdudaemon.drivers.snmp.SnmpEngine"):
+                yield m
+
+
+def _sent(mock_set_cmd):
+    """Return the community, OID and value passed to set_cmd."""
+    # pylint: disable=protected-access
+    args = mock_set_cmd.call_args[0]
+    objecttype = args[4]
+    oid = objecttype._ObjectType__args[0]._ObjectIdentity__args[0]
+    value = int(objecttype._ObjectType__args[1])
+    return args[1].communityName, oid, value
+
+
 def test_driver_accepts():
     """Test that the driver accepts both CyberPower model names."""
     assert Cyberpower81001.accepts("cyberpower81001") is True
@@ -27,9 +49,15 @@ def test_driver_accepts():
     assert Cyberpower81001.accepts("other") is False
 
 
+def test_is_snmp_driver():
+    """Test that the driver is selectable as an SNMP driver subclass."""
+    assert issubclass(Cyberpower81001, SNMP)
+
+
 def test_initialization(test_pdu):
     """Test driver initialization with custom settings."""
     assert test_pdu.hostname == "test.example.com"
+    assert test_pdu.version == "snmpv1"
     assert test_pdu.community == "testcommunity"
 
 
@@ -38,102 +66,30 @@ def test_initialization_default_community(test_pdu_default_community):
     assert test_pdu_default_community.community == "private"
 
 
-@patch('subprocess.call')
-def test_port_interaction_on(mock_subprocess, test_pdu):
+def test_port_interaction_on(mock_set_cmd, test_pdu):
     """Test turning a port on."""
-    # pylint: disable=protected-access
-    test_pdu._port_interaction("on", "1")
-    expected_cmd = (
-        "/usr/bin/snmpset -v 1 -c testcommunity test.example.com "
-        "SNMPv2-SMI::enterprises.3808.1.1.3.3.3.1.1.4.1 integer 1 >/dev/null"
-    )
-    mock_subprocess.assert_called_once_with(expected_cmd, shell=True)
+    test_pdu.port_interaction("on", "1")
+    assert _sent(mock_set_cmd) == (
+        "testcommunity", "1.3.6.1.4.1.3808.1.1.3.3.3.1.1.4.1", 1)
 
 
-@patch('subprocess.call')
-def test_port_interaction_off(mock_subprocess, test_pdu):
+def test_port_interaction_off(mock_set_cmd, test_pdu):
     """Test turning a port off."""
-    # pylint: disable=protected-access
-    test_pdu._port_interaction("off", "2")
-    expected_cmd = (
-        "/usr/bin/snmpset -v 1 -c testcommunity test.example.com "
-        "SNMPv2-SMI::enterprises.3808.1.1.3.3.3.1.1.4.2 integer 2 >/dev/null"
-    )
-    mock_subprocess.assert_called_once_with(expected_cmd, shell=True)
+    test_pdu.port_interaction("off", "2")
+    assert _sent(mock_set_cmd) == (
+        "testcommunity", "1.3.6.1.4.1.3808.1.1.3.3.3.1.1.4.2", 2)
 
 
-@patch('subprocess.call')
-def test_port_interaction_reboot(mock_subprocess, test_pdu):
-    """Test rebooting a port."""
-    # pylint: disable=protected-access
-    test_pdu._port_interaction("reboot", "3")
-    expected_cmd = (
-        "/usr/bin/snmpset -v 1 -c testcommunity test.example.com "
-        "SNMPv2-SMI::enterprises.3808.1.1.3.3.3.1.1.4.3 integer 3 >/dev/null"
-    )
-    mock_subprocess.assert_called_once_with(expected_cmd, shell=True)
+def test_port_interaction_default_community(mock_set_cmd,
+                                            test_pdu_default_community):
+    """Test that the default community string is sent."""
+    test_pdu_default_community.port_interaction("on", "5")
+    assert _sent(mock_set_cmd) == (
+        "private", "1.3.6.1.4.1.3808.1.1.3.3.3.1.1.4.5", 1)
 
 
-@patch('subprocess.call')
-def test_port_interaction_cancel(mock_subprocess, test_pdu):
-    """Test canceling a port action."""
-    # pylint: disable=protected-access
-    test_pdu._port_interaction("cancel", "4")
-    expected_cmd = (
-        "/usr/bin/snmpset -v 1 -c testcommunity test.example.com "
-        "SNMPv2-SMI::enterprises.3808.1.1.3.3.3.1.1.4.4 integer 4 >/dev/null"
-    )
-    mock_subprocess.assert_called_once_with(expected_cmd, shell=True)
-
-
-@patch('subprocess.call')
-def test_port_interaction_numeric_commands(mock_subprocess, test_pdu):
-    """Test numeric command equivalents."""
-    # pylint: disable=protected-access
-    test_pdu._port_interaction("1", "1")  # Same as "on"
-    expected_cmd = (
-        "/usr/bin/snmpset -v 1 -c testcommunity test.example.com "
-        "SNMPv2-SMI::enterprises.3808.1.1.3.3.3.1.1.4.1 integer 1 >/dev/null"
-    )
-    mock_subprocess.assert_called_once_with(expected_cmd, shell=True)
-
-
-@patch('subprocess.call')
-@patch('logging.getLogger')
-def test_port_interaction_unknown_command(mock_logger, mock_subprocess, test_pdu):
+def test_port_interaction_unknown_command(mock_set_cmd, test_pdu):
     """Test handling of unknown commands."""
-    mock_log = Mock()
-    mock_logger.return_value = mock_log
-
-    # pylint: disable=protected-access
-    test_pdu._port_interaction("unknown", "1")
-
-    # Should not call subprocess for unknown commands
-    mock_subprocess.assert_not_called()
-
-
-def test_port_number_conversion(test_pdu):
-    """Test that string port numbers are converted to integers."""
-    with patch('subprocess.call') as mock_subprocess:
-        # pylint: disable=protected-access
-        test_pdu._port_interaction("on", "5")
-        expected_cmd = (
-            "/usr/bin/snmpset -v 1 -c testcommunity test.example.com "
-            "SNMPv2-SMI::enterprises.3808.1.1.3.3.3.1.1.4.5 integer 1 >/dev/null"
-        )
-        mock_subprocess.assert_called_once_with(expected_cmd, shell=True)
-
-
-def test_actions_mapping():
-    """Test that all expected actions are properly mapped."""
-    # Test the mapping indirectly by checking command behavior
-    test_pdu_instance = Cyberpower81001("test.example.com", {})
-    with patch('subprocess.call') as mock_subprocess:
-        # pylint: disable=protected-access
-        test_pdu_instance._port_interaction("on", "1")
-        assert mock_subprocess.called
-
-        mock_subprocess.reset_mock()
-        # pylint: disable=protected-access
-        test_pdu_instance._port_interaction("1", "1")
-        assert mock_subprocess.called
+    with pytest.raises(UnknownCommandException):
+        test_pdu.port_interaction("reboot", "1")
+    mock_set_cmd.assert_not_called()

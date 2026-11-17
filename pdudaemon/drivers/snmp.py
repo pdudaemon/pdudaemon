@@ -29,6 +29,15 @@ from pdudaemon.drivers.driver import PDUDriver, FailedRequestException, UnknownC
 import os
 log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
 
+# pysnmp does not use logging for its debug messages unless asked to, so
+# route them there when libraries are allowed to log debug messages. Leave
+# out the MIB categories, which log over a thousand lines about loading MIBs
+# and drown out the SNMP requests and responses.
+if logging.getLogger().isEnabledFor(logging.DEBUG):
+    from pysnmp import debug
+    debug.set_logger(debug.Debug("all", "!mibbuild", "!mibview", "!mibinstrum",
+                                 loggerName="pysnmp"))
+
 
 class SNMP(PDUDriver):
 
