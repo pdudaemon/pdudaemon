@@ -81,9 +81,10 @@ class TPLink(PDUDriver):
     def send_command(self, json_string):
         try:
             sock_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            # keep the timeout for the whole exchange, a device which accepts
+            # the connection but never replies would block the PDU forever
             sock_tcp.settimeout(10)
             sock_tcp.connect((self.hostname, 9999))
-            sock_tcp.settimeout(None)
             sock_tcp.send(self.encrypt(json_string))
             data = sock_tcp.recv(2048)
             sock_tcp.close()
