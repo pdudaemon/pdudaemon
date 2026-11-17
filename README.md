@@ -42,6 +42,11 @@ To create a config file, use [share/pdudaemon.conf](https://github.com/pdudaemon
 $ docker run -v `pwd`/pdudaemon.conf:/config/pdudaemon.conf pdudaemon/pdudaemon:latest
 ```
 
+The container runs as the unprivileged `pdudaemon` user. USB, HID and serial
+PDUs passed in with `--device` must be accessible to that user, for example
+with `--group-add` matching the device's group, or by running the container
+with `--user root`.
+
 Or you can build your own:
 ```
 $ git clone https://github.com/pdudaemon/pdudaemon
