@@ -38,6 +38,7 @@ class PDURunner:
         self.retrydelay = retrydelay
         self.logger = logging.getLogger("pdud.pdu.%s" % hostname)
         self.driver = self.driver_from_hostname(hostname)
+        self.port_status = {}
         # use single-worker ThreadPoolExecutor to serialize execution
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=1, thread_name_prefix=hostname)
 
@@ -55,6 +56,7 @@ class PDURunner:
         while retries > 0:
             try:
                 self.driver.handle(request, port)
+                self.port_status[str(port)] = request
                 return True
             except (OSError, pexpect.exceptions.EOF, Exception):  # pylint: disable=broad-except
                 self.logger.warn(traceback.format_exc())
