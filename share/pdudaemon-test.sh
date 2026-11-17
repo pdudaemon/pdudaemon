@@ -35,15 +35,8 @@ sleep 10
 curl -q "http://localhost:16421/power/control/reboot?alias=aliastesthttp01&delay=5" &> /dev/null
 sleep 10
 
-kill $PDU_PID
-sleep 10
-
-# Test TCP listener
-$PDUD_BINARY --loglevel=DEBUG --listener tcp --conf=share/pdudaemon.conf &
-PDU_PID=$!
-
-sleep 3
-./pduclient --daemon localhost --hostname tcp --port 3 --command reboot --delay 1
+# Test pduclient
+./pduclient --daemon localhost --hostname pduclient --port 3 --command reboot --delay 1
 sleep 10
 
 if [ $LOCAL ]

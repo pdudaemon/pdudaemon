@@ -26,10 +26,9 @@ from logging.handlers import WatchedFileHandler
 import signal
 import sys
 
-from pdudaemon.tcplistener import TCPListener
 from pdudaemon.httplistener import HTTPListener
 from pdudaemon.pdurunner import PDURunner
-from pdudaemon.drivers.driver import PDUDriver
+from pdudaemon.drivers.driver import PDUDriver, UnknownCommandException
 
 assert PDUDriver, "Imported for user convenience." # type: ignore[truthy-function]
 
@@ -94,16 +93,10 @@ class PDUDaemon:
 
         # Start the listener
         logger.info("Starting the listener")
-        if options.listener:
-            listener = options.listener
-        else:
-            listener = settings['daemon'].get('listener', 'tcp')
-        if listener == 'tcp':
-            self.listener = TCPListener(settings, self)
-        elif listener == 'http':
-            self.listener = HTTPListener(settings, self)
-        else:
-            logging.error("Unknown listener configured")
+        listener = options.listener or settings['daemon'].get('listener', 'http')
+        if listener != 'http':
+            logger.warning("The %s listener is no longer supported, using http", listener)
+        self.listener = HTTPListener(settings, self)
 
     async def start(self):
         await self.listener.start()
@@ -181,12 +174,24 @@ async def main_async():
             sys.exit(1)
 
         runner = PDURunner(config, options.drivehostname, options.driveretries, options.driveretrydelay)
-        if options.driverequest == "reboot":
-            result = await runner.do_job_async(options.driveport, "off")
-            await asyncio.sleep(int(options.drivedelay))
-            result = await runner.do_job_async(options.driveport, "on")
-        else:
-            result = await runner.do_job_async(options.driveport, options.driverequest)
+        result = False
+        try:
+            if options.driverequest == "reboot":
+                await runner.port_off_async(options.driveport)
+                await asyncio.sleep(int(options.drivedelay))
+                await runner.port_on_async(options.driveport)
+            elif options.driverequest == "on":
+                await runner.port_on_async(options.driveport)
+            elif options.driverequest == "off":
+                await runner.port_off_async(options.driveport)
+            elif options.driverequest == "get-port-state":
+                on = await runner.get_port_state_async(options.driveport)
+                logger.info("Port %s state: %s", options.driveport, "on" if on else "off")
+            else:
+                raise UnknownCommandException("Unknown request: %s" % options.driverequest)
+            result = True
+        except Exception as exc:  # pylint: disable=broad-except
+            logger.error("Request failed: %s", exc)
         await runner.shutdown()
         loop.stop()
         return result
