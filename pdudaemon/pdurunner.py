@@ -21,10 +21,9 @@
 import asyncio
 import logging
 import time
-import traceback
 import pexpect
 import concurrent.futures
-from pdudaemon.drivers.driver import PDUDriver
+from pdudaemon.drivers.driver import PDUDriver, FailedRequestException
 import pdudaemon.drivers.strategies
 
 assert pdudaemon.drivers.strategies, "Subclasses are iterated to find all drivers"
@@ -56,9 +55,16 @@ class PDURunner:
             try:
                 self.driver.handle(request, port)
                 return True
-            except (OSError, pexpect.exceptions.EOF, Exception):  # pylint: disable=broad-except
-                self.logger.warn(traceback.format_exc())
-                self.logger.warn("Failed to execute job: {} {} (attempts left {})".format(port, request, retries - 1))
+            except Exception as exc:  # pylint: disable=broad-except
+                # The PDU not being reachable or refusing the request is
+                # expected, so only log the traceback for other errors, which
+                # are likely to be bugs, or when debugging.
+                expected = isinstance(exc, (FailedRequestException, OSError,
+                                            pexpect.exceptions.ExceptionPexpect))
+                self.logger.warning("Failed to execute job: %s %s (attempts left %d): %s: %s",
+                                    port, request, retries - 1, type(exc).__name__,
+                                    str(exc).partition("\n")[0],
+                                    exc_info=not expected or self.logger.isEnabledFor(logging.DEBUG))
                 if self.driver:
                     self.driver._bombout()  # pylint: disable=W0212,E1101
                 time.sleep(self.retrydelay)

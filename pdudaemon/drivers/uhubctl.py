@@ -24,7 +24,7 @@ from shutil import which
 from subprocess import check_call
 from pdudaemon.drivers.localbase import LocalBase
 
-log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
+log = logging.getLogger("pdud.drivers." + __name__.split(".")[-1])
 
 
 class UHubCtl(LocalBase):

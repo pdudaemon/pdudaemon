@@ -25,11 +25,10 @@
 """
 
 import serial
-import os
 import logging
 
 from pdudaemon.drivers.driver import PDUDriver
-log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
+log = logging.getLogger("pdud.drivers." + __name__.split(".")[-1])
 
 # number of retries on communication error
 RETRY_COUNT = 1

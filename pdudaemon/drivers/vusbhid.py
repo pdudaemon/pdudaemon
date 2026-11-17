@@ -27,9 +27,8 @@ import usb.core
 import usb.util
 import array
 
-import os
 
-log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
+log = logging.getLogger("pdud.drivers." + __name__.split(".")[-1])
 
 VENDOR_ID = 0x16C0
 PRODUCT_ID = 0x05DF

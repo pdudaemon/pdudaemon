@@ -26,8 +26,7 @@ from pdudaemon.drivers.driver import PDUDriver
 import socket
 from array import array
 
-import os
-log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
+log = logging.getLogger("pdud.drivers." + __name__.split(".")[-1])
 
 
 class EgPMS(PDUDriver):

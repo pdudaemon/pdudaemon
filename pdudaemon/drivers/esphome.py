@@ -22,12 +22,11 @@
 #  MA 02110-1301, USA.
 
 import logging
-import os
 from pdudaemon.drivers.driver import PDUDriver, FailedRequestException
 import requests
 from requests.auth import HTTPDigestAuth
 
-log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
+log = logging.getLogger("pdud.drivers." + __name__.split(".")[-1])
 
 
 class ESPHomeHTTP(PDUDriver):

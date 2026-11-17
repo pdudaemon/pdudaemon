@@ -37,14 +37,44 @@ assert PDUDriver, "Imported for user convenience." # type: ignore[truthy-functio
 # Constants
 ###########
 CONFIGURATION_FILE = "/etc/pdudaemon/pdudaemon.conf"
-logging_FORMAT = "%(asctime)s - %(name)-30s - %(levelname)s %(message)s"
-logging_FORMAT_JOURNAL = "%(name)s.%(levelname)s %(message)s"
+logging_FORMAT = "%(asctime)s - %(shortname)-20.20s - %(levelname)s %(message)s"
+logging_FORMAT_STREAM = "%(shortname)-20.20s - %(levelname)s %(message)s"
+logging_FORMAT_JOURNAL = "%(shortname)s.%(levelname)s %(message)s"
 logging_FILE = "/var/log/pdudaemon.log"
+# Below DEBUG, to also get debug messages from libraries.
+logging_TRACE = 5
 
 ##################
 # Global logger
 ##################
 logger = logging.getLogger('pdud')
+
+
+class ShortNameFilter(logging.Filter):
+    """Add the logger name without the "pdud." prefix as shortname."""
+
+    def filter(self, record):
+        record.shortname = record.name.removeprefix("pdud.")
+        return True
+
+
+class MultiLineFormatter(logging.Formatter):
+    """Repeat the start of the format on every line of a message."""
+
+    def format(self, record):
+        text = super().format(record)
+        if "\n" not in text:
+            return text
+        # super().format() filled in record.message and record.asctime,
+        # so formatting an empty message gives the prefix.
+        message = record.message
+        record.message = ""
+        try:
+            prefix = self.formatMessage(record)
+        finally:
+            record.message = message
+        first, *rest = text.split("\n")
+        return "\n".join([first] + [prefix + line for line in rest])
 
 
 def setup_logging(options, settings):
@@ -55,28 +85,59 @@ def setup_logging(options, settings):
     if options.journal:
         from systemd.journal import JournalHandler
         handler = JournalHandler(SYSLOG_IDENTIFIER="pdudaemon")
-        handler.setFormatter(logging.Formatter(logging_FORMAT_JOURNAL))
+        log_format = logging_FORMAT_JOURNAL
     elif options.logfile == "-" or not options.logfile:
+        # Timestamps are left out as whatever collects the output, such
+        # as systemd, usually adds its own.
         handler = logging.StreamHandler(sys.stdout)
-        handler.setFormatter(logging.Formatter(logging_FORMAT))
+        log_format = logging_FORMAT_STREAM
     else:
         handler = WatchedFileHandler(options.logfile)
-        handler.setFormatter(logging.Formatter(logging_FORMAT))
+        log_format = logging_FORMAT
 
-    logger.addHandler(handler)
-    settings_level = settings.get('daemon', {}).get('logging_level', None)
-    if settings_level:
-        options.loglevel = settings_level.upper()
+    # The logging settings in the configuration file are meant for the
+    # daemon, so when driving a PDU directly only the command line is
+    # used.
+    if options.drive:
+        log_settings = {}
     else:
-        options.loglevel = options.loglevel.upper()
-    if options.loglevel == "DEBUG":
-        logger.setLevel(logging.DEBUG)
-    elif options.loglevel == "INFO":
-        logger.setLevel(logging.INFO)
-    elif options.loglevel == "WARNING":
-        logger.setLevel(logging.WARNING)
+        log_settings = settings.get('daemon', {})
+
+    if not options.logformat:
+        options.logformat = log_settings.get('logging_format', log_format)
+    # The prefix is shared by every pdudaemon logger so it says nothing
+    # about where a message came from.
+    handler.addFilter(ShortNameFilter())
+    try:
+        handler.setFormatter(MultiLineFormatter(options.logformat))
+    except ValueError as exc:
+        logging.error("Invalid logging format '%s': %s", options.logformat, exc)
+        sys.exit(1)
+
+    # Attach the handler to the root logger so that messages from
+    # libraries such as aiohttp and pysnmp are formatted the same way.
+    root = logging.getLogger()
+    root.addHandler(handler)
+    if not options.loglevel:
+        options.loglevel = log_settings.get('logging_level', "INFO")
+    options.loglevel = options.loglevel.upper()
+    logging.addLevelName(logging_TRACE, "TRACE")
+    try:
+        logger.setLevel(options.loglevel)
+    except ValueError:
+        logger.error("Unknown logging level: %s", options.loglevel)
+        sys.exit(1)
+    # Libraries can be very verbose at the debug level, so only let them
+    # log at it with the trace level.
+    # aiohttp logs every request at the info level, which repeats the
+    # message logged when handling it, so treat it as debug output too.
+    access_logger = logging.getLogger("aiohttp.access")
+    if logger.level <= logging_TRACE:
+        root.setLevel(logging.DEBUG)
+        access_logger.setLevel(logging.NOTSET)
     else:
-        logger.setLevel(logging.ERROR)
+        root.setLevel(max(logger.level, logging.INFO))
+        access_logger.setLevel(logging.WARNING)
 
 
 class PDUDaemon:
@@ -103,7 +164,7 @@ class PDUDaemon:
         elif listener == 'http':
             self.listener = HTTPListener(settings, self)
         else:
-            logging.error("Unknown listener configured")
+            logger.error("Unknown listener configured")
 
     async def start(self):
         await self.listener.start()
@@ -128,9 +189,13 @@ async def main_async():
                      help="Log to the journal")
     log.add_argument("--logfile", dest="logfile", action="store", type=str,
                      default="-", help="log file [%s]" % logging_FILE)
-    log.add_argument("--loglevel", dest="loglevel", default="INFO",
-                     choices=["DEBUG", "ERROR", "INFO", "WARN"],
-                     type=str, help="logging level [INFO]")
+    log.add_argument("--logformat", dest="logformat", default=None, type=str,
+                     help="logging format, overrides the logging_format "
+                     "configuration setting")
+    log.add_argument("--loglevel", dest="loglevel", default=None,
+                     choices=["DEBUG", "ERROR", "INFO", "TRACE", "WARN", "WARNING"],
+                     type=str, help="logging level, overrides the "
+                     "logging_level configuration setting [INFO]")
     parser.add_argument("--conf", "-c", type=argparse.FileType("r"),
                         default=CONFIGURATION_FILE,
                         help="configuration file [%s]" % CONFIGURATION_FILE)
@@ -169,7 +234,7 @@ async def main_async():
             # Using alias support, get all pdu info from alias
             alias_settings = settings["aliases"].get(options.alias, False)
             if not alias_settings:
-                logging.error("Alias requested but not found")
+                logger.error("Alias requested but not found")
                 sys.exit(1)
             options.drivehostname = settings["aliases"][options.alias]["hostname"]
             options.driveport = settings["aliases"][options.alias]["port"]
@@ -177,7 +242,7 @@ async def main_async():
         # Check that the requested PDU has config
         config = settings["pdus"].get(options.drivehostname, False)
         if not config:
-            logging.error("No config section for hostname: {}".format(options.drivehostname))
+            logger.error("No config section for hostname: {}".format(options.drivehostname))
             sys.exit(1)
 
         runner = PDURunner(config, options.drivehostname, options.driveretries, options.driveretrydelay)

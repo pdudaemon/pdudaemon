@@ -21,9 +21,8 @@
 import logging
 import pexpect
 from pdudaemon.drivers.driver import PDUDriver
-import os
 
-log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
+log = logging.getLogger("pdud.drivers." + __name__.split(".")[-1])
 
 
 class Gude1202(PDUDriver):

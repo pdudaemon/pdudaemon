@@ -66,7 +66,7 @@ def parse_http(data, path):
 
 async def process_request(args, config, daemon):
     if args.request in ["on", "off"] and args.delay is not None:
-        logger.warn("delay parameter is deprecated for on/off commands")
+        logger.warning("delay parameter is deprecated for on/off commands")
     if args.delay is not None:
         logger.debug("using custom delay as requested")
     else:

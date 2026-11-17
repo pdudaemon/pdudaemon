@@ -18,12 +18,11 @@
 #  MA 02110-1301, USA.
 
 import logging
-import os
 from pdudaemon.drivers.driver import PDUDriver, FailedRequestException
 import requests
 from requests.auth import HTTPBasicAuth
 
-log = logging.getLogger("pdud.drivers." + os.path.basename(__file__))
+log = logging.getLogger("pdud.drivers." + __name__.split(".")[-1])
 
 
 # The following driver has been tested with the hardware:
